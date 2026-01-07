@@ -1,0 +1,183 @@
+import { useEffect, useState } from 'react';
+import { Plus, FolderTree, Filter } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import BookGrid from '@/components/BookGrid';
+import CreateBookDialog from '@/components/dialogs/CreateBookDialog';
+import CreateSeriesDialog from '@/components/dialogs/CreateSeriesDialog';
+import SeriesDialog from '@/components/dialogs/SeriesDialog';
+import { useBooksStore } from '@/stores/booksStore';
+
+function Home() {
+  const [createBookOpen, setCreateBookOpen] = useState(false);
+  const [createSeriesOpen, setCreateSeriesOpen] = useState(false);
+  const [seriesDialogOpen, setSeriesDialogOpen] = useState(false);
+  const [selectedSeries, setSelectedSeries] = useState(null);
+
+  const [filterType, setFilterType] = useState('all'); 
+  const [showBooksInSeries, setShowBooksInSeries] = useState(false);
+
+  const { 
+    books: booksMap,
+    series: seriesMap,
+    seriesLayout,
+    loading, 
+    fetchBooks, 
+    fetchSeries, 
+    fetchSeriesBooks 
+  } = useBooksStore();
+
+  useEffect(() => {
+    const loadData = async () => {
+      await Promise.all([fetchBooks(), fetchSeries()]);
+    };
+    loadData();
+  }, [fetchBooks, fetchSeries]);
+
+  useEffect(() => {
+    const seriesIds = Object.keys(seriesMap);
+    if (seriesIds.length > 0) {
+      seriesIds.forEach(id => fetchSeriesBooks(id));
+    }
+  }, [seriesMap, fetchSeriesBooks]);
+
+  const handleSeriesClick = (seriesItem) => {
+    setSelectedSeries(seriesItem);
+    setSeriesDialogOpen(true);
+  };
+  
+  const booksList = Object.values(booksMap);
+  const seriesList = Object.values(seriesMap);
+
+  const bookToSeriesMap = new Map();
+  
+  Object.entries(seriesLayout).forEach(([sId, bookIds]) => {
+    const sName = seriesMap[sId]?.name;
+    if (sName && Array.isArray(bookIds)) {
+      bookIds.forEach(bId => bookToSeriesMap.set(bId, sName));
+    }
+  });
+
+  const processedItems = (() => {
+    const cleanBooks = booksList
+      .filter(b => !b.archived)
+      .map(b => ({
+        ...b,
+        type: 'book',
+        seriesName: bookToSeriesMap.get(b.id) || null,
+        isInSeries: bookToSeriesMap.has(b.id)
+      }));
+
+    const cleanSeries = seriesList.map(s => ({ ...s, type: 'series' }));
+
+    switch (filterType) {
+      case 'books':
+        return cleanBooks;
+      case 'series':
+        return cleanSeries;
+      case 'all':
+      default:
+        const filteredBooks = showBooksInSeries 
+          ? cleanBooks 
+          : cleanBooks.filter(b => !b.isInSeries);
+          
+        return [...filteredBooks, ...cleanSeries];
+    }
+  })();
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="container mx-auto p-6 space-y-8">
+        
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">My Library</h1>
+            <p className="text-muted-foreground mt-1">Manage your collection</p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={() => setCreateSeriesOpen(true)} variant="outline">
+              <FolderTree className="mr-2 h-4 w-4" />
+              New Series
+            </Button>
+            <Button onClick={() => setCreateBookOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Book
+            </Button>
+          </div>
+        </header>
+
+        <Separator />
+
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-card p-2 rounded-lg border shadow-sm">
+          <div className="flex items-center gap-4 px-2">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Filter className="h-4 w-4" />
+              <span className="text-sm font-medium">Filter:</span>
+            </div>
+            <div className="flex gap-1 bg-muted/50 p-1 rounded-md">
+              {['all', 'books', 'series'].map((type) => (
+                <Button
+                  key={type}
+                  variant={filterType === type ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setFilterType(type)}
+                  className="capitalize h-7 px-3 text-xs"
+                >
+                  {type}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {filterType === 'all' && (
+            <div className="flex items-center gap-2 px-2">
+              <Switch 
+                id="show-series-books"
+                checked={showBooksInSeries}
+                onCheckedChange={setShowBooksInSeries}
+              />
+              <Label htmlFor="show-series-books" className="text-sm cursor-pointer">
+                Show books inside series
+              </Label>
+            </div>
+          )}
+        </div>
+
+        <main>
+          {loading && processedItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4 text-muted-foreground animate-pulse">
+               <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+               <p>Loading your library...</p>
+            </div>
+          ) : (
+            <BookGrid
+              items={processedItems}
+              onSeriesClick={handleSeriesClick}
+              enableDragDrop={filterType !== 'books'}
+            />
+          )}
+          
+          {!loading && processedItems.length === 0 && (
+            <div className="text-center py-20 text-muted-foreground">
+              <p>No items found.</p>
+            </div>
+          )}
+        </main>
+
+        <CreateBookDialog open={createBookOpen} onOpenChange={setCreateBookOpen} />
+        <CreateSeriesDialog open={createSeriesOpen} onOpenChange={setCreateSeriesOpen} />
+        {selectedSeries && (
+          <SeriesDialog
+            open={seriesDialogOpen}
+            onOpenChange={setSeriesDialogOpen}
+            series={selectedSeries}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default Home;
