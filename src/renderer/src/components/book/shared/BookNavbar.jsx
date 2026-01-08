@@ -24,8 +24,7 @@ function BookNavbar({ book, currentPage, onPageChange }) {
   return (
     <Card className="rounded-none border-x-0 border-t-0 py-0!">
       <div className="container max-w-full">
-        <div className="flex items-center justify-between py-4">
-          {/* Book Info and Back Button */}
+        <div className="flex items-center justify-between py-4 px-2">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -47,14 +46,10 @@ function BookNavbar({ book, currentPage, onPageChange }) {
                   className="h-8 w-8 rounded object-cover"
                 />
               )}
-              <div>
-                <h1 className="font-semibold text-lg leading-tight">{book.name}</h1>
-                <p className="text-sm text-muted-foreground">by {book.author}</p>
-              </div>
+              <h1 className="font-semibold text-lg leading-tight">{book.name}</h1>
             </div>
           </div>
 
-          {/* Navigation */}
           <nav className="flex items-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -66,13 +61,12 @@ function BookNavbar({ book, currentPage, onPageChange }) {
                   variant={isActive ? 'secondary' : 'ghost'}
                   size="sm"
                   onClick={() => onPageChange(item.id)}
-                  className={`flex items-center gap-2 px-4 py-2 h-9 ${
-                    item.isPrimary && !isActive
-                      ? 'bg-yellow-500 text-primary-foreground hover:bg-yellow-600'
-                      : item.isPrimary && isActive
+                  className={`flex items-center gap-2 px-4 py-2 h-9 ${item.isPrimary && !isActive
+                    ? 'bg-yellow-500 text-primary-foreground hover:bg-yellow-600'
+                    : item.isPrimary && isActive
                       ? 'bg-yellow-500 text-primary-foreground hover:bg-yellow-500'
                       : ''
-                  }`}
+                    }`}
                 >
                   <Icon className="h-4 w-4" />
                   <span className="hidden sm:inline">{item.label}</span>

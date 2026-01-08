@@ -25,16 +25,13 @@ function Book() {
       return;
     }
 
-    // Only fetch if we don't have this book cached or if it's a different book
     if (!currentBook || currentBook.id !== parseInt(bookId)) {
       fetchBook(parseInt(bookId)).catch(() => {
-        // If book doesn't exist, redirect to home
         navigate('/');
       });
     }
   }, [bookId, currentBook, fetchBook, navigate]);
 
-  // Clear current book when component unmounts
   useEffect(() => {
     return () => {
       clearCurrentBook();
@@ -48,7 +45,7 @@ function Book() {
   };
 
   if (!bookId) {
-    return null; // Will redirect
+    return null;
   }
 
   if (loading && !currentBook) {
@@ -105,13 +102,13 @@ function Book() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <BookNavbar
         book={currentBook}
         currentPage={page}
         onPageChange={handlePageChange}
       />
-      <main className="container mx-auto px-4 py-6">
+      <main className={page === 'write' ? 'flex-1 overflow-hidden' : 'container mx-auto px-4 py-6'}>
         {renderPage()}
       </main>
     </div>

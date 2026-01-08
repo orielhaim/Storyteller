@@ -16,82 +16,31 @@ We are building this project in phases. Here is our detailed development plan:
 ## Phase 3: The Core Editor 📝
 
 ### Book Edit Page Architecture
-- [ ] **Book Entry Point**: Dedicated book editing workspace accessible from project dashboard
-- [ ] **Navigation Layout**: Three-panel layout (sidebar navigation, main editor area, context panel)
-- [ ] **Book Settings**: Global book configuration (title, genre, target word count, synopsis)
+- [X] **Book Entry Point**: Dedicated book editing workspace
+- [X] **Book Settings**: Global book configuration (title, genre, target word count, synopsis)
+- [X] **Characters Manager**: Hierarchical tree view of Characters
+- [X] **World Manager**: worlds, locations, objects
 
-### Chapter Editor
-- [ ] **Chapter List Sidebar**: Hierarchical tree view of Parts → Chapters → Scenes
-- [ ] **Chapter Management**: Create, rename, reorder, delete chapters
-- [ ] **Scene Organization**: Sub-scenes within chapters for detailed outlining
+### Writing Section (Dockview & react-arborist Integration)
+- [X] **Chapter List Sidebar**: Hierarchical tree view of Chapters and Scenes
+- [X] **Chapter and Scene Management**: Create, rename, reorder, delete chapters and scenes
+- [X] **Drag-and-Drop Reorganization**: Move chapters and scenes between parts
 - [ ] **Chapter Metadata**: Word count, last edited, status (draft/editing/revised)
-- [ ] **Drag-and-Drop Reorganization**: Move chapters and scenes between parts
+- [ ] **Multiple Tabs**: Different tabs such as Characters, World, Locations, Objects, Notes, etc.
 
 ### Rich Text Editor (TipTap Integration)
-- [ ] **Core Editor Setup**: TipTap editor with real-time rendering
-- [ ] **Basic Formatting**: Bold, italic, underline, strikethrough
-- [ ] **Headings & Structure**: H1-H6, blockquotes, code blocks
-- [ ] **Lists**: Ordered and unordered lists with nesting
-- [ ] **Links & Images**: Insert and edit hyperlinks, embed images
+- [X] **Core Editor Setup**: TipTap editor with real-time rendering
+- [ ] **Full Formatting**: Bold, italic, underline, strikethrough, headings, lists, links, code blocks, blockquotes, etc.
+- [ ] **Images**: Insert and edit images
+- [ ] **Mentions**: Insert and edit mentions to characters, worlds, locations, objects
 - [ ] **Autosave System**: Automatic saving to SQLite every 30 seconds
 - [ ] **Revision History**: Basic undo/redo with draft snapshots
-
-## Phase 4: Interface & Layout 🖼️
-
-### Split-View Architecture
-- [ ] **Multi-Tab System**: Open multiple chapters/scenes simultaneously
-- [ ] **Split Panels**: Horizontal and vertical splits for side-by-side editing
-- [ ] **Panel Management**: Resize, close, and rearrange editor panels
-- [ ] **Tab Groups**: Organize related documents in tab groups
-
-### Customizable Workspace
-- [ ] **Layout Presets**: Save and restore workspace configurations
-- [ ] **Panel Pinning**: Pin important panels (character list, outline)
-- [ ] **Minimap**: Chapter overview and quick navigation
-- [ ] **Fullscreen Mode**: Distraction-free writing environment
 
 ### Theme & Appearance
 - [ ] **Dark/Light Mode Toggle**: System preference detection
 - [ ] **Custom Themes**: User-defined color schemes
 - [ ] **Font Customization**: Choose from web fonts and system fonts
 - [ ] **Font Size & Line Height**: Adjustable reading preferences
-
-## Phase 5: World Building Modules 🧛‍♂️
-
-### Character Manager
-- [ ] **Character Database**: Centralized character repository
-- [ ] **Character Profiles**: Detailed forms for character information
-  - Basic Info: Name, age, gender, occupation
-  - Physical Description: Appearance, clothing, distinctive features
-  - Personality: Traits, motivations, flaws, arc development
-  - Relationships: Family, friends, enemies, romantic interests
-  - Backstory: History, key events, secrets
-- [ ] **Character Templates**: Pre-built templates for common archetypes
-- [ ] **Custom Fields**: User-definable fields for specific world-building needs
-- [ ] **Character Gallery**: Visual character cards with avatars
-- [ ] **Character Search & Filter**: Find characters by various criteria
-
-### Location Manager
-- [ ] **Location Database**: Geographic and setting management
-- [ ] **Location Profiles**: Detailed location information
-  - Basic Info: Name, type, significance
-  - Description: Visual details, atmosphere, sensory information
-  - Geography: Maps, coordinates, climate, terrain
-  - History: Key events, changes over time
-  - Connections: Relationships to other locations
-- [ ] **Location Hierarchy**: Organize locations by region/country/city
-- [ ] **Location Maps**: Visual map integration with location markers
-- [ ] **Travel Tracking**: Character movement between locations
-
-### World Editor
-- [ ] **World Overview**: Central hub for world-building elements
-- [ ] **Timeline Integration**: Chronological events across the story world
-- [ ] **World Rules & Laws**: Magic systems, physics, societal rules
-- [ ] **Culture & Society**: Customs, traditions, social structures
-- [ ] **Items & Artifacts**: Important objects with detailed descriptions
-- [ ] **Factions & Organizations**: Groups, guilds, governments
-- [ ] **Species & Races**: Non-human elements (fantasy/sci-fi)
-- [ ] **Languages & Communication**: Constructed languages, dialects
 
 ### Notes System
 - [ ] **Universal Notes**: Free-form note-taking for any purpose
@@ -101,7 +50,7 @@ We are building this project in phases. Here is our detailed development plan:
 - [ ] **Rich Text Notes**: Full formatting support in notes
 - [ ] **Note Attachments**: Link images, documents, or external resources
 
-## Phase 6: Advanced Features 🚀
+## Phase 4: Advanced Features 🚀
 
 ### Timeline & Plot Management
 - [ ] **Visual Timeline**: Interactive timeline of story events

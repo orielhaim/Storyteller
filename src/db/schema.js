@@ -83,3 +83,24 @@ export const objects = table("objects", {
   createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
   updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
 });
+
+export const chapters = table("chapters", {
+  id: t.int().primaryKey({ autoIncrement: true }),
+  bookId: t.int("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  name: t.text().notNull(),
+  description: t.text(),
+  position: t.integer().notNull().default(0),
+  createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
+  updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
+});
+
+export const scenes = table("scenes", {
+  id: t.int().primaryKey({ autoIncrement: true }),
+  chapterId: t.int("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
+  bookId: t.int("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  name: t.text().notNull(),
+  content: t.text("content", { mode: "json" }).default(null),
+  position: t.integer().notNull().default(0),
+  createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
+  updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
+});

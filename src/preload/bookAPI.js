@@ -69,6 +69,28 @@ contextBridge.exposeInMainWorld('bookAPI', {
     delete: (id) => ipcRenderer.invoke('objects:delete', id),
   },
 
+  // Chapters API
+  chapters: {
+    getAllByBook: (bookId) => ipcRenderer.invoke('chapters:getAllByBook', bookId),
+    getById: (id) => ipcRenderer.invoke('chapters:getById', id),
+    create: (data) => ipcRenderer.invoke('chapters:create', data),
+    update: (id, data) => ipcRenderer.invoke('chapters:update', id, data),
+    delete: (id) => ipcRenderer.invoke('chapters:delete', id),
+    reorder: (bookId, chapterIds) => ipcRenderer.invoke('chapters:reorder', bookId, chapterIds),
+  },
+
+  // Scenes API
+  scenes: {
+    getAllByChapter: (chapterId) => ipcRenderer.invoke('scenes:getAllByChapter', chapterId),
+    getAllByBook: (bookId) => ipcRenderer.invoke('scenes:getAllByBook', bookId),
+    getById: (id) => ipcRenderer.invoke('scenes:getById', id),
+    create: (data) => ipcRenderer.invoke('scenes:create', data),
+    update: (id, data) => ipcRenderer.invoke('scenes:update', id, data),
+    delete: (id) => ipcRenderer.invoke('scenes:delete', id),
+    reorder: (chapterId, sceneIds) => ipcRenderer.invoke('scenes:reorder', chapterId, sceneIds),
+    moveToChapter: (sceneId, chapterId) => ipcRenderer.invoke('scenes:moveToChapter', sceneId, chapterId),
+  },
+
   // Image API
   image: {
     save: (base64Data, filename) => ipcRenderer.invoke('image:save', base64Data, filename),
