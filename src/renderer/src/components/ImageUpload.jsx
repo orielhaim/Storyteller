@@ -181,7 +181,7 @@ function ImageUpload({
           onDragLeave={onDragLeave}
           onDrop={onDrop}
           className={`
-            relative w-full h-full min-h-[200px] flex flex-col items-center justify-center p-6 text-center
+            relative w-full h-full flex flex-col items-center justify-center p-6 text-center
             border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200
             ${isDragOver 
               ? 'border-primary bg-primary/5 scale-[0.99]' 

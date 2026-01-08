@@ -48,3 +48,38 @@ export const characters = table("characters", {
   createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
   updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
 });
+
+export const worlds = table("worlds", {
+  id: t.int().primaryKey({ autoIncrement: true }),
+  bookId: t.int("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  name: t.text().notNull(),
+  description: t.text(),
+  referenceImage: t.text("reference_image"),
+  createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
+  updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
+});
+
+export const locations = table("locations", {
+  id: t.int().primaryKey({ autoIncrement: true }),
+  bookId: t.int("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  worldId: t.int("world_id").references(() => worlds.id, { onDelete: "set null" }),
+  name: t.text().notNull(),
+  city: t.text(),
+  state: t.text(),
+  nation: t.text(),
+  description: t.text(),
+  referenceImage: t.text("reference_image"),
+  createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
+  updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
+});
+
+export const objects = table("objects", {
+  id: t.int().primaryKey({ autoIncrement: true }),
+  bookId: t.int("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  name: t.text().notNull(),
+  description: t.text(),
+  groups: t.text("groups", { mode: "json" }).default([]), // array of group names
+  referenceImage: t.text("reference_image"),
+  createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
+  updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
+});

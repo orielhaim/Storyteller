@@ -111,7 +111,7 @@ function Book() {
         currentPage={page}
         onPageChange={handlePageChange}
       />
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-4 py-6">
         {renderPage()}
       </main>
     </div>

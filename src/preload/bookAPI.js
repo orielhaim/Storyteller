@@ -42,6 +42,33 @@ contextBridge.exposeInMainWorld('bookAPI', {
     delete: (id) => ipcRenderer.invoke('characters:delete', id),
   },
 
+  // Worlds API
+  worlds: {
+    getAllByBook: (bookId) => ipcRenderer.invoke('worlds:getAllByBook', bookId),
+    getById: (id) => ipcRenderer.invoke('worlds:getById', id),
+    create: (data) => ipcRenderer.invoke('worlds:create', data),
+    update: (id, data) => ipcRenderer.invoke('worlds:update', id, data),
+    delete: (id) => ipcRenderer.invoke('worlds:delete', id),
+  },
+
+  // Locations API
+  locations: {
+    getAllByBook: (bookId) => ipcRenderer.invoke('locations:getAllByBook', bookId),
+    getById: (id) => ipcRenderer.invoke('locations:getById', id),
+    create: (data) => ipcRenderer.invoke('locations:create', data),
+    update: (id, data) => ipcRenderer.invoke('locations:update', id, data),
+    delete: (id) => ipcRenderer.invoke('locations:delete', id),
+  },
+
+  // Objects API
+  objects: {
+    getAllByBook: (bookId) => ipcRenderer.invoke('objects:getAllByBook', bookId),
+    getById: (id) => ipcRenderer.invoke('objects:getById', id),
+    create: (data) => ipcRenderer.invoke('objects:create', data),
+    update: (id, data) => ipcRenderer.invoke('objects:update', id, data),
+    delete: (id) => ipcRenderer.invoke('objects:delete', id),
+  },
+
   // Image API
   image: {
     save: (base64Data, filename) => ipcRenderer.invoke('image:save', base64Data, filename),

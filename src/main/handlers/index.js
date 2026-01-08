@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { bookHandlers, seriesHandlers, bookSeriesHandlers, characterHandlers } from './bookHandler.js';
+import { bookHandlers, seriesHandlers, bookSeriesHandlers, characterHandlers, worldHandlers, locationHandlers, objectHandlers } from './bookHandler.js';
 import { imageHandlers } from './imageHandler.js';
 
 export function registerIpcHandlers() {
@@ -32,6 +32,27 @@ export function registerIpcHandlers() {
   ipcMain.handle('characters:create', characterHandlers.create);
   ipcMain.handle('characters:update', characterHandlers.update);
   ipcMain.handle('characters:delete', characterHandlers.delete);
+
+  // World channels
+  ipcMain.handle('worlds:getAllByBook', worldHandlers.getAllByBook);
+  ipcMain.handle('worlds:getById', worldHandlers.getById);
+  ipcMain.handle('worlds:create', worldHandlers.create);
+  ipcMain.handle('worlds:update', worldHandlers.update);
+  ipcMain.handle('worlds:delete', worldHandlers.delete);
+
+  // Location channels
+  ipcMain.handle('locations:getAllByBook', locationHandlers.getAllByBook);
+  ipcMain.handle('locations:getById', locationHandlers.getById);
+  ipcMain.handle('locations:create', locationHandlers.create);
+  ipcMain.handle('locations:update', locationHandlers.update);
+  ipcMain.handle('locations:delete', locationHandlers.delete);
+
+  // Object channels
+  ipcMain.handle('objects:getAllByBook', objectHandlers.getAllByBook);
+  ipcMain.handle('objects:getById', objectHandlers.getById);
+  ipcMain.handle('objects:create', objectHandlers.create);
+  ipcMain.handle('objects:update', objectHandlers.update);
+  ipcMain.handle('objects:delete', objectHandlers.delete);
 
   // Image channels
   ipcMain.handle('image:save', imageHandlers.saveImage);
