@@ -16,7 +16,7 @@ export const bookHandlers = {
     return result[0] || null;
   }),
 
-  create: handleRequest(async ({ name, author, description, image, progressStatus }) => {
+  create: handleRequest(async ({ name, author, description, image, progressStatus, genres, targetAudience, primaryLanguage }) => {
     const now = Date.now();
     const result = await db.insert(books).values({
       name,
@@ -24,6 +24,9 @@ export const bookHandlers = {
       description: description || null,
       image: image || null,
       progressStatus: progressStatus || "not_started",
+      genres: genres || [],
+      targetAudience: targetAudience || "general",
+      primaryLanguage: primaryLanguage || "en",
       createdAt: now,
       updatedAt: now,
       archived: false,
@@ -31,7 +34,7 @@ export const bookHandlers = {
     return result[0];
   }),
 
-  update: handleRequest(async (id, { name, author, description, image, progressStatus }) => {
+  update: handleRequest(async (id, { name, author, description, image, progressStatus, genres, targetAudience, primaryLanguage }) => {
     const result = await db.update(books)
       .set({
         name,
@@ -39,6 +42,9 @@ export const bookHandlers = {
         description: description || null,
         image: image || null,
         progressStatus: progressStatus || undefined,
+        genres: genres || undefined,
+        targetAudience: targetAudience || undefined,
+        primaryLanguage: primaryLanguage || undefined,
         updatedAt: Date.now(),
       })
       .where(eq(books.id, id))

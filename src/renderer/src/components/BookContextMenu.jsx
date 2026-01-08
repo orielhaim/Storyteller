@@ -53,8 +53,7 @@ export default function BookContextMenu({ children, book, onSeriesUpdate }) {
   );
 
   const handleOpen = () => {
-    // TODO: Implement book opening functionality
-    toast.info('Book opening functionality coming soon!');
+    navigate(`/book?id=${book.id}`);
   };
 
   const handleDeleteBook = () => {
@@ -108,7 +107,7 @@ export default function BookContextMenu({ children, book, onSeriesUpdate }) {
         </ContextMenuTrigger>
 
         <ContextMenuContent className="w-48">
-          <ContextMenuItem onClick={handleOpen} disabled>
+          <ContextMenuItem onClick={handleOpen}>
             <Eye className="mr-2 h-4 w-4" />
             Open
           </ContextMenuItem>

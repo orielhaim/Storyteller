@@ -24,20 +24,22 @@ import { useBooksStore } from '@/stores/booksStore';
 
 import useImageLoader from '@/hooks/useImageLoader';
 
-const STATUS_CONFIG = {
-  completed:   { label: 'Completed',   variant: 'default',    className: 'bg-green-600 hover:bg-green-700' },
-  in_process:  { label: 'In Process',  variant: 'secondary',  className: 'bg-blue-100 text-blue-800 hover:bg-blue-200' },
-  future:      { label: 'Future',      variant: 'outline',    className: 'bg-background/80 backdrop-blur-sm' },
-  not_started: { label: 'Not Started', variant: 'destructive', className: '' },
-};
+import { BOOK_STATUS_CONFIG } from '@/config/bookConfig';
 
 function SeriesBookItem({ book, index, onSeriesUpdate }) {
+  const navigate = useNavigate();
   const imageUrl = useImageLoader(book.image);
-  const status = STATUS_CONFIG[book.progressStatus] || STATUS_CONFIG.not_started;
+  const status = BOOK_STATUS_CONFIG[book.progressStatus] || BOOK_STATUS_CONFIG.not_started;
+
+  const handleBookClick = (e) => {
+    // Prevent navigation if clicking on context menu trigger
+    if (e.target.closest('[data-radix-collection-item]')) return;
+    navigate(`/book?id=${book.id}`);
+  };
 
   return (
     <BookContextMenu book={book} onSeriesUpdate={onSeriesUpdate}>
-      <div className="group relative">
+      <div className="group relative cursor-pointer" onClick={handleBookClick}>
         <div className="aspect-2/3 bg-muted/30 rounded-md overflow-hidden shadow-sm transition-shadow hover:shadow-md border border-border/50">
 
           {imageUrl ? (

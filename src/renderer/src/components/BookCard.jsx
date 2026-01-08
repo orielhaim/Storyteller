@@ -1,18 +1,14 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Book, User } from 'lucide-react';
 import BookContextMenu from './BookContextMenu';
-
-const STATUS_CONFIG = {
-  completed:   { label: 'Completed',   variant: 'default',    className: 'bg-green-600 hover:bg-green-700' },
-  in_process:  { label: 'In Process',  variant: 'secondary',  className: 'bg-blue-100 text-blue-800 hover:bg-blue-200' },
-  future:      { label: 'Future',      variant: 'outline',    className: 'bg-background/80 backdrop-blur-sm' },
-  not_started: { label: 'Not Started', variant: 'destructive', className: '' },
-};
+import { BOOK_STATUS_CONFIG } from '@/config/bookConfig';
 
 export default function BookCard({ id, book, imageUrl, seriesName, draggable = false, onSeriesUpdate }) {
+  const navigate = useNavigate();
   const {
     attributes,
     listeners,
@@ -20,8 +16,8 @@ export default function BookCard({ id, book, imageUrl, seriesName, draggable = f
     transform,
     transition,
     isDragging,
-  } = useSortable({ 
-    id, 
+  } = useSortable({
+    id,
     disabled: !draggable,
     data: { type: 'book', book }
   });
@@ -33,16 +29,19 @@ export default function BookCard({ id, book, imageUrl, seriesName, draggable = f
     zIndex: isDragging ? 999 : 'auto',
   };
 
-  const status = STATUS_CONFIG[book.progressStatus] || STATUS_CONFIG.not_started;
+  const status = BOOK_STATUS_CONFIG[book.progressStatus] || BOOK_STATUS_CONFIG.not_started;
 
   return (
     <BookContextMenu book={book} onSeriesUpdate={onSeriesUpdate}>
       <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="h-full touch-none">
-        <Card className={`
-          h-full overflow-hidden border-0 shadow-sm transition-all duration-300 group py-0!
-          ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}
-          ${!isDragging && 'hover:shadow-xl hover:-translate-y-1'}
-        `}>
+        <Card
+          onClick={() => navigate(`/book?id=${book.id}`)}
+          className={`
+            h-full overflow-hidden border-0 shadow-sm transition-all duration-300 group py-0!
+            ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
+            ${!isDragging && 'hover:shadow-xl hover:-translate-y-1'}
+          `}
+        >
           <CardContent className="p-0 h-full relative">
 
             <div className="relative aspect-2/3 w-full bg-muted/30">

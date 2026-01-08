@@ -49,39 +49,7 @@ Built with a focus on performance, maintainability, and a modern developer exper
 
 ## 🗺️ Roadmap
 
-We are building this project in phases. Here is our current plan:
-
-### Phase 1: Foundation 🏗️
-- [X] Initialize Electron (electron-vite) + React + Tailwind CSS + Shadcn/ui.
-- [X] Setup SQLite with Drizzle ORM connectivity (IPC communication).
-- [X] Establish global state management with Zustand.
-
-### Phase 2: Project Dashboard 📂
-- [X] "Welcome" screen.
-- [X] Ability to create/delete Books/Series.
-- [X] Move Books between Series. (Drag-and-drop)
-- [X] Series Management Page.
-
-### Phase 3: The Core Editor 📝
-- [ ] Basic Chapter/Scene list (Sidebar).
-- [ ] Integration of TipTap editor.
-- [ ] Autosave functionality to SQLite.
-- [ ] Basic markdown formatting support.
-
-### Phase 4: Interface & Layout 🖼️
-- [ ] Implement Split-View architecture (open multiple tabs/panes).
-- [ ] Draggable panels (resize sidebar/editor).
-- [ ] Dark/Light mode toggle.
-
-### Phase 5: World Building Modules 🧛‍♂️
-- [ ] **Character Manager:** Create/Edit character profiles with custom fields.
-- [ ] **Location Manager:** Basic location tracking.
-- [ ] Side-by-side view: Open a character sheet while editing a chapter.
-
-### Phase 6: Advanced Features 🚀
-- [ ] Timeline view.
-- [ ] Export to PDF/EPUB.
-- [ ] Statistics (Word count, session tracking).
+For a detailed breakdown of our development phases and upcoming features, see our [ROADMAP.md](ROADMAP.md).
 
 ---
 
@@ -106,10 +74,6 @@ To run the project locally for development:
     ```
 
 ---
-
-## 🤝 Contributing
-
-Contributions are welcome! Whether it's reporting bugs, suggesting features, or writing code. Please check the `CONTRIBUTING.md` (coming soon) for guidelines.
 
 ## 📄 License
 

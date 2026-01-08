@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 
 import useImageLoader from '@/hooks/useImageLoader';
 
+import { BOOK_STATUS_CONFIG } from '@/config/bookConfig';
+
 const BookImage = ({ imageUuid, className = "" }) => {
   const imageData = useImageLoader(imageUuid);
 
@@ -43,13 +45,7 @@ function BookItem({ book, onRemove, isOverlay = false }) {
     zIndex: isDragging ? 0 : 'auto',
   };
 
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'completed': return 'bg-green-100 text-green-800 hover:bg-green-100';
-      case 'in_process': return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
-      default: return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
-    }
-  };
+  const status = BOOK_STATUS_CONFIG[book.progressStatus] || BOOK_STATUS_CONFIG.not_started;
 
   return (
     <div
@@ -84,8 +80,8 @@ function BookItem({ book, onRemove, isOverlay = false }) {
               {book.name}
             </h4>
             {book.progressStatus && (
-              <Badge variant="outline" className={`text-[10px] h-4 px-1 rounded-sm border-0 ${getStatusColor(book.progressStatus)}`}>
-                {book.progressStatus.replace('_', ' ')}
+              <Badge variant={status.variant} className={`text-[10px] h-4 px-1 rounded-sm border-0 ${status.className}`}>
+                {status.label}
               </Badge>
             )}
           </div>

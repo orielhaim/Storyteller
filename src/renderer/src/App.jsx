@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Welcome from './pages/Welcome';
 import Home from './pages/Home';
 import SeriesManagement from './pages/SeriesManagement';
+import Book from './pages/Book';
 
 function App() {
   const [hasSeenWelcome] = useState(() => {
@@ -23,6 +24,10 @@ function App() {
         <Route
           path="/series"
           element={<SeriesManagement />}
+        />
+        <Route
+          path="/book"
+          element={<Book />}
         />
       </Routes>
     </div>
