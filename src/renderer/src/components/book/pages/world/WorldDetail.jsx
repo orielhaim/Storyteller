@@ -92,7 +92,7 @@ export default function WorldDetail({ worldId, onBack, showBackButton = true }) 
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] max-w-4xl mx-auto gap-4 px-4">
+    <div className="flex flex-col h-[calc(100vh-2rem)] max-w-4xl mx-auto gap-4 px-4 overflow-y-auto">
       {/* Header */}
       <header className="flex items-center justify-between py-2 border-b shrink-0">
         <div className="flex items-center gap-4">

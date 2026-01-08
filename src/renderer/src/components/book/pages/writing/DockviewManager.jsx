@@ -6,7 +6,7 @@ import { Book, Folder, FileText, X, User, Globe, MapPin, Package } from 'lucide-
 const CustomTab = ({ api, params }) => {
   const getIcon = (type) => {
     const typeToCheck = params?.iconType || params?.component;
-    
+
     switch (typeToCheck) {
       case 'chapters':
         return <Book className="h-3 w-3 mr-1" />;
@@ -65,11 +65,11 @@ const DockviewManager = forwardRef(({ components = {}, onReady: onReadyCallback,
         component: componentName,
         params: {
           ...params,
-          component: componentName, 
+          component: componentName,
           iconType: componentName
         },
         title: params.title || componentName,
-        tabComponent: 'customTab', 
+        tabComponent: 'customTab',
       });
 
       return panel;
@@ -94,13 +94,13 @@ const DockviewManager = forwardRef(({ components = {}, onReady: onReadyCallback,
 
   const handleReady = (event) => {
     apiRef.current = event.api;
-    
+
     event.api.onDidRemovePanel(() => {
       if (onPanelRemoved && apiRef.current) {
         onPanelRemoved(apiRef.current.panels.length);
       }
     });
-    
+
     if (onReadyCallback) {
       onReadyCallback(event.api);
     }
@@ -110,7 +110,7 @@ const DockviewManager = forwardRef(({ components = {}, onReady: onReadyCallback,
     <DockviewReact
       onReady={handleReady}
       components={components}
-      className="dockview-theme-replit"
+      className="dockview-theme-replit w-full h-full"
       tabComponents={{
         customTab: CustomTab,
       }}

@@ -47,7 +47,8 @@ function SceneEditorWindow({ sceneId, sceneName }) {
 
       setIsSaving(true);
       try {
-        await updateScene(sceneId, { content });
+        // Update content directly via API to avoid triggering global scene list updates
+        await window.bookAPI.scenes.update(sceneId, { content });
       } catch (error) {
         console.error('Failed to save scene:', error);
       } finally {

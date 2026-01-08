@@ -182,7 +182,7 @@ function BookWrite({ book }) {
       <div className="w-64 shrink-0">
         <FileTree bookId={book.id} onNodeClick={handleNodeClick} />
       </div>
-      <div className="flex-1">
+      <div className="flex-1 min-w-0 overflow-hidden h-full">
         <DockviewManager
           ref={dockviewRef}
           components={components}
@@ -192,6 +192,7 @@ function BookWrite({ book }) {
       </div>
     </div>
   );
+
 }
 
 export default BookWrite;
