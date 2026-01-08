@@ -2,10 +2,12 @@ import { useEffect, useMemo } from 'react';
 import { Tree } from 'react-arborist';
 import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { useWritingStore } from '@/stores/writingStore';
-import { Folder, FileText, ChevronRight, ChevronDown, Book } from 'lucide-react';
+import { useCharacterStore } from '@/stores/characterStore';
+import { useWorldStore } from '@/stores/worldStore';
+import { Folder, FileText, ChevronRight, ChevronDown, Book, Users, User, Globe, MapPin, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-function buildTreeData(bookId, chapters, scenes) {
+function buildTreeData(bookId, chapters, scenes, characters, worlds, locations, objects) {
   if (!bookId) return [];
 
   const validScenes = scenes.filter(scene => scene && typeof scene.chapterId === 'number');
@@ -36,6 +38,84 @@ function buildTreeData(bookId, chapters, scenes) {
     };
   });
 
+  // Group characters by role
+  const charactersByRole = characters.reduce((acc, character) => {
+    const role = character.role || 'unsorted';
+    if (!acc[role]) {
+      acc[role] = [];
+    }
+    acc[role].push(character);
+    return acc;
+  }, {});
+
+  const roleLabels = {
+    protagonist: 'Protagonists',
+    supporting: 'Supporting Characters',
+    antagonist: 'Antagonists',
+    marginal: 'Marginal Characters',
+    unsorted: 'Unsorted'
+  };
+
+  const characterRoleNodes = Object.entries(charactersByRole).map(([role, roleCharacters]) => ({
+    id: `character-role-${role}`,
+    name: roleLabels[role] || role,
+    type: 'character-role',
+    entityId: role,
+    children: roleCharacters.map((character) => ({
+      id: `character-${character.id}`,
+      name: `${character.firstName} ${character.lastName || ''}`.trim(),
+      type: 'character',
+      entityId: character.id,
+      role: role,
+    })),
+  }));
+
+  // Create world subcategories
+  const worldNodes = worlds.map((world) => ({
+    id: `world-${world.id}`,
+    name: world.name,
+    type: 'world',
+    entityId: world.id,
+  }));
+
+  const locationNodes = locations.map((location) => ({
+    id: `location-${location.id}`,
+    name: location.name,
+    type: 'location',
+    entityId: location.id,
+  }));
+
+  const objectNodes = objects.map((object) => ({
+    id: `object-${object.id}`,
+    name: object.name,
+    type: 'object',
+    entityId: object.id,
+  }));
+
+  const worldCategoryNodes = [
+    {
+      id: 'worlds',
+      name: 'Worlds',
+      type: 'worlds',
+      entityId: null,
+      children: worldNodes,
+    },
+    {
+      id: 'locations',
+      name: 'Locations',
+      type: 'locations',
+      entityId: null,
+      children: locationNodes,
+    },
+    {
+      id: 'world-objects',
+      name: 'Objects',
+      type: 'world-objects',
+      entityId: null,
+      children: objectNodes,
+    },
+  ];
+
   return [{
     id: 'main',
     name: 'Main',
@@ -43,19 +123,39 @@ function buildTreeData(bookId, chapters, scenes) {
     entityId: null,
     isOpen: true,
     children: chapterNodes,
+  },
+  {
+    id: 'characters',
+    name: 'Characters',
+    type: 'characters',
+    entityId: null,
+    children: characterRoleNodes,
+  },
+  {
+    id: 'world',
+    name: 'World',
+    type: 'world-category',
+    entityId: null,
+    children: worldCategoryNodes,
   }];
 }
 
 export default function FileTree({ bookId, onNodeClick }) {
   const { chapters, scenes, fetchChapters, fetchScenesByBook, reorderScenes, reorderChapters, moveSceneToChapter } = useWritingStore();
+  const { characters, fetchCharacters } = useCharacterStore();
+  const { worlds, locations, objects, fetchWorlds, fetchLocations, fetchObjects } = useWorldStore();
 
   useEffect(() => {
     if (!bookId) return;
     fetchChapters(bookId);
     fetchScenesByBook(bookId);
-  }, [bookId, fetchChapters, fetchScenesByBook]);
+    fetchCharacters(bookId);
+    fetchWorlds(bookId);
+    fetchLocations(bookId);
+    fetchObjects(bookId);
+  }, [bookId, fetchChapters, fetchScenesByBook, fetchCharacters, fetchWorlds, fetchLocations, fetchObjects]);
 
-  const treeData = useMemo(() => buildTreeData(bookId, chapters, scenes), [bookId, chapters, scenes]);
+  const treeData = useMemo(() => buildTreeData(bookId, chapters, scenes, characters, worlds, locations, objects), [bookId, chapters, scenes, characters, worlds, locations, objects]);
 
   const handleActivate = (node) => {
     if (!onNodeClick || !node?.data) return;
@@ -122,24 +222,24 @@ export default function FileTree({ bookId, onNodeClick }) {
   return (
     <div className="w-full bg-sidebar border-r border-border">
       <AutoSizer renderProp={({ width, height }) => (
-          <Tree
-            key={`tree-${bookId}-${treeData.length}`}
-            data={treeData}
-            width={width}
-            height={height}
-            indent={16}
-            rowHeight={32}
-            onActivate={handleActivate}
-            onMove={handleMove}
-            openByDefault={true}
-            widthTerminator={width}
-            disableDrag={(node) => node.data?.type === 'main'}
-          >
-            {NodeRenderer}
-          </Tree>
-        )}>
+        <Tree
+          key={`tree-${bookId}-${treeData.length}`}
+          data={treeData}
+          width={width}
+          height={height}
+          indent={16}
+          rowHeight={32}
+          onActivate={handleActivate}
+          onMove={handleMove}
+          openByDefault={true}
+          widthTerminator={width}
+          disableDrag={(node) => node.data?.type === 'main' || node.data?.type === 'characters' || node.data?.type === 'character-role' || node.data?.type === 'world-category' || node.data?.type === 'worlds' || node.data?.type === 'locations' || node.data?.type === 'world-objects'}
+        >
+          {NodeRenderer}
+        </Tree>
+      )}>
 
-        
+
       </AutoSizer>
     </div>
   );
@@ -200,6 +300,52 @@ function NodeRenderer({ node, style, dragHandle, tree }) {
 function NodeIcon({ type, isOpen }) {
   if (type === 'main') {
     return <Book className="h-4 w-4 shrink-0 text-primary" />;
+  }
+
+  if (type === 'characters') {
+    return <Users className="h-4 w-4 shrink-0 text-purple-500" />;
+  }
+
+  if (type === 'character-role') {
+    return (
+      <Folder
+        className={cn(
+          "h-4 w-4 shrink-0 transition-colors",
+          isOpen ? "text-purple-500 fill-purple-500/20" : "text-purple-500/80"
+        )}
+      />
+    );
+  }
+
+  if (type === 'character') {
+    return <User className="h-4 w-4 shrink-0 text-muted-foreground" />;
+  }
+
+  if (type === 'world-category') {
+    return <Globe className="h-4 w-4 shrink-0 text-green-500" />;
+  }
+
+  if (type === 'worlds' || type === 'locations' || type === 'world-objects') {
+    return (
+      <Folder
+        className={cn(
+          "h-4 w-4 shrink-0 transition-colors",
+          isOpen ? "text-green-500 fill-green-500/20" : "text-green-500/80"
+        )}
+      />
+    );
+  }
+
+  if (type === 'world') {
+    return <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />;
+  }
+
+  if (type === 'location') {
+    return <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />;
+  }
+
+  if (type === 'object') {
+    return <Package className="h-4 w-4 shrink-0 text-muted-foreground" />;
   }
 
   if (type === 'chapter') {

@@ -1,7 +1,7 @@
 import { useRef, useImperativeHandle, forwardRef } from 'react';
 import { DockviewReact } from 'dockview-react';
 import 'dockview-react/dist/styles/dockview.css';
-import { Book, Folder, FileText, X } from 'lucide-react';
+import { Book, Folder, FileText, X, User, Globe, MapPin, Package } from 'lucide-react';
 
 const CustomTab = ({ api, params }) => {
   const getIcon = (type) => {
@@ -14,6 +14,14 @@ const CustomTab = ({ api, params }) => {
         return <Folder className="h-3 w-3 mr-1" />;
       case 'scene-editor':
         return <FileText className="h-3 w-3 mr-1" />;
+      case 'character-editor':
+        return <User className="h-3 w-3 mr-1" />;
+      case 'world-editor':
+        return <Globe className="h-3 w-3 mr-1" />;
+      case 'location-editor':
+        return <MapPin className="h-3 w-3 mr-1" />;
+      case 'object-editor':
+        return <Package className="h-3 w-3 mr-1" />;
       default:
         return null;
     }

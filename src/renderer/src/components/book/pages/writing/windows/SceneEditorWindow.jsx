@@ -1,6 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
+import { useEffect, useState } from 'react';
+import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor';
 import { useWritingStore } from '@/stores/writingStore';
 import { useDebouncedCallback } from '@/hooks/useDebounce.js';
 import { Button } from '@/components/ui/button';
@@ -8,47 +7,44 @@ import { Input } from '@/components/ui/input';
 import { FileText, Save, X } from 'lucide-react';
 
 function SceneEditorWindow({ sceneId, sceneName }) {
-  const { currentScene, fetchScene, updateScene } = useWritingStore();
+  const { updateScene } = useWritingStore();
+  const [scene, setScene] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState('');
   const [isSavingName, setIsSavingName] = useState(false);
 
-  const editor = useEditor({
-    extensions: [StarterKit],
-    content: currentScene?.content || '',
-    onUpdate: ({ editor }) => {
-      // Auto-save will be handled by debounced callback
-    },
-  });
 
   useEffect(() => {
-    if (sceneId) {
-      fetchScene(sceneId);
-    }
-  }, [sceneId, fetchScene]);
+    const fetchSceneData = async () => {
+      if (!sceneId) return;
 
-  useEffect(() => {
-    if (editor && currentScene && currentScene.id === sceneId) {
-      const currentContent = editor.getJSON();
-      const sceneContent = currentScene.content || { type: 'doc', content: [] };
-
-      if (JSON.stringify(currentContent) !== JSON.stringify(sceneContent)) {
-        editor.commands.setContent(sceneContent);
+      setIsLoading(true);
+      try {
+        // Use the bookAPI directly instead of the store
+        const res = await window.bookAPI.scenes.getById(sceneId);
+        if (res.success) {
+          setScene(res.data);
+          setEditName(res.data.name);
+        } else {
+          console.error('Failed to fetch scene:', res.error);
+        }
+      } catch (error) {
+        console.error('Failed to fetch scene:', error);
+      } finally {
+        setIsLoading(false);
       }
-    }
-  }, [editor, currentScene, sceneId]);
+    };
 
-  useEffect(() => {
-    if (currentScene && currentScene.id === sceneId) {
-      setEditName(currentScene.name);
-    }
-  }, [currentScene, sceneId]);
+    fetchSceneData();
+  }, [sceneId]);
+
 
   const debouncedSave = useDebouncedCallback(
     async (content) => {
       if (!sceneId) return;
-      
+
       setIsSaving(true);
       try {
         await updateScene(sceneId, { content });
@@ -61,28 +57,18 @@ function SceneEditorWindow({ sceneId, sceneName }) {
     1000
   );
 
-  useEffect(() => {
-    if (!editor) return;
+  const handleContentChange = (content) => {
+    debouncedSave(content);
+  };
 
-    const handleUpdate = () => {
-      const content = editor.getJSON();
-      debouncedSave(content);
-    };
-
-    editor.on('update', handleUpdate);
-
-    return () => {
-      editor.off('update', handleUpdate);
-    };
-  }, [editor, debouncedSave]);
 
   const handleStartNameEdit = () => {
     setIsEditingName(true);
-    setEditName(currentScene?.name || '');
+    setEditName(scene?.name || '');
   };
 
   const handleCancelNameEdit = () => {
-    setEditName(currentScene?.name || '');
+    setEditName(scene?.name || '');
     setIsEditingName(false);
   };
 
@@ -108,7 +94,7 @@ function SceneEditorWindow({ sceneId, sceneName }) {
     }
   };
 
-  if (!currentScene || currentScene.id !== sceneId) {
+  if (isLoading || !scene || scene.id !== sceneId) {
     return (
       <div className="h-full flex items-center justify-center">
         <p className="text-muted-foreground">Loading scene...</p>
@@ -154,7 +140,7 @@ function SceneEditorWindow({ sceneId, sceneName }) {
               onDoubleClick={handleStartNameEdit}
               title="Double-click to edit scene name"
             >
-              {sceneName || currentScene?.name || 'Scene Editor'}
+              {sceneName || scene?.name || 'Scene Editor'}
             </h3>
           )}
           {isSaving && !isEditingName && (
@@ -165,8 +151,11 @@ function SceneEditorWindow({ sceneId, sceneName }) {
           )}
         </div>
       </div>
-      <div className="flex-1 overflow-auto p-4">
-        <EditorContent editor={editor} className="prose prose-sm max-w-none dark:prose-invert" />
+      <div className="flex-1 overflow-auto">
+        <SimpleEditor
+          initialContent={scene?.content || { type: 'doc', content: [] }}
+          onContentChange={handleContentChange}
+        />
       </div>
     </div>
   );

@@ -42,6 +42,7 @@ Built with a focus on performance, maintainability, and a modern developer exper
 - **UI Framework:** [Tailwind CSS](https://tailwindcss.com/)
 - **Components:** [shadcn/ui](https://ui.shadcn.com/)
 - **Editor Engine:** [TipTap](https://tiptap.dev/)
+- **Dockview:** [Dockview](https://github.com/dockview/dockview)
 - **Database:** [SQLite](https://www.sqlite.org/)
 - **ORM:** [Drizzle ORM](https://orm.drizzle.team/)
 

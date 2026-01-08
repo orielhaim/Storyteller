@@ -4,12 +4,20 @@ import DockviewManager from './writing/DockviewManager';
 import ChaptersWindow from './writing/windows/ChaptersWindow';
 import ScenesWindow from './writing/windows/ScenesWindow';
 import SceneEditorWindow from './writing/windows/SceneEditorWindow';
+import WorldDetail from './world/WorldDetail';
+import LocationDetail from './world/LocationDetail';
+import ObjectDetail from './world/ObjectDetail';
+import CharacterProfile from './CharacterProfile';
 import { useWritingStore } from '@/stores/writingStore';
+import { useCharacterStore } from '@/stores/characterStore';
+import { useWorldStore } from '@/stores/worldStore';
 
 function BookWrite({ book }) {
   const dockviewRef = useRef(null);
   const [dockviewReady, setDockviewReady] = useState(false);
-  const { chapters, scenes, fetchChapters } = useWritingStore();
+  const { chapters, scenes } = useWritingStore();
+  const { characters } = useCharacterStore();
+  const { worlds, locations, objects } = useWorldStore();
 
   const handleNodeClick = useCallback((type, id, data) => {
     if (!dockviewRef.current) return;
@@ -37,8 +45,40 @@ function BookWrite({ book }) {
         sceneName: scene?.name,
         title: scene?.name || 'Scene Editor',
       });
+    } else if (type === 'character') {
+      const character = characters.find(c => c.id === id);
+      const panelId = `character-${id}`;
+      dockviewRef.current.addPanel(panelId, 'character-editor', {
+        characterId: id,
+        characterName: character ? `${character.firstName} ${character.lastName || ''}`.trim() : 'Character Profile',
+        title: character ? `${character.firstName} ${character.lastName || ''}`.trim() : 'Character Profile',
+      });
+    } else if (type === 'world') {
+      const world = worlds.find(w => w.id === id);
+      const panelId = `world-${id}`;
+      dockviewRef.current.addPanel(panelId, 'world-editor', {
+        worldId: id,
+        worldName: world?.name,
+        title: world?.name || 'World Detail',
+      });
+    } else if (type === 'location') {
+      const location = locations.find(l => l.id === id);
+      const panelId = `location-${id}`;
+      dockviewRef.current.addPanel(panelId, 'location-editor', {
+        locationId: id,
+        locationName: location?.name,
+        title: location?.name || 'Location Detail',
+      });
+    } else if (type === 'object') {
+      const object = objects.find(o => o.id === id);
+      const panelId = `object-${id}`;
+      dockviewRef.current.addPanel(panelId, 'object-editor', {
+        objectId: id,
+        objectName: object?.name,
+        title: object?.name || 'Object Detail',
+      });
     }
-  }, [book.id, chapters, scenes]);
+  }, [book.id, chapters, scenes, characters, worlds, locations, objects]);
 
   const handleOpenChapter = useCallback((chapter) => {
     if (!dockviewRef.current) return;
@@ -82,6 +122,34 @@ function BookWrite({ book }) {
         sceneName={props.params.sceneName}
       />
     ),
+    'character-editor': (props) => (
+      <CharacterProfile
+        characterId={props.params.characterId}
+        onBack={() => { }} // This will be handled by the dockview close mechanism
+        showBackButton={false}
+      />
+    ),
+    'world-editor': (props) => (
+      <WorldDetail
+        worldId={props.params.worldId}
+        onBack={() => { }} // This will be handled by the dockview close mechanism
+        showBackButton={false}
+      />
+    ),
+    'location-editor': (props) => (
+      <LocationDetail
+        locationId={props.params.locationId}
+        onBack={() => { }} // This will be handled by the dockview close mechanism
+        showBackButton={false}
+      />
+    ),
+    'object-editor': (props) => (
+      <ObjectDetail
+        objectId={props.params.objectId}
+        onBack={() => { }} // This will be handled by the dockview close mechanism
+        showBackButton={false}
+      />
+    ),
   }), [handleOpenChapter, handleOpenScene]);
 
   const handleDockviewReady = useCallback(() => {
@@ -115,9 +183,9 @@ function BookWrite({ book }) {
         <FileTree bookId={book.id} onNodeClick={handleNodeClick} />
       </div>
       <div className="flex-1">
-        <DockviewManager 
-          ref={dockviewRef} 
-          components={components} 
+        <DockviewManager
+          ref={dockviewRef}
+          components={components}
           onReady={handleDockviewReady}
           onPanelRemoved={handlePanelRemoved}
         />

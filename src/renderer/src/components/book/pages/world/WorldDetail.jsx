@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function WorldDetail({ worldId, onBack }) {
+export default function WorldDetail({ worldId, onBack, showBackButton = true }) {
   const { currentWorld, fetchWorld, updateWorld, deleteWorld } = useWorldStore();
 
   // Local state
@@ -92,13 +92,15 @@ export default function WorldDetail({ worldId, onBack }) {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] max-w-4xl mx-auto gap-4">
+    <div className="flex flex-col h-[calc(100vh-2rem)] max-w-4xl mx-auto gap-4 px-4">
       {/* Header */}
       <header className="flex items-center justify-between py-2 border-b shrink-0">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={onBack}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          {showBackButton && (
+            <Button variant="ghost" size="icon" onClick={onBack}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          )}
           <div>
             <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
               {formData.name || 'Unnamed World'}
