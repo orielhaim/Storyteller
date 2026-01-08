@@ -33,3 +33,18 @@ export const bookSeries = table("book_series", {
 }, (table) => [
   t.uniqueIndex("book_series_idx").on(table.bookId, table.seriesId),
 ]);
+
+export const characters = table("characters", {
+  id: t.int().primaryKey({ autoIncrement: true }),
+  bookId: t.int("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  firstName: t.text("first_name").notNull(),
+  lastName: t.text("last_name").notNull(),
+  role: t.text().default("supporting").notNull(), // protagonist, supporting, antagonist, marginal
+  avatar: t.text("avatar"),
+  description: t.text(), // one-liner description
+  attributes: t.text("attributes", { mode: "json" }).default({}), // JSON for custom fields and detailed info
+  groups: t.text("groups", { mode: "json" }).default([]), // array of group names
+  tags: t.text("tags", { mode: "json" }).default([]), // array of tags
+  createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
+  updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
+});

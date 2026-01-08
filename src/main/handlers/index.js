@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { bookHandlers, seriesHandlers, bookSeriesHandlers } from './bookHandler.js';
+import { bookHandlers, seriesHandlers, bookSeriesHandlers, characterHandlers } from './bookHandler.js';
 import { imageHandlers } from './imageHandler.js';
 
 export function registerIpcHandlers() {
@@ -25,6 +25,13 @@ export function registerIpcHandlers() {
   ipcMain.handle('bookSeries:removeBookFromSeries', bookSeriesHandlers.removeBookFromSeries);
   ipcMain.handle('bookSeries:updateBookPosition', bookSeriesHandlers.updateBookPosition);
   ipcMain.handle('bookSeries:reorderSeries', bookSeriesHandlers.reorderSeries);
+
+  // Character channels
+  ipcMain.handle('characters:getAllByBook', characterHandlers.getAllByBook);
+  ipcMain.handle('characters:getById', characterHandlers.getById);
+  ipcMain.handle('characters:create', characterHandlers.create);
+  ipcMain.handle('characters:update', characterHandlers.update);
+  ipcMain.handle('characters:delete', characterHandlers.delete);
 
   // Image channels
   ipcMain.handle('image:save', imageHandlers.saveImage);

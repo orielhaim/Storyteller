@@ -33,6 +33,15 @@ contextBridge.exposeInMainWorld('bookAPI', {
       ipcRenderer.invoke('bookSeries:reorderSeries', seriesId, bookIds),
   },
 
+  // Characters API
+  characters: {
+    getAllByBook: (bookId) => ipcRenderer.invoke('characters:getAllByBook', bookId),
+    getById: (id) => ipcRenderer.invoke('characters:getById', id),
+    create: (data) => ipcRenderer.invoke('characters:create', data),
+    update: (id, data) => ipcRenderer.invoke('characters:update', id, data),
+    delete: (id) => ipcRenderer.invoke('characters:delete', id),
+  },
+
   // Image API
   image: {
     save: (base64Data, filename) => ipcRenderer.invoke('image:save', base64Data, filename),
