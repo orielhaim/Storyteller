@@ -13,6 +13,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Empty,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription
+} from '@/components/ui/empty';
 
 const BookThumbnail = ({ book, isSelected, onToggle }) => {
   const [imageUrl, setImageUrl] = useState(null);
@@ -191,9 +197,20 @@ function AddBookToSeriesDialog({
 
               <ScrollArea className="flex-1 h-[400px] border rounded-md p-4 bg-muted/10">
                 {filteredBooks.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
-                    <p>{searchQuery ? 'No books match your search.' : 'No available books found.'}</p>
-                  </div>
+                  <Empty className="h-full">
+                    <EmptyMedia variant="icon">
+                      <Search className="h-8 w-8" />
+                    </EmptyMedia>
+                    <EmptyTitle>
+                      {searchQuery ? 'No matches found' : 'No books available'}
+                    </EmptyTitle>
+                    <EmptyDescription>
+                      {searchQuery
+                        ? 'Try adjusting your search terms or check your spelling.'
+                        : 'All your books are already in this series, or you haven\'t added any books yet.'
+                      }
+                    </EmptyDescription>
+                  </Empty>
                 ) : (
                   <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 gap-4">
                     {filteredBooks.map(b => (
@@ -207,10 +224,6 @@ function AddBookToSeriesDialog({
                   </div>
                 )}
               </ScrollArea>
-
-              <div className="text-xs text-muted-foreground text-right">
-                {selectedBookIds.length} book(s) selected
-              </div>
             </div>
           )}
         </div>

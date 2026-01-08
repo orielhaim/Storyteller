@@ -33,7 +33,7 @@ import useImageLoader from '@/hooks/useImageLoader';
 
 import { useBooksStore } from '@/stores/booksStore';
 
-const DraggableBook = ({ book, id }) => {
+const DraggableBook = ({ book, id, onSeriesUpdate }) => {
   const imageUrl = useImageLoader(book.image);
   return (
     <BookCard
@@ -42,6 +42,7 @@ const DraggableBook = ({ book, id }) => {
       imageUrl={imageUrl}
       seriesName={book.seriesName}
       draggable={true}
+      onSeriesUpdate={onSeriesUpdate}
     />
   );
 };
@@ -59,7 +60,7 @@ const DroppableSeries = ({ seriesItem, id, onClick, isDropTarget }) => {
   );
 };
 
-function BookGrid({ items, onSeriesClick, enableDragDrop = true }) {
+function BookGrid({ items, onSeriesClick, enableDragDrop = true, onSeriesUpdate }) {
   const [activeDragItem, setActiveDragItem] = useState(null);
   const [pendingDrop, setPendingDrop] = useState(null); // { book, series }
 
@@ -118,10 +119,7 @@ function BookGrid({ items, onSeriesClick, enableDragDrop = true }) {
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-        <div className="text-4xl mb-4 opacity-20">📚</div>
-        <p>Your library is empty.</p>
-      </div>
+      <></>
     );
   }
 
@@ -133,10 +131,11 @@ function BookGrid({ items, onSeriesClick, enableDragDrop = true }) {
           <SortableContext items={books.map(b => `book-${b.id}`)} strategy={rectSortingStrategy}>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {books.map((book) => (
-                <DraggableBook 
-                  key={`book-${book.id}`} 
-                  id={`book-${book.id}`} 
-                  book={book} 
+                <DraggableBook
+                  key={`book-${book.id}`}
+                  id={`book-${book.id}`}
+                  book={book}
+                  onSeriesUpdate={onSeriesUpdate}
                 />
               ))}
             </div>
@@ -155,6 +154,7 @@ function BookGrid({ items, onSeriesClick, enableDragDrop = true }) {
                 seriesItem={seriesItem}
                 onClick={onSeriesClick}
                 isDropTarget={activeDragItem?.type === 'book'}
+                onSeriesUpdate={onSeriesUpdate}
               />
             ))}
           </div>

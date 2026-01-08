@@ -9,6 +9,13 @@ import CreateBookDialog from '@/components/dialogs/CreateBookDialog';
 import CreateSeriesDialog from '@/components/dialogs/CreateSeriesDialog';
 import SeriesDialog from '@/components/dialogs/SeriesDialog';
 import { useBooksStore } from '@/stores/booksStore';
+import {
+  Empty,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent
+} from '@/components/ui/empty';
 
 function Home() {
   const [createBookOpen, setCreateBookOpen] = useState(false);
@@ -46,6 +53,12 @@ function Home() {
   const handleSeriesClick = (seriesItem) => {
     setSelectedSeries(seriesItem);
     setSeriesDialogOpen(true);
+  };
+
+  const handleSeriesUpdate = () => {
+    // Refresh data when series are updated
+    fetchBooks();
+    fetchSeries();
   };
   
   const booksList = Object.values(booksMap);
@@ -156,13 +169,50 @@ function Home() {
               items={processedItems}
               onSeriesClick={handleSeriesClick}
               enableDragDrop={filterType !== 'books'}
+              onSeriesUpdate={handleSeriesUpdate}
             />
           )}
           
           {!loading && processedItems.length === 0 && (
-            <div className="text-center py-20 text-muted-foreground">
-              <p>No items found.</p>
-            </div>
+            <Empty className="py-20">
+              <EmptyMedia variant="icon">
+                {filterType === 'books' ? (
+                  <Plus className="h-8 w-8" />
+                ) : filterType === 'series' ? (
+                  <FolderTree className="h-8 w-8" />
+                ) : (
+                  <Filter className="h-8 w-8" />
+                )}
+              </EmptyMedia>
+              <EmptyTitle>
+                {filterType === 'books' ? 'Your bookshelf is empty' :
+                 filterType === 'series' ? 'No series created yet' :
+                 'Your library awaits its first entry'}
+              </EmptyTitle>
+              <EmptyDescription>
+                {filterType === 'books' ? 'Start building your collection by adding your first book.' :
+                 filterType === 'series' ? 'Create series to organize and group your books thematically.' :
+                 'Add books and create series to bring your literary world to life.'}
+              </EmptyDescription>
+              <EmptyContent className="flex gap-2">
+                {filterType !== 'series' && (
+                  <Button onClick={() => setCreateBookOpen(true)} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Book
+                  </Button>
+                )}
+                {filterType !== 'books' && (
+                  <Button
+                    onClick={() => setCreateSeriesOpen(true)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <FolderTree className="h-4 w-4 mr-2" />
+                    Create Series
+                  </Button>
+                )}
+              </EmptyContent>
+            </Empty>
           )}
         </main>
 
@@ -173,6 +223,7 @@ function Home() {
             open={seriesDialogOpen}
             onOpenChange={setSeriesDialogOpen}
             series={selectedSeries}
+            onSeriesUpdate={handleSeriesUpdate}
           />
         )}
       </div>

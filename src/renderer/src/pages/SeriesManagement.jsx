@@ -18,6 +18,13 @@ import {
 
 import ImageUpload from '@/components/ImageUpload';
 import BookList from '@/components/BookList';
+import {
+  Empty,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent
+} from '@/components/ui/empty';
 import AddBookToSeriesDialog from '@/components/dialogs/AddBookToSeriesDialog';
 import ConfirmBookRemovalDialog from '@/components/dialogs/ConfirmBookRemovalDialog';
 import ConfirmSeriesDeletionDialog from '@/components/dialogs/ConfirmSeriesDeletionDialog';
@@ -263,12 +270,21 @@ function SeriesManagement() {
           <Separator />
 
           {seriesBooks.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed rounded-lg bg-muted/30">
-              <p className="text-muted-foreground mb-4">This series is empty.</p>
-              <Button variant="outline" onClick={() => setAddBookOpen(true)}>
-                Add your first book
-              </Button>
-            </div>
+            <Empty className="py-12 border-2 border-dashed rounded-lg bg-muted/30">
+              <EmptyMedia variant="icon">
+                <Plus className="h-8 w-8" />
+              </EmptyMedia>
+              <EmptyTitle>This series awaits its first chapter</EmptyTitle>
+              <EmptyDescription>
+                Start building your series by adding books. Drag and drop books from your library or use the button below.
+              </EmptyDescription>
+              <EmptyContent>
+                <Button variant="outline" onClick={() => setAddBookOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add your first book
+                </Button>
+              </EmptyContent>
+            </Empty>
           ) : (
             <BookList
               books={seriesBooks}
