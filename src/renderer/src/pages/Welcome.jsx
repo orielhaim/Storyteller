@@ -1,4 +1,4 @@
-import { useTransition } from 'react';
+import { useTransition, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, FolderTree, PenTool, Layout, Loader2 } from 'lucide-react';
@@ -59,6 +59,17 @@ function FeatureCard({ feature }) {
 
 export default function Welcome() {
   const [isPending, startTransition] = useTransition();
+  const [version, setVersion] = useState('');
+
+  useEffect(() => {
+    const fetchVersion = async () => {
+      const version = await window.generalAPI.getVersion();
+      setVersion(version);
+      console.log('App Version:', version); // ידפיס למשל "1.0.0"
+    };
+
+    fetchVersion();
+  }, []);
 
   const handleGetStarted = () => {
     startTransition(() => {
@@ -108,7 +119,7 @@ export default function Welcome() {
             )}
           </Button>
           <p className="text-sm text-slate-400 dark:text-slate-600 font-medium">
-            v{window.generalAPI?.getVersion()} • GPLv3
+            v{version} • GPLv3
           </p>
         </div>
       </div>

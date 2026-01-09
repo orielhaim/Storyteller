@@ -3,6 +3,8 @@ productName: Storyteller
 directories:
   buildResources: build
 files:
+  - "out/**/*"
+  - "drizzle/**/*"
   - '!**/.vscode/*'
   - '!src/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
@@ -10,6 +12,8 @@ files:
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
 asarUnpack:
   - resources/**
+  - node_modules/better-sqlite3/**
+  - drizzle/**
 win:
   executableName: Storyteller
 nsis:
@@ -36,7 +40,7 @@ linux:
   category: Utility
 appImage:
   artifactName: ${name}-${version}.${ext}
-npmRebuild: false
+npmRebuild: true
 publish:
   provider: generic
   url: https://orielhaim.com/Storyteller/auto-updates

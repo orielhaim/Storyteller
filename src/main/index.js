@@ -1,17 +1,26 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import log from 'electron-log/main';
+log.initialize();
+Object.assign(console, log.functions);
+process.on('uncaughtException', (error) => {
+  log.error('CRITICAL ERROR:', error);
+});
+process.on('unhandledRejection', (reason) => {
+  log.error('Unhandled Rejection:', reason);
+});
 import { registerIpcHandlers } from './handlers/index.js';
 import { runMigrations } from '../db/migrate.js';
 
 function createWindow() {
-  // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? {} : {}),
+    icon: join(__dirname, '../../resources/icon.png'), 
+    ...(process.platform === 'linux' ? { icon: join(__dirname, '../../resources/icon.png') } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
@@ -35,6 +44,7 @@ function createWindow() {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+  mainWindow.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished
@@ -48,7 +58,7 @@ app.whenReady().then(async () => {
     // You might want to show an error dialog or exit the app
   }
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.orielhaim.storyteller')
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -58,6 +68,9 @@ app.whenReady().then(async () => {
   })
 
   // Register IPC handlers
+  ipcMain.handle('get-app-version', () => {
+    return app.getVersion();
+  });
   registerIpcHandlers();
 
   createWindow()
