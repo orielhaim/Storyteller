@@ -42,5 +42,7 @@ appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: true
 publish:
-  provider: generic
-  url: https://orielhaim.com/Storyteller/auto-updates
+  provider: github
+  owner: orielhaim
+  repo: Storyteller
+  releaseType: draft

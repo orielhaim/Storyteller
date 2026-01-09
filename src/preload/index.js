@@ -1,4 +1,5 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
+import "./updaterAPI.js"
 import "./bookAPI.js"
 
 contextBridge.exposeInMainWorld('generalAPI', {

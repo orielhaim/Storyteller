@@ -1,7 +1,9 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { autoUpdater } from 'electron-updater';
 import log from 'electron-log/main';
+
 log.initialize();
 Object.assign(console, log.functions);
 process.on('uncaughtException', (error) => {
@@ -10,8 +12,58 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (reason) => {
   log.error('Unhandled Rejection:', reason);
 });
+
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = 'info';
+
+autoUpdater.autoDownload = false;
+autoUpdater.forceDevUpdateConfig = !app.isPackaged;
+
 import { registerIpcHandlers } from './handlers/index.js';
 import { runMigrations } from '../db/migrate.js';
+
+// IPC handlers for update functionality
+ipcMain.handle('updater:check-for-updates', () => {
+  autoUpdater.checkForUpdates();
+});
+
+ipcMain.handle('updater:start-download', () => {
+  autoUpdater.downloadUpdate();
+});
+
+ipcMain.handle('updater:install-and-restart', () => {
+  autoUpdater.quitAndInstall(false, true);
+});
+
+// Update event handlers that send events to renderer
+autoUpdater.on('update-available', (info) => {
+  console.log('Update available:', info);
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send('updater:update-available', info);
+  });
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  console.log('Update downloaded');
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send('updater:update-downloaded', info);
+  });
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+  const log_message = `Download speed: ${progressObj.bytesPerSecond} - Downloaded ${progressObj.percent}%`;
+  console.log(log_message);
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send('updater:download-progress', progressObj);
+  });
+});
+
+autoUpdater.on('error', (err) => {
+  console.error('Error in auto-updater:', err);
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send('updater:error', err);
+  });
+});
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -19,7 +71,7 @@ function createWindow() {
     height: 670,
     show: false,
     autoHideMenuBar: true,
-    icon: join(__dirname, '../../resources/icon.png'), 
+    icon: join(__dirname, '../../resources/icon.png'),
     ...(process.platform === 'linux' ? { icon: join(__dirname, '../../resources/icon.png') } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

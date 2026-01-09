@@ -8,3 +8,4 @@ old
 *.db
 pnpm-lock.yaml
 drizzle
+testServer.js
