@@ -110,7 +110,7 @@ const DockviewManager = forwardRef(({ components = {}, onReady: onReadyCallback,
     <DockviewReact
       onReady={handleReady}
       components={components}
-      className="dockview-theme-replit w-full h-full"
+      className="dockview-theme-replit w-full h-full p-1!"
       tabComponents={{
         customTab: CustomTab,
       }}

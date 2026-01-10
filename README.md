@@ -28,23 +28,21 @@ Built for the modern web era, it prioritizes user experience (UI/UX), speed, and
 ### 🌍 World Building
 - **Character Database:** Detailed profiles for your cast. Track appearance, backstory, and relationships.
 - **Locations & Items:** Manage the settings and important objects of your story.
-- **Timeline:** (Coming Soon) Visual timeline to track events across your story's chronology.
+- **Timeline:** Visual timeline to track events across your story's chronology.
 
 ---
 
-## 🛠️ Tech Stack
+### Dashboard
+![Dashboard](docs/screenshots/Dashbord.png)
+*Main dashboard showing Books and Series with easy organization.*
 
-Built with a focus on performance, maintainability, and a modern developer experience:
+### Book Page
+![Book Page](docs/screenshots/book_page.png)
+*Organized pages for every aspect of your book. from characters to world building to the main writing workspace.*
 
-- **Core:** [Electron](https://www.electronjs.org/) (Desktop runtime)
-- **Frontend:** [React](https://react.dev/)
-- **State Management:** [Zustand](https://github.com/pmndrs/zustand)
-- **UI Framework:** [Tailwind CSS](https://tailwindcss.com/)
-- **Components:** [shadcn/ui](https://ui.shadcn.com/)
-- **Editor Engine:** [TipTap](https://tiptap.dev/)
-- **Dockview:** [Dockview](https://github.com/dockview/dockview)
-- **Database:** [SQLite](https://www.sqlite.org/)
-- **ORM:** [Drizzle ORM](https://orm.drizzle.team/)
+### Book Workspace
+![Book Workspace](docs/screenshots/book_workspace.png)
+*Main writing workspace with Multiple Tabs with every content you need.*
 
 ---
 

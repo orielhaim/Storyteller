@@ -9,3 +9,4 @@ old
 pnpm-lock.yaml
 drizzle
 testServer.js
+.env
