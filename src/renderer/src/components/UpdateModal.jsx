@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Download } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 const UpdateModal = ({ isOpen, onClose, updateInfo, currentVersion, onInstallNow }) => {
   const [timeAgo, setTimeAgo] = useState('');
@@ -57,7 +58,7 @@ const UpdateModal = ({ isOpen, onClose, updateInfo, currentVersion, onInstallNow
               <div
                 className="text-sm text-muted-foreground prose prose-sm max-w-none dark:prose-invert"
                 dir="auto"
-                dangerouslySetInnerHTML={{ __html: updateInfo.releaseNotes }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(updateInfo.releaseNotes) }}
               />
             </div>
           )}

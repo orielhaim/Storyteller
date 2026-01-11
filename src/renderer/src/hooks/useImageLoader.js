@@ -7,7 +7,7 @@ function useImageLoader(imageUuid) {
     if (!imageUuid || typeof imageUuid !== 'string') return;
 
     let isMounted = true;
-    window.bookAPI.image.getData(imageUuid)
+    window.imageAPI.getData(imageUuid)
       .then(result => {
         if (isMounted && result.success && result.data) {
           setSrc(result.data);

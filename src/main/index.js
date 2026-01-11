@@ -3,7 +3,9 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log/main';
+import dotenv from 'dotenv';
 
+dotenv.config();
 log.initialize();
 Object.assign(console, log.functions);
 process.on('uncaughtException', (error) => {
@@ -17,12 +19,11 @@ autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
 
 autoUpdater.autoDownload = false;
-autoUpdater.forceDevUpdateConfig = !app.isPackaged;
+autoUpdater.forceDevUpdateConfig = (is.dev && process.env['UPDATER_TEST']);
 
 import { registerIpcHandlers } from './handlers/index.js';
 import { runMigrations } from '../db/migrate.js';
 
-// IPC handlers for update functionality
 ipcMain.handle('updater:check-for-updates', () => {
   autoUpdater.checkForUpdates();
 });
@@ -35,7 +36,6 @@ ipcMain.handle('updater:install-and-restart', () => {
   autoUpdater.quitAndInstall(false, true);
 });
 
-// Update event handlers that send events to renderer
 autoUpdater.on('update-available', (info) => {
   console.log('Update available:', info);
   BrowserWindow.getAllWindows().forEach(window => {
@@ -55,6 +55,12 @@ autoUpdater.on('download-progress', (progressObj) => {
   console.log(log_message);
   BrowserWindow.getAllWindows().forEach(window => {
     window.webContents.send('updater:download-progress', progressObj);
+  });
+});
+
+autoUpdater.on('update-not-available', (info) => {
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send('updater:update-not-available', info);
   });
 });
 
@@ -127,20 +133,12 @@ app.whenReady().then(async () => {
   createWindow()
 
   app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.

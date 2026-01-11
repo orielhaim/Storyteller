@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from 'react';
 import { Tree } from 'react-arborist';
-import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { useWritingStore } from '@/stores/writingStore';
 import { useCharacterStore } from '@/stores/characterStore';
 import { useWorldStore } from '@/stores/worldStore';
@@ -220,27 +219,19 @@ export default function FileTree({ bookId, onNodeClick }) {
   if (!bookId) return null;
 
   return (
-    <div className="w-full bg-sidebar border-r border-border">
-      <AutoSizer renderProp={({ width, height }) => (
-        <Tree
-          key={`tree-${bookId}-${treeData.length}`}
-          data={treeData}
-          width={width}
-          height={height}
-          indent={16}
-          rowHeight={32}
-          onActivate={handleActivate}
-          onMove={handleMove}
-          openByDefault={true}
-          widthTerminator={width}
-          disableDrag={(node) => node.data?.type === 'main' || node.data?.type === 'characters' || node.data?.type === 'character-role' || node.data?.type === 'world-category' || node.data?.type === 'worlds' || node.data?.type === 'locations' || node.data?.type === 'world-objects'}
-        >
-          {NodeRenderer}
-        </Tree>
-      )}>
-
-
-      </AutoSizer>
+    <div className="w-full bg-sidebar border-r border-border h-full">
+      <Tree
+        key={`tree-${bookId}-${treeData.length}`}
+        data={treeData}
+        indent={16}
+        rowHeight={32}
+        onActivate={handleActivate}
+        onMove={handleMove}
+        openByDefault={true}
+        disableDrag={(node) => node.data?.type === 'main' || node.data?.type === 'characters' || node.data?.type === 'character-role' || node.data?.type === 'world-category' || node.data?.type === 'worlds' || node.data?.type === 'locations' || node.data?.type === 'world-objects'}
+      >
+        {NodeRenderer}
+      </Tree>
     </div>
   );
 }

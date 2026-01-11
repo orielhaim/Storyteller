@@ -19,18 +19,10 @@ import {
   EmptyTitle,
   EmptyDescription
 } from '@/components/ui/empty';
+import useImageLoader from '@/hooks/useImageLoader';
 
 const BookThumbnail = ({ book, isSelected, onToggle }) => {
-  const [imageUrl, setImageUrl] = useState(null);
-
-  useEffect(() => {
-    if (!book.image) return;
-    let mounted = true;
-    window.bookAPI.image.getData(book.image).then(res => {
-      if (mounted && res.success) setImageUrl(res.data);
-    });
-    return () => { mounted = false; };
-  }, [book.image]);
+  const imageUrl = useImageLoader(book.image);
 
   return (
     <div

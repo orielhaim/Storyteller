@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Upload, X, Image as ImageIcon, Loader2, Trash2 } from 'lucide-react';
+import { Upload, Image as ImageIcon, Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 
@@ -36,7 +36,7 @@ function ImageUpload({
       if (!preview) setIsLoading(true);
       
       try {
-        const result = await window.bookAPI.image.getData(value);
+        const result = await window.imageAPI.getData(value);
         if (isMounted) {
           if (result.success && result.data) {
             setPreview(result.data);
@@ -73,7 +73,7 @@ function ImageUpload({
 
     try {
       const base64Data = await fileToBase64(file);
-      const result = await window.bookAPI.image.save(base64Data, file.name);
+      const result = await window.imageAPI.save(base64Data, file.name);
 
       if (result.success) {
         onChange(result.data.uuid);
@@ -120,7 +120,7 @@ function ImageUpload({
     setPreview(null);
 
     try {
-      await window.bookAPI.image.delete(previousValue);
+      await window.imageAPI.delete(previousValue);
     } catch (error) {
       console.error('Delete failed:', error);
       toast.error('Failed to delete image');

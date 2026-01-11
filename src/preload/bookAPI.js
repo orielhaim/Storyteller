@@ -90,12 +90,5 @@ contextBridge.exposeInMainWorld('bookAPI', {
     delete: (id) => ipcRenderer.invoke('scenes:delete', id),
     reorder: (chapterId, sceneIds) => ipcRenderer.invoke('scenes:reorder', chapterId, sceneIds),
     moveToChapter: (sceneId, chapterId) => ipcRenderer.invoke('scenes:moveToChapter', sceneId, chapterId),
-  },
-
-  // Image API
-  image: {
-    save: (base64Data, filename) => ipcRenderer.invoke('image:save', base64Data, filename),
-    getData: (uuid) => ipcRenderer.invoke('image:getData', uuid),
-    delete: (uuid) => ipcRenderer.invoke('image:delete', uuid),
-  },
+  }
 });

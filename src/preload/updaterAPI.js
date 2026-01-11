@@ -8,5 +8,6 @@ contextBridge.exposeInMainWorld('updaterAPI', {
   onUpdateDownloaded: (callback) => ipcRenderer.on('updater:update-downloaded', callback),
   onDownloadProgress: (callback) => ipcRenderer.on('updater:download-progress', callback),
   onUpdateError: (callback) => ipcRenderer.on('updater:error', callback),
+  onUpdateNotAvailable: (callback) => ipcRenderer.on('updater:update-not-available', callback),
   removeAllListeners: (event) => ipcRenderer.removeAllListeners(event),
 })

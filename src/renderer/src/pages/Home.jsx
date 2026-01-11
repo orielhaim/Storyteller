@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Plus, FolderTree, Filter } from 'lucide-react';
+import { Plus, FolderTree, Filter, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import BookGrid from '@/components/BookGrid';
 import CreateBookDialog from '@/components/dialogs/CreateBookDialog';
 import CreateSeriesDialog from '@/components/dialogs/CreateSeriesDialog';
@@ -18,22 +18,23 @@ import {
 } from '@/components/ui/empty';
 
 function Home() {
+  const navigate = useNavigate();
   const [createBookOpen, setCreateBookOpen] = useState(false);
   const [createSeriesOpen, setCreateSeriesOpen] = useState(false);
   const [seriesDialogOpen, setSeriesDialogOpen] = useState(false);
   const [selectedSeries, setSelectedSeries] = useState(null);
 
-  const [filterType, setFilterType] = useState('all'); 
+  const [filterType, setFilterType] = useState('all');
   const [showBooksInSeries, setShowBooksInSeries] = useState(false);
 
-  const { 
+  const {
     books: booksMap,
     series: seriesMap,
     seriesLayout,
-    loading, 
-    fetchBooks, 
-    fetchSeries, 
-    fetchSeriesBooks 
+    loading,
+    fetchBooks,
+    fetchSeries,
+    fetchSeriesBooks
   } = useBooksStore();
 
   useEffect(() => {
@@ -60,12 +61,12 @@ function Home() {
     fetchBooks();
     fetchSeries();
   };
-  
+
   const booksList = Object.values(booksMap);
   const seriesList = Object.values(seriesMap);
 
   const bookToSeriesMap = new Map();
-  
+
   Object.entries(seriesLayout).forEach(([sId, bookIds]) => {
     const sName = seriesMap[sId]?.name;
     if (sName && Array.isArray(bookIds)) {
@@ -92,10 +93,10 @@ function Home() {
         return cleanSeries;
       case 'all':
       default:
-        const filteredBooks = showBooksInSeries 
-          ? cleanBooks 
+        const filteredBooks = showBooksInSeries
+          ? cleanBooks
           : cleanBooks.filter(b => !b.isInSeries);
-          
+
         return [...filteredBooks, ...cleanSeries];
     }
   })();
@@ -103,7 +104,7 @@ function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto p-6 space-y-8">
-        
+
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">My Library</h1>
@@ -118,10 +119,11 @@ function Home() {
               <Plus className="mr-2 h-4 w-4" />
               New Book
             </Button>
+            <Button onClick={() => navigate('/settings')} variant="ghost" size="icon" className="cursor-pointer">
+              <Settings className="h-6 w-6" />
+            </Button>
           </div>
         </header>
-
-        <Separator />
 
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-card p-2 rounded-lg border shadow-sm">
           <div className="flex items-center gap-4 px-2">
@@ -146,7 +148,7 @@ function Home() {
 
           {filterType === 'all' && (
             <div className="flex items-center gap-2 px-2">
-              <Switch 
+              <Switch
                 id="show-series-books"
                 checked={showBooksInSeries}
                 onCheckedChange={setShowBooksInSeries}
@@ -161,8 +163,8 @@ function Home() {
         <main>
           {loading && processedItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 space-y-4 text-muted-foreground animate-pulse">
-               <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-               <p>Loading your library...</p>
+              <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              <p>Loading your library...</p>
             </div>
           ) : (
             <BookGrid
@@ -172,7 +174,7 @@ function Home() {
               onSeriesUpdate={handleSeriesUpdate}
             />
           )}
-          
+
           {!loading && processedItems.length === 0 && (
             <Empty className="py-20">
               <EmptyMedia variant="icon">
@@ -186,13 +188,13 @@ function Home() {
               </EmptyMedia>
               <EmptyTitle>
                 {filterType === 'books' ? 'Your bookshelf is empty' :
-                 filterType === 'series' ? 'No series created yet' :
-                 'Your library awaits its first entry'}
+                  filterType === 'series' ? 'No series created yet' :
+                    'Your library awaits its first entry'}
               </EmptyTitle>
               <EmptyDescription>
                 {filterType === 'books' ? 'Start building your collection by adding your first book.' :
-                 filterType === 'series' ? 'Create series to organize and group your books thematically.' :
-                 'Add books and create series to bring your literary world to life.'}
+                  filterType === 'series' ? 'Create series to organize and group your books thematically.' :
+                    'Add books and create series to bring your literary world to life.'}
               </EmptyDescription>
               <EmptyContent className="flex gap-2">
                 {filterType !== 'series' && (

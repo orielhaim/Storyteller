@@ -41,6 +41,7 @@ We are building this project in phases. Here is our detailed development plan:
 - [X] **Auto Updates**: Automatically check for updates and installer (using github release)
 
 ### Settings & Preferences
+- [X] **Updates**: Detailed update information and release notes
 - [ ] **Dark/Light Mode Toggle**: System preference detection
 - [ ] **Font and Text Customization**: Choose from web fonts and system fonts
 - [ ] **Global Settings**: Application-wide preferences

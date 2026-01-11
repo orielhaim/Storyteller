@@ -11,6 +11,7 @@ import CharacterProfile from './CharacterProfile';
 import { useWritingStore } from '@/stores/writingStore';
 import { useCharacterStore } from '@/stores/characterStore';
 import { useWorldStore } from '@/stores/worldStore';
+import { Group as ResizablePanelGroup, Panel as ResizablePanel } from 'react-resizable-panels';
 
 function BookWrite({ book }) {
   const dockviewRef = useRef(null);
@@ -178,21 +179,19 @@ function BookWrite({ book }) {
   }, [book.id]);
 
   return (
-    <div className="flex h-[calc(100vh-4.5rem)]">
-      <div className="w-64 shrink-0">
+    <ResizablePanelGroup direction="horizontal" style={{ height: '' }} className="h-[calc(100vh-4.5rem)]">
+      <ResizablePanel minSize={150} maxSize={300} defaultSize={250} collapsible>
         <FileTree bookId={book.id} onNodeClick={handleNodeClick} />
-      </div>
-      <div className="flex-1 min-w-0 overflow-hidden h-full">
+        </ResizablePanel>
+      <ResizablePanel className="overflow-hidden">
         <DockviewManager
-          ref={dockviewRef}
-          components={components}
-          onReady={handleDockviewReady}
-          onPanelRemoved={handlePanelRemoved}
-        />
-      </div>
-    </div>
+        ref={dockviewRef}
+        components={components}
+        onReady={handleDockviewReady}
+        onPanelRemoved={handlePanelRemoved}
+      /></ResizablePanel>
+    </ResizablePanelGroup>
   );
-
 }
 
 export default BookWrite;
