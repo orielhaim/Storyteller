@@ -2,16 +2,34 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Wand2 } from 'lucide-react';
 
 const fields = [
   { key: 'age', label: 'Age', type: 'text', placeholder: '25', colSpan: 1 },
   { key: 'occupation', label: 'Occupation', type: 'text', placeholder: 'Warrior', colSpan: 1 },
   { key: 'birthDate', label: 'Birth Date', type: 'date', colSpan: 1 },
+  { key: 'deathDate', label: 'Death Date', type: 'date', colSpan: 1 },
   { key: 'residence', label: 'Residence', type: 'text', placeholder: 'City name', colSpan: 1 },
 ];
 
 const FormField = ({ config, value, onChange }) => {
+  if (config.type === 'date') {
+    return (
+      <div className={`space-y-2 ${config.colSpan === 2 ? 'col-span-2' : 'col-span-1'}`}>
+        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          {config.label}
+        </Label>
+        <DatePicker
+          value={value}
+          onChange={(dateValue) => onChange(config.key, dateValue)}
+          placeholder={config.placeholder}
+          className="bg-card/50 focus:bg-background transition-colors"
+        />
+      </div>
+    );
+  }
+
   const Component = config.type === 'textarea' ? Textarea : Input;
 
   return (

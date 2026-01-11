@@ -7,6 +7,7 @@ import BookWrite from '@/components/book/pages/BookWrite';
 import BookCharacters from '@/components/book/pages/BookCharacters';
 import BookWorld from '@/components/book/pages/BookWorld';
 import BookSettings from '@/components/book/pages/BookSettings';
+import BookTimeline from '@/components/book/pages/BookTimeline';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
@@ -94,6 +95,8 @@ function Book() {
         return <BookCharacters book={currentBook} />;
       case 'world':
         return <BookWorld book={currentBook} />;
+      case 'timeline':
+        return <BookTimeline book={currentBook} />;
       case 'settings':
         return <BookSettings book={currentBook} />;
       default:
