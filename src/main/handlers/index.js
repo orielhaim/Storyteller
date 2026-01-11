@@ -36,6 +36,10 @@ export function registerIpcHandlers() {
   ipcMain.handle('characters:create', characterHandlers.create);
   ipcMain.handle('characters:update', characterHandlers.update);
   ipcMain.handle('characters:delete', characterHandlers.delete);
+  ipcMain.handle('characters:getRelationships', characterHandlers.getRelationships);
+  ipcMain.handle('characters:addRelationship', characterHandlers.addRelationship);
+  ipcMain.handle('characters:updateRelationship', characterHandlers.updateRelationship);
+  ipcMain.handle('characters:removeRelationship', characterHandlers.removeRelationship);
 
   // World channels
   ipcMain.handle('worlds:getAllByBook', worldHandlers.getAllByBook);

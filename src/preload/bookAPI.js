@@ -41,6 +41,10 @@ contextBridge.exposeInMainWorld('bookAPI', {
     create: (data) => ipcRenderer.invoke('characters:create', data),
     update: (id, data) => ipcRenderer.invoke('characters:update', id, data),
     delete: (id) => ipcRenderer.invoke('characters:delete', id),
+    getRelationships: (characterId) => ipcRenderer.invoke('characters:getRelationships', characterId),
+    addRelationship: (data) => ipcRenderer.invoke('characters:addRelationship', data),
+    updateRelationship: (id, data) => ipcRenderer.invoke('characters:updateRelationship', id, data),
+    removeRelationship: (id) => ipcRenderer.invoke('characters:removeRelationship', id),
   },
 
   // Worlds API

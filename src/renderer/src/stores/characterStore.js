@@ -3,20 +3,15 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
 export const useCharacterStore = create(immer((set, get) => ({
-  // Current book characters
   characters: [],
   currentCharacter: null,
+  relationships: [],
   loading: false,
   error: null,
 
-  // Cache for characters by book
   characterCache: {}, // Record<bookId, Character[]>
 
-  // --- Actions ---
-
-  // Fetch all characters for a book (with caching)
   fetchCharacters: async (bookId) => {
-    // Check cache first
     const cachedCharacters = get().characterCache[bookId];
     if (cachedCharacters) {
       set(state => { state.characters = cachedCharacters; });
@@ -49,7 +44,6 @@ export const useCharacterStore = create(immer((set, get) => ({
     }
   },
 
-  // Fetch a specific character by ID
   fetchCharacter: async (id) => {
     set(state => {
       state.loading = true;
@@ -60,8 +54,11 @@ export const useCharacterStore = create(immer((set, get) => ({
       const res = await bookAPI.characters.getById(id);
       if (!res.success) throw new Error(res.error);
 
+      const relRes = await bookAPI.characters.getRelationships(id);
+      
       set(state => {
         state.currentCharacter = res.data;
+        state.relationships = relRes.success ? relRes.data : [];
         state.loading = false;
       });
 
@@ -76,7 +73,64 @@ export const useCharacterStore = create(immer((set, get) => ({
     }
   },
 
-  // Create a new character
+  fetchRelationships: async (characterId) => {
+    try {
+      const res = await bookAPI.characters.getRelationships(characterId);
+      if (!res.success) throw new Error(res.error);
+
+      set(state => {
+        state.relationships = res.data;
+      });
+
+      return res.data;
+    } catch (e) {
+      console.error('Failed to fetch relationships:', e);
+      throw e;
+    }
+  },
+
+  addRelationship: async (data) => {
+    try {
+      const res = await bookAPI.characters.addRelationship(data);
+      if (!res.success) throw new Error(res.error);
+
+      await get().fetchRelationships(data.characterId);
+      
+      return res.data;
+    } catch (e) {
+      console.error('Failed to add relationship:', e);
+      throw e;
+    }
+  },
+
+  updateRelationship: async (id, characterId, data) => {
+    try {
+      const res = await bookAPI.characters.updateRelationship(id, data);
+      if (!res.success) throw new Error(res.error);
+
+      await get().fetchRelationships(characterId);
+      
+      return res.data;
+    } catch (e) {
+      console.error('Failed to update relationship:', e);
+      throw e;
+    }
+  },
+
+  removeRelationship: async (id, characterId) => {
+    try {
+      const res = await bookAPI.characters.removeRelationship(id);
+      if (!res.success) throw new Error(res.error);
+
+      await get().fetchRelationships(characterId);
+      
+      return res;
+    } catch (e) {
+      console.error('Failed to remove relationship:', e);
+      throw e;
+    }
+  },
+
   createCharacter: async (data) => {
     set(state => { state.loading = true; state.error = null; });
 
@@ -88,7 +142,6 @@ export const useCharacterStore = create(immer((set, get) => ({
 
       set(state => {
         state.characters.push(newCharacter);
-        // Invalidate cache for this book
         delete state.characterCache[data.bookId];
         state.loading = false;
       });
@@ -104,7 +157,6 @@ export const useCharacterStore = create(immer((set, get) => ({
     }
   },
 
-  // Update a character
   updateCharacter: async (id, data) => {
     set(state => { state.loading = true; state.error = null; });
 
@@ -115,18 +167,15 @@ export const useCharacterStore = create(immer((set, get) => ({
       const updatedCharacter = res.data;
 
       set(state => {
-        // Update in characters array
         const index = state.characters.findIndex(char => char.id === id);
         if (index !== -1) {
           state.characters[index] = updatedCharacter;
         }
 
-        // Update current character if it's the one being updated
         if (state.currentCharacter?.id === id) {
           state.currentCharacter = updatedCharacter;
         }
 
-        // Invalidate cache for this character's book
         if (updatedCharacter.bookId) {
           delete state.characterCache[updatedCharacter.bookId];
         }
@@ -145,7 +194,6 @@ export const useCharacterStore = create(immer((set, get) => ({
     }
   },
 
-  // Delete a character
   deleteCharacter: async (id) => {
     set(state => { state.loading = true; state.error = null; });
 
@@ -154,15 +202,12 @@ export const useCharacterStore = create(immer((set, get) => ({
       if (!res.success) throw new Error(res.error);
 
       set(state => {
-        // Remove from characters array
         state.characters = state.characters.filter(char => char.id !== id);
 
-        // Clear current character if it's the one being deleted
         if (state.currentCharacter?.id === id) {
           state.currentCharacter = null;
         }
 
-        // Invalidate cache for all books (since we don't know which book this character belonged to)
         state.characterCache = {};
 
         state.loading = false;
@@ -179,18 +224,15 @@ export const useCharacterStore = create(immer((set, get) => ({
     }
   },
 
-  // Set current character (for viewing/editing)
   setCurrentCharacter: (character) => set(state => {
     state.currentCharacter = character;
   }),
 
-  // Clear current character
   clearCurrentCharacter: () => set(state => {
     state.currentCharacter = null;
     state.error = null;
   }),
 
-  // Clear characters for a book
   clearCharacters: (bookId) => set(state => {
     state.characters = [];
     if (bookId) {
@@ -199,7 +241,6 @@ export const useCharacterStore = create(immer((set, get) => ({
     state.error = null;
   }),
 
-  // Invalidate cache for a specific book
   invalidateCharacterCache: (bookId) => set(state => {
     delete state.characterCache[bookId];
   }),

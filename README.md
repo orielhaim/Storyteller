@@ -54,7 +54,9 @@ For a detailed breakdown of our development phases and upcoming features, see ou
 
 ## 🚀 Getting Started
 
-To run the project locally for development:
+Just download the latest release from the [Releases Page](https://github.com/orielhaim/storyteller/releases) and run the installer.
+
+#### To run the project locally for development:
 
 1.  **Clone the repo:**
     ```bash

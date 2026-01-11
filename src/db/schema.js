@@ -39,12 +39,23 @@ export const characters = table("characters", {
   bookId: t.int("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
   firstName: t.text("first_name").notNull(),
   lastName: t.text("last_name").notNull(),
+  gender: t.text("gender"), // male, female, unicorn, null
   role: t.text().default("supporting").notNull(), // protagonist, supporting, antagonist, marginal
   avatar: t.text("avatar"),
   description: t.text(), // one-liner description
   attributes: t.text("attributes", { mode: "json" }).default({}), // JSON for custom fields and detailed info
   groups: t.text("groups", { mode: "json" }).default([]), // array of group names
   tags: t.text("tags", { mode: "json" }).default([]), // array of tags
+  createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
+  updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
+});
+
+export const characterRelationships = table("character_relationships", {
+  id: t.int().primaryKey({ autoIncrement: true }),
+  characterId: t.int("character_id").notNull().references(() => characters.id, { onDelete: "cascade" }),
+  relatedCharacterId: t.int("related_character_id").notNull().references(() => characters.id, { onDelete: "cascade" }),
+  relationshipType: t.text("relationship_type").notNull(), // father, mother, son, daughter, sibling, etc.
+  metadata: t.text("metadata", { mode: "json" }).default({}), // engagement date, marriage date, etc.
   createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
   updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
 });
