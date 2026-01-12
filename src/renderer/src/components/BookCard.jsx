@@ -3,7 +3,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Book, User } from 'lucide-react';
+import { Book, User, Archive } from 'lucide-react';
 import BookContextMenu from './BookContextMenu';
 import { BOOK_STATUS_CONFIG } from '@/config/bookConfig';
 
@@ -63,11 +63,19 @@ export default function BookCard({ id, book, imageUrl, seriesName, draggable = f
                 <Badge variant={status.variant} className={`text-[10px] h-5 px-1.5 shadow-sm ${status.className}`}>
                   {status.label}
                 </Badge>
-                {seriesName && (
-                  <Badge variant="secondary" className="text-[10px] h-5 px-1.5 shadow-sm bg-black/60 text-white backdrop-blur-md border-0">
-                    {seriesName}
-                  </Badge>
-                )}
+                <div className="flex gap-1">
+                  {book.archived && (
+                    <Badge variant="destructive" className="text-[10px] h-5 px-1.5 shadow-sm">
+                      <Archive className="w-3 h-3 mr-1" />
+                      Archived
+                    </Badge>
+                  )}
+                  {seriesName && (
+                    <Badge variant="secondary" className="text-[10px] h-5 px-1.5 shadow-sm bg-black/60 text-white backdrop-blur-md border-0">
+                      {seriesName}
+                    </Badge>
+                  )}
+                </div>
               </div>
 
               <div className="absolute inset-x-0 bottom-0 pt-12 pb-3 px-3 bg-linear-to-t from-black/90 via-black/60 to-transparent">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Trash2, Plus, Minus, AlertTriangle } from 'lucide-react';
+import { Eye, Trash2, Plus, Minus, AlertTriangle, Archive, ArchiveRestore } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -37,7 +37,9 @@ export default function BookContextMenu({ children, book, onSeriesUpdate }) {
     seriesLayout,
     addBookToSeries,
     removeBookFromSeries,
-    deleteBook
+    deleteBook,
+    archiveBook,
+    unarchiveBook
   } = useBooksStore();
 
   // Check if book is in a series
@@ -99,6 +101,28 @@ export default function BookContextMenu({ children, book, onSeriesUpdate }) {
     setShowRemoveDialog(false);
   };
 
+  const handleArchiveBook = async () => {
+    try {
+      await archiveBook(book.id);
+      toast.success(`"${book.name}" has been archived`);
+      onSeriesUpdate?.();
+    } catch (error) {
+      toast.error('Failed to archive book');
+      console.error(error);
+    }
+  };
+
+  const handleUnarchiveBook = async () => {
+    try {
+      await unarchiveBook(book.id);
+      toast.success(`"${book.name}" has been unarchived`);
+      onSeriesUpdate?.();
+    } catch (error) {
+      toast.error('Failed to unarchive book');
+      console.error(error);
+    }
+  };
+
   return (
     <>
       <ContextMenu>
@@ -140,6 +164,22 @@ export default function BookContextMenu({ children, book, onSeriesUpdate }) {
             </ContextMenuItem>
           )}
 
+          {((!isInSeries && availableSeries.length > 0) || isInSeries) && (
+            <ContextMenuSeparator />
+          )}
+
+          {book.archived ? (
+            <ContextMenuItem onClick={handleUnarchiveBook}>
+              <ArchiveRestore className="mr-2 h-4 w-4" />
+              Unarchive Book
+            </ContextMenuItem>
+          ) : (
+            <ContextMenuItem onClick={handleArchiveBook}>
+              <Archive className="mr-2 h-4 w-4" />
+              Archive Book
+            </ContextMenuItem>
+          )}
+
           <ContextMenuSeparator />
 
           <ContextMenuItem
@@ -160,7 +200,7 @@ export default function BookContextMenu({ children, book, onSeriesUpdate }) {
       />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent className="sm:max-w-[400px]">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" />
@@ -172,13 +212,26 @@ export default function BookContextMenu({ children, book, onSeriesUpdate }) {
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="mt-4">
+          <AlertDialogFooter className="mt-4 gap-2 flex-col sm:flex-row">
             <AlertDialogCancel>Cancel</AlertDialogCancel>
+            {!book?.archived && (
+              <AlertDialogAction
+                onClick={() => {
+                  handleArchiveBook();
+                  setShowDeleteDialog(false);
+                }}
+                className="bg-orange-600 text-white hover:bg-orange-700"
+              >
+                <Archive className="mr-2 h-4 w-4" />
+                Archive Instead
+              </AlertDialogAction>
+            )}
             <AlertDialogAction
               onClick={handleConfirmDeleteBook}
               className="bg-destructive text-destructive-foreground text-white hover:bg-destructive/90"
             >
-              Delete Book
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Permanently
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

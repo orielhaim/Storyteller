@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Trash2 } from 'lucide-react';
+import { Eye, Trash2, Archive, ArchiveRestore } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -20,7 +20,9 @@ export default function SeriesContextMenu({ children, series, onSeriesUpdate }) 
 
   const {
     seriesLayout,
-    deleteSeries
+    deleteSeries,
+    archiveSeries,
+    unarchiveSeries
   } = useBooksStore();
 
   const bookCount = seriesLayout[series.id]?.length || 0;
@@ -58,6 +60,28 @@ export default function SeriesContextMenu({ children, series, onSeriesUpdate }) 
     }
   };
 
+  const handleArchiveSeries = async () => {
+    try {
+      await archiveSeries(series.id);
+      toast.success(`"${series.name}" has been archived`);
+      onSeriesUpdate?.();
+    } catch (error) {
+      toast.error('Failed to archive series');
+      console.error(error);
+    }
+  };
+
+  const handleUnarchiveSeries = async () => {
+    try {
+      await unarchiveSeries(series.id);
+      toast.success(`"${series.name}" has been unarchived`);
+      onSeriesUpdate?.();
+    } catch (error) {
+      toast.error('Failed to unarchive series');
+      console.error(error);
+    }
+  };
+
   return (
     <>
       <ContextMenu>
@@ -70,6 +94,20 @@ export default function SeriesContextMenu({ children, series, onSeriesUpdate }) 
             <Eye className="mr-2 h-4 w-4" />
             Open Series
           </ContextMenuItem>
+
+          <ContextMenuSeparator />
+
+          {series.archived ? (
+            <ContextMenuItem onClick={handleUnarchiveSeries}>
+              <ArchiveRestore className="mr-2 h-4 w-4" />
+              Unarchive Series
+            </ContextMenuItem>
+          ) : (
+            <ContextMenuItem onClick={handleArchiveSeries}>
+              <Archive className="mr-2 h-4 w-4" />
+              Archive Series
+            </ContextMenuItem>
+          )}
 
           <ContextMenuSeparator />
 
@@ -90,6 +128,7 @@ export default function SeriesContextMenu({ children, series, onSeriesUpdate }) 
         bookCount={bookCount}
         onDeleteSeriesOnly={handleDeleteSeriesOnly}
         onDeleteWithBooks={handleDeleteWithBooks}
+        onArchiveSeries={handleArchiveSeries}
       />
     </>
   );

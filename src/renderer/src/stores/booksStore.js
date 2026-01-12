@@ -162,6 +162,19 @@ export const useBooksStore = create(immer((set, get) => ({
   archiveBook: (id) => get()._toggleBookStatus(id, bookAPI.books.archive),
   unarchiveBook: (id) => get()._toggleBookStatus(id, bookAPI.books.unarchive),
 
+  // Generic status toggle helper for series (used for archive/unarchive)
+  _toggleSeriesStatus: async (id, apiMethod) => {
+    try {
+      const res = await apiMethod(id);
+      if (!res.success) throw new Error(res.error);
+      set(state => { state.series[id] = res.data; });
+      return res.data;
+    } catch (e) { get()._handleError(e); }
+  },
+
+  archiveSeries: (id) => get()._toggleSeriesStatus(id, bookAPI.series.archive),
+  unarchiveSeries: (id) => get()._toggleSeriesStatus(id, bookAPI.series.unarchive),
+
   // 3. Series Actions
 
   createSeries: async (data) => {

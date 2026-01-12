@@ -1,6 +1,7 @@
 import { useDroppable } from '@dnd-kit/core';
 import { Card, CardContent } from '@/components/ui/card';
-import { Layers } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Layers, Archive } from 'lucide-react';
 import SeriesContextMenu from './SeriesContextMenu';
 
 export default function SeriesCard({ id, series, imageUrl, onClick, isDropTarget, onSeriesUpdate }) {
@@ -23,8 +24,13 @@ export default function SeriesCard({ id, series, imageUrl, onClick, isDropTarget
         >
           <CardContent className="p-0 h-full relative">
 
-            <div className="absolute top-0 right-0 p-2 z-20">
+            <div className="absolute top-0 right-0 p-2 z-20 flex gap-1">
               <Layers className="w-5 h-5 text-white/80 drop-shadow-md" />
+              {series.archived && (
+                <Badge variant="destructive" className="text-[10px] h-5 px-1.5 shadow-sm">
+                  <Archive className="w-3 h-3" />
+                </Badge>
+              )}
             </div>
 
             <div className="relative aspect-2/3 w-full bg-muted/30">

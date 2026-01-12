@@ -71,6 +71,22 @@ export const seriesHandlers = {
     await db.delete(series).where(eq(series.id, id));
     return { deleted: true };
   }),
+
+  archive: handleRequest(async (id) => {
+    const result = await db.update(series)
+      .set({ archived: true, updatedAt: Date.now() })
+      .where(eq(series.id, id))
+      .returning();
+    return result[0] || null;
+  }),
+
+  unarchive: handleRequest(async (id) => {
+    const result = await db.update(series)
+      .set({ archived: false, updatedAt: Date.now() })
+      .where(eq(series.id, id))
+      .returning();
+    return result[0] || null;
+  }),
 };
 
 // Book-Series relationship handlers

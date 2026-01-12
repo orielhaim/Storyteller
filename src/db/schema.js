@@ -23,6 +23,7 @@ export const series = table("series", {
   image: t.text("image"),
   createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
   updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
+  archived: t.integer("archived", { mode: "boolean" }).default(false).notNull(),
 });
 
 export const bookSeries = table("book_series", {

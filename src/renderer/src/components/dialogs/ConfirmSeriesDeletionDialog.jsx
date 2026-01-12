@@ -10,13 +10,14 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-function ConfirmSeriesDeletionDialog({ 
-  open, 
-  onOpenChange, 
-  series, 
-  bookCount = 0, 
-  onDeleteSeriesOnly, 
-  onDeleteWithBooks 
+function ConfirmSeriesDeletionDialog({
+  open,
+  onOpenChange,
+  series,
+  bookCount = 0,
+  onDeleteSeriesOnly,
+  onDeleteWithBooks,
+  onArchiveSeries
 }) {
   const [step, setStep] = useState('choice'); // 'choice' | 'confirm_all'
 
@@ -35,6 +36,11 @@ function ConfirmSeriesDeletionDialog({
 
   const handleConfirmAll = () => {
     onDeleteWithBooks();
+    handleClose();
+  };
+
+  const handleArchive = () => {
+    onArchiveSeries?.();
     handleClose();
   };
 
@@ -68,7 +74,7 @@ function ConfirmSeriesDeletionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent>
         
         {step === 'choice' && (
           <>
@@ -80,12 +86,30 @@ function ConfirmSeriesDeletionDialog({
             </DialogHeader>
 
             <div className="grid gap-4 py-4">
-              <div 
+              {!series?.archived && onArchiveSeries && (
+                <div
+                  className="flex items-start gap-4 p-4 border-2 border-primary/20 bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors cursor-pointer group"
+                  onClick={handleArchive}
+                >
+                  <div className="p-2 bg-primary/10 rounded-full text-primary">
+                    <Archive className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <h4 className="font-semibold text-sm text-primary">Archive Series</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Move the series to archive. You can restore it later.
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" className="mt-1">Archive</Button>
+                </div>
+              )}
+
+              <div
                 className="flex items-start gap-4 p-4 border rounded-lg hover:bg-muted/40 transition-colors cursor-pointer group"
                 onClick={handleSeriesOnly}
               >
                 <div className="p-2 bg-primary/10 rounded-full text-primary">
-                  <Archive className="h-5 w-5" />
+                  <Trash2 className="h-5 w-5" />
                 </div>
                 <div className="flex-1 space-y-1">
                   <h4 className="font-semibold text-sm">Keep Books, Delete Series</h4>

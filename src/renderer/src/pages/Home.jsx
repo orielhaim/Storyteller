@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Plus, FolderTree, Filter, Settings } from 'lucide-react';
+import { Plus, FolderTree, Filter, Settings, MoreVertical } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import BookGrid from '@/components/BookGrid';
 import CreateBookDialog from '@/components/dialogs/CreateBookDialog';
 import CreateSeriesDialog from '@/components/dialogs/CreateSeriesDialog';
@@ -26,6 +32,7 @@ function Home() {
 
   const [filterType, setFilterType] = useState('all');
   const [showBooksInSeries, setShowBooksInSeries] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   const {
     books: booksMap,
@@ -76,7 +83,7 @@ function Home() {
 
   const processedItems = (() => {
     const cleanBooks = booksList
-      .filter(b => !b.archived)
+      .filter(b => showArchived || !b.archived)
       .map(b => ({
         ...b,
         type: 'book',
@@ -84,7 +91,9 @@ function Home() {
         isInSeries: bookToSeriesMap.has(b.id)
       }));
 
-    const cleanSeries = seriesList.map(s => ({ ...s, type: 'series' }));
+    const cleanSeries = seriesList
+      .filter(s => showArchived || !s.archived)
+      .map(s => ({ ...s, type: 'series' }));
 
     switch (filterType) {
       case 'books':
@@ -146,18 +155,41 @@ function Home() {
             </div>
           </div>
 
-          {filterType === 'all' && (
-            <div className="flex items-center gap-2 px-2">
-              <Switch
-                id="show-series-books"
-                checked={showBooksInSeries}
-                onCheckedChange={setShowBooksInSeries}
-              />
-              <Label htmlFor="show-series-books" className="text-sm cursor-pointer">
-                Show books inside series
-              </Label>
-            </div>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {filterType === 'all' && (
+                <DropdownMenuItem asChild>
+                  <div className="flex items-center justify-between w-full px-2 py-1.5">
+                    <Label htmlFor="show-series-books" className="text-sm cursor-pointer">
+                      Show books inside series
+                    </Label>
+                    <Switch
+                      id="show-series-books"
+                      checked={showBooksInSeries}
+                      onCheckedChange={setShowBooksInSeries}
+                    />
+                  </div>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem asChild>
+                <div className="flex items-center justify-between w-full px-2 py-1.5">
+                  <Label htmlFor="show-archived" className="text-sm cursor-pointer">
+                    Show archived items
+                  </Label>
+                  <Switch
+                    id="show-archived"
+                    checked={showArchived}
+                    onCheckedChange={setShowArchived}
+                  />
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <main>

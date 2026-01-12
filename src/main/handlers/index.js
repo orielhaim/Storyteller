@@ -23,6 +23,8 @@ export function registerIpcHandlers() {
   ipcMain.handle('series:create', seriesHandlers.create);
   ipcMain.handle('series:update', seriesHandlers.update);
   ipcMain.handle('series:delete', seriesHandlers.delete);
+  ipcMain.handle('series:archive', seriesHandlers.archive);
+  ipcMain.handle('series:unarchive', seriesHandlers.unarchive);
 
   // Book-Series relationship channels
   ipcMain.handle('bookSeries:addBookToSeries', bookSeriesHandlers.addBookToSeries);
