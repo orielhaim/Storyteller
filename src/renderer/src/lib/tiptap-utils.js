@@ -6,6 +6,7 @@ import {
 } from "@tiptap/pm/state"
 import { cellAround, CellSelection } from "@tiptap/pm/tables"
 import { findParentNodeClosestToPos } from "@tiptap/react";
+import DOMPurify from "dompurify";
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
@@ -345,52 +346,70 @@ export const handleImageUpload = async (file, onProgress, abortSignal) => {
   return "/images/tiptap-ui-placeholder-image.jpg"
 }
 
-const ATTR_WHITESPACE =
-  // eslint-disable-next-line no-control-regex
-  /[\u0000-\u0020\u00A0\u1680\u180E\u2000-\u2029\u205F\u3000]/g
+const DEFAULT_ALLOWED_PROTOCOLS = [
+  "http", "https", "ftp", "ftps", "mailto",
+  "tel", "callto", "sms", "cid", "xmpp"
+]
 
-export function isAllowedUri(
-  uri,
-  protocols
-) {
-  const allowedProtocols = [
-    "http",
-    "https",
-    "ftp",
-    "ftps",
-    "mailto",
-    "tel",
-    "callto",
-    "sms",
-    "cid",
-    "xmpp",
-  ]
+/**
+ * Checks if a URI is safe/allowed using DOMPurify.
+ * Replaces the old Regex-based implementation to prevent ReDoS and allow safer validation.
+ *
+ * @param uri - The URI string to check
+ * @param protocols - Optional list of allowed protocols (strings or objects with 'scheme')
+ * @returns boolean indicating if the URI is allowed
+ */
+export function isAllowedUri(uri, protocols) {
+  if (!uri) return false
 
+  const customSchemes = []
   if (protocols) {
     protocols.forEach((protocol) => {
-      const nextProtocol =
-        typeof protocol === "string" ? protocol : protocol.scheme
-
-      if (nextProtocol) {
-        allowedProtocols.push(nextProtocol)
+      const scheme = typeof protocol === "string" ? protocol : protocol.scheme
+      if (scheme) {
+        customSchemes.push(scheme.replace(/:$/, ""))
       }
     })
   }
 
-  return (!uri || uri.replace(ATTR_WHITESPACE, "").match(new RegExp(// eslint-disable-next-line no-useless-escape
-  `^(?:(?:${allowedProtocols.join("|")}):|[^a-z]|[a-z0-9+.\-]+(?:[^a-z+.\-:]|$))`, "i")));
+  const clean = DOMPurify.sanitize(`<a href="${uri}"></a>`, {
+    ALLOWED_TAGS: ["a"],
+    ALLOWED_ATTR: ["href"],
+    ADD_URI_SCHEME: customSchemes,
+    WHOLE_DOCUMENT: false,
+  })
+
+  return /href=["']/.test(clean)
 }
 
+/**
+ * Sanitizes a URL, resolving it against a base URL if provided.
+ *
+ * @param inputUrl - The URL to sanitize
+ * @param baseUrl - Optional base URL for relative paths
+ * @param protocols - Optional allowed protocols
+ * @returns The sanitized URL string or "#" if invalid
+ */
 export function sanitizeUrl(inputUrl, baseUrl, protocols) {
   try {
-    const url = new URL(inputUrl, baseUrl)
+    let urlToTest = inputUrl
 
-    if (isAllowedUri(url.href, protocols)) {
-      return url.href
+    if (baseUrl) {
+      urlToTest = new URL(inputUrl, baseUrl).href
+    } else {
+      try {
+        urlToTest = new URL(inputUrl).href
+      } catch (e) { }
     }
-  } catch {
-    // If URL creation fails, it's considered invalid
+
+    if (isAllowedUri(urlToTest, protocols)) {
+      return urlToTest
+    }
+  } catch (e) {
+    // If URL creation fails drastically
+    // console.warn("Invalid URL provided", e)
   }
+
   return "#"
 }
 
