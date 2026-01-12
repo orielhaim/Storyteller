@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { MapPin } from 'lucide-react';
 
-const fields = [
+export const FIELDS = [
   { key: 'birthPlace', label: 'Place of Birth', type: 'text', colSpan: 1 },
   { key: 'family', label: 'Family & Relations', type: 'textarea', rows: 2, colSpan: 2 },
   { key: 'history', label: 'Biography', type: 'textarea', rows: 5, colSpan: 2 },
@@ -42,7 +42,7 @@ export default function BackgroundTab({ attributes, onChange }) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {fields.map(field => (
+          {FIELDS.map(field => (
             <FormField
               key={field.key}
               config={field}

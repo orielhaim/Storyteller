@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Swords } from 'lucide-react';
 
-const fields = [
+export const FIELDS = [
   { key: 'goal', label: 'Goal', type: 'textarea', rows: 2, colSpan: 2 },
   { key: 'motivation', label: 'Motivation', type: 'textarea', rows: 2, colSpan: 2 },
   { key: 'obstacle', label: 'Obstacle', type: 'textarea', rows: 2, colSpan: 2 },
@@ -42,7 +42,7 @@ export default function StoryTab({ attributes, onChange }) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {fields.map(field => (
+          {FIELDS.map(field => (
             <FormField
               key={field.key}
               config={field}

@@ -6,14 +6,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2 } from 'lucide-react';
 
-const KNOWN_KEYS = new Set([
-  'age', 'occupation', 'birthDate', 'residence',
-  'generalDescription', 'height', 'weight', 'eyeColor', 'hairColor', 'distinguishingMarks', 'faceclaim',
-  'characterTraits', 'mbti', 'enneagram', 'ghost', 'lie', 'habits',
-  'goal', 'motivation', 'obstacle', 'development',
-  'birthPlace', 'family', 'history', 'secrets',
-  'freeNotes'
-]);
+import { FIELDS as QUICK_STATS_FIELDS } from './QuickStatsTab';
+import { FIELDS as APPEARANCE_FIELDS } from './AppearanceTab';
+import { FIELDS as PSYCHOLOGY_FIELDS } from './PsychologyTab';
+import { FIELDS as STORY_FIELDS } from './StoryTab';
+import { FIELDS as BACKGROUND_FIELDS } from './BackgroundTab';
+import { FIELDS as NOTES_FIELDS } from './NotesTab';
+
+const ALL_KNOWN_FIELDS = [
+  ...(QUICK_STATS_FIELDS || []),
+  ...(APPEARANCE_FIELDS || []),
+  ...(PSYCHOLOGY_FIELDS || []),
+  ...(STORY_FIELDS || []),
+  ...(BACKGROUND_FIELDS || []),
+  ...(NOTES_FIELDS || [])
+];
+
+const KNOWN_KEYS = new Set(ALL_KNOWN_FIELDS.map(f => f.key));
 
 const CustomTab = ({ attributes, onChange }) => {
   const [newKey, setNewKey] = useState('');

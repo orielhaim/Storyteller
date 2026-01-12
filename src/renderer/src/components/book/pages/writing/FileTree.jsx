@@ -76,19 +76,23 @@ function buildTreeData(bookId, chapters, scenes, characters, worlds, locations, 
     unsorted: 'Unsorted'
   };
 
-  const characterRoleNodes = Object.entries(charactersByRole).map(([role, roleCharacters]) => ({
-    id: `character-role-${role}`,
-    name: roleLabels[role] || role,
-    type: 'character-role',
-    entityId: role,
-    children: roleCharacters.map((character) => ({
-      id: `character-${character.id}`,
-      name: `${character.firstName} ${character.lastName || ''}`.trim(),
-      type: 'character',
-      entityId: character.id,
-      role: role,
-    })),
-  }));
+  const roleOrder = ['protagonist', 'supporting', 'antagonist', 'marginal', 'unsorted'];
+
+  const characterRoleNodes = roleOrder
+    .filter(role => charactersByRole[role])
+    .map((role) => ({
+      id: `character-role-${role}`,
+      name: roleLabels[role] || role,
+      type: 'character-role',
+      entityId: role,
+      children: charactersByRole[role].map((character) => ({
+        id: `character-${character.id}`,
+        name: `${character.firstName} ${character.lastName || ''}`.trim(),
+        type: 'character',
+        entityId: character.id,
+        role: role,
+      })),
+    }));
 
   // Create world subcategories
   const worldNodes = worlds.map((world) => ({

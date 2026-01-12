@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { FileText } from 'lucide-react';
 
-const fields = [
+export const FIELDS = [
   { key: 'freeNotes', label: 'Free Notes', type: 'textarea', rows: 10, colSpan: 2 },
 ];
 
@@ -39,7 +39,7 @@ export default function NotesTab({ attributes, onChange }) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {fields.map(field => (
+          {FIELDS.map(field => (
             <FormField
               key={field.key}
               config={field}

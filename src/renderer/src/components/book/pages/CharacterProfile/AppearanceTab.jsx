@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Eye } from 'lucide-react';
 
-const fields = [
+export const FIELDS = [
   { key: 'generalDescription', label: 'General Description', type: 'textarea', rows: 4, colSpan: 2 },
   { key: 'height', label: 'Height', type: 'text', placeholder: "6'2", colSpan: 1 },
   { key: 'weight', label: 'Weight', type: 'text', placeholder: "180 lbs", colSpan: 1 },
@@ -45,7 +45,7 @@ export default function AppearanceTab({ attributes, onChange }) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {fields.map(field => (
+          {FIELDS.map(field => (
             <FormField
               key={field.key}
               config={field}

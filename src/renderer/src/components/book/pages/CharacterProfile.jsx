@@ -14,43 +14,51 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   User, Plus, X, Save, ArrowLeft,
-  Users, Wand2, Eye, Brain, Swords, MapPin, FileText
+  Users, Wand2, Eye, Brain, Swords, MapPin, FileText, Edit3, Layout
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import QuickStatsTab from '@/components/book/pages/CharacterProfile/QuickStatsTab';
-import AppearanceTab from '@/components/book/pages/CharacterProfile/AppearanceTab';
-import PsychologyTab from '@/components/book/pages/CharacterProfile/PsychologyTab';
-import StoryTab from '@/components/book/pages/CharacterProfile/StoryTab';
-import BackgroundTab from '@/components/book/pages/CharacterProfile/BackgroundTab';
-import NotesTab from '@/components/book/pages/CharacterProfile/NotesTab';
+import QuickStatsTab, { FIELDS as QUICK_STATS_FIELDS } from '@/components/book/pages/CharacterProfile/QuickStatsTab';
+import AppearanceTab, { FIELDS as APPEARANCE_FIELDS } from '@/components/book/pages/CharacterProfile/AppearanceTab';
+import PsychologyTab, { FIELDS as PSYCHOLOGY_FIELDS } from '@/components/book/pages/CharacterProfile/PsychologyTab';
+import StoryTab, { FIELDS as STORY_FIELDS } from '@/components/book/pages/CharacterProfile/StoryTab';
+import BackgroundTab, { FIELDS as BACKGROUND_FIELDS } from '@/components/book/pages/CharacterProfile/BackgroundTab';
+import NotesTab, { FIELDS as NOTES_FIELDS } from '@/components/book/pages/CharacterProfile/NotesTab';
 import RelationshipTab from '@/components/book/pages/CharacterProfile/RelationshipTab';
 import CustomTab from '@/components/book/pages/CharacterProfile/CustomTab';
 
-const SECTIONS = {
+import CharacterProfileView from '@/components/book/pages/CharacterProfile/CharacterProfileView';
+
+export const SECTIONS = {
   quickStats: {
     icon: Wand2,
     label: "Quick Stats",
+    fields: QUICK_STATS_FIELDS
   },
   appearance: {
     icon: Eye,
     label: "Appearance",
+    fields: APPEARANCE_FIELDS
   },
   psychology: {
     icon: Brain,
     label: "Psychology",
+    fields: PSYCHOLOGY_FIELDS
   },
   story: {
     icon: Swords,
     label: "Story Arc",
+    fields: STORY_FIELDS
   },
   background: {
     icon: MapPin,
     label: "Background",
+    fields: BACKGROUND_FIELDS
   },
   notes: {
     icon: FileText,
     label: "Notes",
+    fields: NOTES_FIELDS
   }
 };
 
@@ -61,6 +69,7 @@ export default function CharacterProfile({ characterId, onBack, showBackButton =
 
   const [formData, setFormData] = useState(null);
   const [newGroup, setNewGroup] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
 
   const initialDataRef = useRef(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -81,72 +90,75 @@ export default function CharacterProfile({ characterId, onBack, showBackButton =
   }, [currentCharacter]);
 
   const handleCoreChange = (field, value) => {
-    setFormData(prev => {
-      const next = { ...prev, [field]: value };
-      setIsDirty(JSON.stringify(next) !== initialDataRef.current);
-      return next;
-    });
+    // Calculate new state immediately
+    const prev = formData;
+    const next = { ...prev, [field]: value };
+
+    updateAndDebounce(next);
   };
 
   const handleAttributeChange = (key, value) => {
-    setFormData(prev => {
-      const nextAttributes = { ...prev.attributes };
-      if (value === undefined) {
-        delete nextAttributes[key];
-      } else {
-        nextAttributes[key] = value;
-      }
-      const next = { ...prev, attributes: nextAttributes };
-      setIsDirty(JSON.stringify(next) !== initialDataRef.current);
-      return next;
-    });
+    const prev = formData;
+    const nextAttributes = { ...prev.attributes };
+    if (value === undefined) {
+      delete nextAttributes[key];
+    } else {
+      nextAttributes[key] = value;
+    }
+
+    const next = { ...prev, attributes: nextAttributes };
+    updateAndDebounce(next);
   };
 
   const handleGroupAction = (action, value) => {
-    setFormData(prev => {
-      const groups = prev.groups || [];
-      let newGroups;
+    const prev = formData;
+    const groups = prev.groups || [];
+    let newGroups;
 
-      if (action === 'add' && value && !groups.includes(value)) {
-        newGroups = [...groups, value];
-      } else if (action === 'remove') {
-        newGroups = groups.filter(g => g !== value);
-      } else {
-        return prev;
-      }
+    if (action === 'add' && value && !groups.includes(value)) {
+      newGroups = [...groups, value];
+    } else if (action === 'remove') {
+      newGroups = groups.filter(g => g !== value);
+    } else {
+      return;
+    }
 
-      const next = { ...prev, groups: newGroups };
-      setIsDirty(JSON.stringify(next) !== initialDataRef.current);
-      return next;
-    });
+    const next = { ...prev, groups: newGroups };
+    updateAndDebounce(next);
   };
 
+  // Improved debounce: receives data as parameter instead of relying on external state
   const debouncedSave = useDebouncedCallback(async (dataToSave) => {
     if (!dataToSave) return;
 
+    // Prepare data for saving (snake case, etc.)
+    const formattedData = {
+      ...dataToSave,
+      first_name: dataToSave.firstName,
+      last_name: dataToSave.lastName,
+      gender: dataToSave.gender,
+    };
+    delete formattedData.firstName;
+    delete formattedData.lastName;
+
     try {
-      await updateCharacter(characterId, dataToSave);
-      initialDataRef.current = JSON.stringify(formData);
+      await updateCharacter(characterId, formattedData);
+      initialDataRef.current = JSON.stringify(dataToSave);
       setIsDirty(false);
     } catch (error) {
       console.error('Autosave failed:', error);
     }
   }, 2000);
 
-  useEffect(() => {
-    if (isDirty && formData) {
-      const dataToSave = {
-        ...formData,
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        gender: formData.gender,
-      };
-      delete dataToSave.firstName;
-      delete dataToSave.lastName;
-
-      debouncedSave(dataToSave);
-    }
-  }, [formData, isDirty, debouncedSave]);
+  // Helper function for update and debounced save
+  // This replaces the heavy useEffect
+  const updateAndDebounce = (newData) => {
+    setFormData(newData);
+    setIsDirty(true);
+    // Send the new data directly to debounce
+    // This prevents the need for an effect that runs on every change
+    debouncedSave(newData);
+  };
 
   const handleSave = () => {
     if (!isDirty) return;
@@ -189,8 +201,10 @@ export default function CharacterProfile({ characterId, onBack, showBackButton =
     );
   }
 
+
+
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] max-w-7xl mx-auto gap-4 px-4 overflow-y-auto">
+    <div className="flex flex-col h-full max-w-7xl mx-auto gap-4 px-4 overflow-y-auto">
       <header className="flex items-center justify-between py-2 border-b shrink-0">
         <div className="flex items-center gap-4">
           {showBackButton && (
@@ -205,204 +219,225 @@ export default function CharacterProfile({ characterId, onBack, showBackButton =
             </h1>
           </div>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={!isDirty || isPending}
-          className={isDirty ? "animate-in zoom-in-95 duration-200" : ""}
-        >
-          {isPending ? <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-          {isPending ? 'Saving...' : 'Save Changes'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditing(!isEditing)}
+            className="flex items-center gap-2"
+          >
+            {isEditing ? (
+              <><Layout className="h-4 w-4" /> View Mode</>
+            ) : (
+              <><Edit3 className="h-4 w-4" /> Edit Mode</>
+            )}
+          </Button>
+          {isEditing && isDirty && (
+            <Button
+              onClick={handleSave}
+              disabled={isPending}
+              className="animate-in zoom-in-95 duration-200"
+            >
+              {isPending ? <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+              {isPending ? 'Saving...' : 'Save Changes'}
+            </Button>
+          )}
+        </div>
       </header>
 
       <div className="flex flex-col flex-1 min-h-0">
-
-        <aside className="flex flex-col gap-6 shrink-0 overflow-y-auto pb-10">
-          <Card className="border-none shadow-none bg-transparent">
-            <CardContent className="p-0 space-y-6">
-              <div className="flex flex-row items-center gap-4">
-                <ImageUpload
-                  value={formData.avatar}
-                  onChange={(uuid) => handleCoreChange('avatar', uuid)}
-                  className="w-52 h-64 shadow-lg rounded-lg object-cover"
-                />
-                <div className="w-full space-y-3">
-                  <div className="flex flex-row gap-2">
-                    <div className="space-y-1">
-                      <Label htmlFor="char-first-name">First Name</Label>
-                      <Input
-                        id="char-first-name"
-                        value={formData.firstName || ''}
-                        onChange={e => handleCoreChange('firstName', e.target.value)}
-                        className="font-semibold text-lg"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="char-last-name">Last Name</Label>
-                      <Input
-                        id="char-last-name"
-                        value={formData.lastName || ''}
-                        onChange={e => handleCoreChange('lastName', e.target.value)}
-                        className="font-semibold text-lg"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label htmlFor="char-description">Description</Label>
-                    <Textarea
-                      id="char-description"
-                      value={formData.description || ''}
-                      onChange={e => handleCoreChange('description', e.target.value)}
-                      className="h-24"
+        {!isEditing ? (
+          <CharacterProfileView formData={formData} relationships={relationships} />
+        ) : (
+          <div className="flex flex-col flex-1 min-h-0">
+            <aside className="flex flex-col gap-6 shrink-0 overflow-y-auto pb-10">
+              <Card className="border-none shadow-none bg-transparent">
+                <CardContent className="p-0 space-y-6">
+                  <div className="flex flex-row items-center gap-4">
+                    <ImageUpload
+                      value={formData.avatar}
+                      onChange={(uuid) => handleCoreChange('avatar', uuid)}
+                      className="w-52 h-64 shadow-lg rounded-lg object-cover"
                     />
-                  </div>
+                    <div className="w-full space-y-3">
+                      <div className="flex flex-row gap-2">
+                        <div className="space-y-1">
+                          <Label htmlFor="char-first-name">First Name</Label>
+                          <Input
+                            id="char-first-name"
+                            value={formData.firstName || ''}
+                            onChange={e => handleCoreChange('firstName', e.target.value)}
+                            className="font-semibold text-lg"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="char-last-name">Last Name</Label>
+                          <Input
+                            id="char-last-name"
+                            value={formData.lastName || ''}
+                            onChange={e => handleCoreChange('lastName', e.target.value)}
+                            className="font-semibold text-lg"
+                          />
+                        </div>
+                      </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label>Gender</Label>
-                      <Select value={formData.gender || 'none'} onValueChange={v => handleCoreChange('gender', v === 'none' ? null : v)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">None / Unknown</SelectItem>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="unicorn">Unicorn</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="space-y-1">
+                        <Label htmlFor="char-description">Description</Label>
+                        <Textarea
+                          id="char-description"
+                          value={formData.description || ''}
+                          onChange={e => handleCoreChange('description', e.target.value)}
+                          className="h-24"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label>Gender</Label>
+                          <Select value={formData.gender || 'none'} onValueChange={v => handleCoreChange('gender', v === 'none' ? null : v)}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None / Unknown</SelectItem>
+                              <SelectItem value="male">Male</SelectItem>
+                              <SelectItem value="female">Female</SelectItem>
+                              <SelectItem value="unicorn">Unicorn</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Role</Label>
+                          <Select value={formData.role || 'supporting'} onValueChange={v => handleCoreChange('role', v)}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="protagonist">Protagonist</SelectItem>
+                              <SelectItem value="antagonist">Antagonist</SelectItem>
+                              <SelectItem value="supporting">Supporting</SelectItem>
+                              <SelectItem value="marginal">Marginal</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <Label>Role</Label>
-                      <Select value={formData.role || 'supporting'} onValueChange={v => handleCoreChange('role', v)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="protagonist">Protagonist</SelectItem>
-                          <SelectItem value="antagonist">Antagonist</SelectItem>
-                          <SelectItem value="supporting">Supporting</SelectItem>
-                          <SelectItem value="marginal">Marginal</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-3">
+                    <Label>Groups & Factions</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.groups?.map(group => (
+                        <Badge key={group} variant="secondary" className="hover:bg-destructive/10 hover:text-destructive cursor-pointer group transition-colors" onClick={() => handleGroupAction('remove', group)}>
+                          {group}
+                          <X className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </Badge>
+                      ))}
+                      <div className="flex items-center gap-1 w-full">
+                        <Input
+                          placeholder="Add group..."
+                          className="h-8 text-xs"
+                          value={newGroup}
+                          onChange={e => setNewGroup(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              handleGroupAction('add', newGroup.trim());
+                              setNewGroup('');
+                            }
+                          }}
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            handleGroupAction('add', newGroup.trim());
+                            setNewGroup('');
+                          }}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
+            </aside>
 
-              <Separator />
-
-              <div className="space-y-3">
-                <Label>Groups & Factions</Label>
-                <div className="flex flex-wrap gap-2">
-                  {formData.groups?.map(group => (
-                    <Badge key={group} variant="secondary" className="hover:bg-destructive/10 hover:text-destructive cursor-pointer group transition-colors" onClick={() => handleGroupAction('remove', group)}>
-                      {group}
-                      <X className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </Badge>
-                  ))}
-                  <div className="flex items-center gap-1 w-full">
-                    <Input
-                      placeholder="Add group..."
-                      className="h-8 text-xs"
-                      value={newGroup}
-                      onChange={e => setNewGroup(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                          handleGroupAction('add', newGroup.trim());
-                          setNewGroup('');
-                        }
-                      }}
-                    />
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 w-8 p-0"
-                      onClick={() => {
-                        handleGroupAction('add', newGroup.trim());
-                        setNewGroup('');
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </aside>
-
-        <main className="flex-1 min-w-0 h-full flex flex-col">
-          <Tabs defaultValue="quickStats" className="h-full flex flex-col">
-            <div className="overflow-x-auto pb-2 shrink-0">
-              <TabsList className="w-full justify-start h-auto p-1 bg-transparent border-b rounded-none space-x-2">
-                {Object.entries(SECTIONS).map(([key, config]) => {
-                  const IconComponent = config.icon;
-                  return (
-                    <TabsTrigger
-                      key={key}
-                      value={key}
-                      className="data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground rounded-md px-4 py-2"
-                    >
-                      <IconComponent className="h-4 w-4 mr-2" />
-                      {config.label}
+            <main className="flex-1 min-w-0 h-full flex flex-col">
+              <Tabs defaultValue="quickStats" className="h-full flex flex-col">
+                <div className="overflow-x-auto pb-2 shrink-0">
+                  <TabsList className="w-full justify-start h-auto p-1 bg-transparent border-b rounded-none space-x-2">
+                    {Object.entries(SECTIONS).map(([key, config]) => {
+                      const IconComponent = config.icon;
+                      return (
+                        <TabsTrigger
+                          key={key}
+                          value={key}
+                          className="data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground rounded-md px-4 py-2"
+                        >
+                          <IconComponent className="h-4 w-4 mr-2" />
+                          {config.label}
+                        </TabsTrigger>
+                      );
+                    })}
+                    <TabsTrigger value="relationships" className="data-[state=active]:bg-secondary rounded-md px-4 py-2">
+                      <Users className="h-4 w-4 mr-2" /> Relationships
                     </TabsTrigger>
-                  );
-                })}
-                <TabsTrigger value="relationships" className="data-[state=active]:bg-secondary rounded-md px-4 py-2">
-                  <Users className="h-4 w-4 mr-2" /> Relationships
-                </TabsTrigger>
-                <TabsTrigger value="custom" className="data-[state=active]:bg-secondary rounded-md px-4 py-2">
-                  <Plus className="h-4 w-4 mr-2" /> Custom
-                </TabsTrigger>
-              </TabsList>
-            </div>
+                    <TabsTrigger value="custom" className="data-[state=active]:bg-secondary rounded-md px-4 py-2">
+                      <Plus className="h-4 w-4 mr-2" /> Custom
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
 
-            <div className="flex-1 relative mt-4">
-              <ScrollArea className="h-full pr-4 pb-20">
-                <TabsContent value="quickStats" className="mt-0 space-y-6 animate-in fade-in-50 duration-300">
-                  <QuickStatsTab attributes={formData.attributes} onChange={handleAttributeChange} />
-                </TabsContent>
+                <div className="flex-1 relative mt-4">
+                  <ScrollArea className="h-full pb-4">
+                    <TabsContent value="quickStats" className="mt-0 space-y-6 animate-in fade-in-50 duration-300">
+                      <QuickStatsTab attributes={formData.attributes} onChange={handleAttributeChange} />
+                    </TabsContent>
 
-                <TabsContent value="appearance" className="mt-0 space-y-6 animate-in fade-in-50 duration-300">
-                  <AppearanceTab attributes={formData.attributes} onChange={handleAttributeChange} />
-                </TabsContent>
+                    <TabsContent value="appearance" className="mt-0 space-y-6 animate-in fade-in-50 duration-300">
+                      <AppearanceTab attributes={formData.attributes} onChange={handleAttributeChange} />
+                    </TabsContent>
 
-                <TabsContent value="psychology" className="mt-0 space-y-6 animate-in fade-in-50 duration-300">
-                  <PsychologyTab attributes={formData.attributes} onChange={handleAttributeChange} />
-                </TabsContent>
+                    <TabsContent value="psychology" className="mt-0 space-y-6 animate-in fade-in-50 duration-300">
+                      <PsychologyTab attributes={formData.attributes} onChange={handleAttributeChange} />
+                    </TabsContent>
 
-                <TabsContent value="story" className="mt-0 space-y-6 animate-in fade-in-50 duration-300">
-                  <StoryTab attributes={formData.attributes} onChange={handleAttributeChange} />
-                </TabsContent>
+                    <TabsContent value="story" className="mt-0 space-y-6 animate-in fade-in-50 duration-300">
+                      <StoryTab attributes={formData.attributes} onChange={handleAttributeChange} />
+                    </TabsContent>
 
-                <TabsContent value="background" className="mt-0 space-y-6 animate-in fade-in-50 duration-300">
-                  <BackgroundTab attributes={formData.attributes} onChange={handleAttributeChange} />
-                </TabsContent>
+                    <TabsContent value="background" className="mt-0 space-y-6 animate-in fade-in-50 duration-300">
+                      <BackgroundTab attributes={formData.attributes} onChange={handleAttributeChange} />
+                    </TabsContent>
 
-                <TabsContent value="notes" className="mt-0 space-y-6 animate-in fade-in-50 duration-300">
-                  <NotesTab attributes={formData.attributes} onChange={handleAttributeChange} />
-                </TabsContent>
+                    <TabsContent value="notes" className="mt-0 space-y-6 animate-in fade-in-50 duration-300">
+                      <NotesTab attributes={formData.attributes} onChange={handleAttributeChange} />
+                    </TabsContent>
 
-                <TabsContent value="custom" className="mt-0 animate-in fade-in-50">
-                  <CustomTab attributes={formData.attributes} onChange={handleAttributeChange} />
-                </TabsContent>
+                    <TabsContent value="custom" className="mt-0 animate-in fade-in-50">
+                      <CustomTab attributes={formData.attributes} onChange={handleAttributeChange} />
+                    </TabsContent>
 
-                <TabsContent value="relationships" className="mt-0 animate-in fade-in-50">
-                  <RelationshipTab
-                    characterId={characterId}
-                    bookId={formData.bookId}
-                    relationships={relationships}
-                    onAdd={addRelationship}
-                    onUpdate={updateRelationship}
-                    onRemove={(id) => removeRelationship(id, characterId)}
-                  />
-                </TabsContent>
-              </ScrollArea>
-            </div>
-          </Tabs>
-        </main>
+                    <TabsContent value="relationships" className="mt-0 animate-in fade-in-50">
+                      <RelationshipTab
+                        characterId={characterId}
+                        bookId={formData.bookId}
+                        relationships={relationships}
+                        onAdd={addRelationship}
+                        onUpdate={updateRelationship}
+                        onRemove={(id) => removeRelationship(id, characterId)}
+                      />
+                    </TabsContent>
+                  </ScrollArea>
+                </div>
+              </Tabs>
+            </main>
+          </div>
+        )}
       </div>
     </div>
   );

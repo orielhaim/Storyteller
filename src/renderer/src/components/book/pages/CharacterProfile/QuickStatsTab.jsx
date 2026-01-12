@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Wand2 } from 'lucide-react';
 
-const fields = [
+export const FIELDS = [
   { key: 'age', label: 'Age', type: 'text', placeholder: '25', colSpan: 1 },
   { key: 'occupation', label: 'Occupation', type: 'text', placeholder: 'Warrior', colSpan: 1 },
   { key: 'birthDate', label: 'Birth Date', type: 'date', colSpan: 1 },
@@ -60,7 +60,7 @@ export default function QuickStatsTab({ attributes, onChange }) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {fields.map(field => (
+          {FIELDS.map(field => (
             <FormField
               key={field.key}
               config={field}

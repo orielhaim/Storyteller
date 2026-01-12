@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Brain } from 'lucide-react';
 
-const fields = [
+export const FIELDS = [
   { key: 'characterTraits', label: 'Traits (comma separated)', type: 'textarea', rows: 2, colSpan: 2 },
   { key: 'mbti', label: 'MBTI', type: 'text', placeholder: 'INTJ', colSpan: 1 },
   { key: 'enneagram', label: 'Enneagram', type: 'text', placeholder: 'Type 5', colSpan: 1 },
@@ -44,7 +44,7 @@ export default function PsychologyTab({ attributes, onChange }) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {fields.map(field => (
+          {FIELDS.map(field => (
             <FormField
               key={field.key}
               config={field}
