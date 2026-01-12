@@ -3,12 +3,28 @@ import { Tree } from 'react-arborist';
 import { useWritingStore } from '@/stores/writingStore';
 import { useCharacterStore } from '@/stores/characterStore';
 import { useWorldStore } from '@/stores/worldStore';
-import { Folder, FileText, ChevronRight, ChevronDown, Book, Users, User, Globe, MapPin, Package, Plus } from 'lucide-react';
+import { Folder, FileText, ChevronRight, ChevronDown, Book, Users, User, Globe, MapPin, Package, Plus, Eye, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CreateCharacterDialog from '../dialogs/CreateCharacterDialog';
 import CreateWorldDialog from '../dialogs/CreateWorldDialog';
 import CreateLocationDialog from '../dialogs/CreateLocationDialog';
 import CreateObjectDialog from '../dialogs/CreateObjectDialog';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 function buildTreeData(bookId, chapters, scenes, characters, worlds, locations, objects) {
   if (!bookId) return [];
@@ -143,14 +159,16 @@ function buildTreeData(bookId, chapters, scenes, characters, worlds, locations, 
   }];
 }
 
-export default function FileTree({ bookId, onNodeClick }) {
-  const { chapters, scenes, fetchChapters, fetchScenesByBook, reorderScenes, reorderChapters, moveSceneToChapter } = useWritingStore();
-  const { characters, fetchCharacters, createCharacter } = useCharacterStore();
-  const { worlds, locations, objects, fetchWorlds, fetchLocations, fetchObjects, createWorld, createLocation, createObject } = useWorldStore();
+export default function FileTree({ bookId, onNodeClick, onItemDeleted }) {
+  const { chapters, scenes, fetchChapters, fetchScenesByBook, reorderScenes, reorderChapters, moveSceneToChapter, deleteChapter, deleteScene } = useWritingStore();
+  const { characters, fetchCharacters, createCharacter, deleteCharacter } = useCharacterStore();
+  const { worlds, locations, objects, fetchWorlds, fetchLocations, fetchObjects, createWorld, createLocation, createObject, deleteWorld, deleteLocation, deleteObject } = useWorldStore();
   const [isCreateCharacterDialogOpen, setIsCreateCharacterDialogOpen] = useState(false);
   const [isCreateWorldDialogOpen, setIsCreateWorldDialogOpen] = useState(false);
   const [isCreateLocationDialogOpen, setIsCreateLocationDialogOpen] = useState(false);
   const [isCreateObjectDialogOpen, setIsCreateObjectDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   useEffect(() => {
     if (!bookId) return;
@@ -224,10 +242,113 @@ export default function FileTree({ bookId, onNodeClick }) {
     }
   };
 
+  const getItemInfo = (type, entityId) => {
+    switch (type) {
+      case 'chapter':
+        return {
+          name: chapters.find(c => c.id === entityId)?.name || 'Chapter',
+          displayType: 'chapter',
+          deleteFunction: deleteChapter
+        };
+      case 'scene':
+        return {
+          name: scenes.find(s => s.id === entityId)?.name || 'Scene',
+          displayType: 'scene',
+          deleteFunction: deleteScene
+        };
+      case 'character':
+        const character = characters.find(c => c.id === entityId);
+        return {
+          name: character ? `${character.firstName} ${character.lastName || ''}`.trim() : 'Character',
+          displayType: 'character',
+          deleteFunction: deleteCharacter
+        };
+      case 'world':
+        return {
+          name: worlds.find(w => w.id === entityId)?.name || 'World',
+          displayType: 'world',
+          deleteFunction: deleteWorld
+        };
+      case 'location':
+        return {
+          name: locations.find(l => l.id === entityId)?.name || 'Location',
+          displayType: 'location',
+          deleteFunction: deleteLocation
+        };
+      case 'object':
+        return {
+          name: objects.find(o => o.id === entityId)?.name || 'Object',
+          displayType: 'object',
+          deleteFunction: deleteObject
+        };
+      default:
+        return null;
+    }
+  };
+
   const handleActivate = (node) => {
     if (!onNodeClick || !node?.data) return;
 
     onNodeClick(node.data.type, node.data.entityId, node.data);
+  };
+
+  const handleOpenItem = (node) => {
+    handleActivate(node);
+  };
+
+  const handleDeleteItem = (node) => {
+    const { type, entityId } = node.data;
+    const itemInfo = getItemInfo(type, entityId);
+    if (itemInfo) {
+      setItemToDelete({ type, entityId, name: itemInfo.name, displayType: itemInfo.displayType, deleteFunction: itemInfo.deleteFunction });
+      setDeleteDialogOpen(true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      const { type, entityId, deleteFunction } = itemToDelete;
+
+      if (type === 'chapter') {
+        await deleteFunction(entityId, bookId);
+      } else if (type === 'scene') {
+        const scene = scenes.find(s => s.id === entityId);
+        await deleteFunction(entityId, scene?.chapterId, bookId);
+      } else {
+        await deleteFunction(entityId);
+      }
+
+      if (onItemDeleted) {
+        onItemDeleted(type, entityId);
+      }
+
+      switch (type) {
+        case 'chapter':
+        case 'scene':
+          fetchChapters(bookId);
+          fetchScenesByBook(bookId);
+          break;
+        case 'character':
+          fetchCharacters(bookId);
+          break;
+        case 'world':
+          fetchWorlds(bookId);
+          break;
+        case 'location':
+          fetchLocations(bookId);
+          break;
+        case 'object':
+          fetchObjects(bookId);
+          break;
+      }
+    } catch (error) {
+      console.error('Failed to delete item:', error);
+    } finally {
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    }
   };
 
   const handleMove = async (args) => {
@@ -299,7 +420,7 @@ export default function FileTree({ bookId, onNodeClick }) {
         openByDefault={true}
         disableDrag={(node) => node.data?.type === 'main' || node.data?.type === 'characters' || node.data?.type === 'character-role' || node.data?.type === 'world-category' || node.data?.type === 'worlds' || node.data?.type === 'locations' || node.data?.type === 'world-objects'}
       >
-        {(nodeProps) => <NodeRenderer {...nodeProps} onAddCharacter={handleAddCharacter} onAddWorld={handleAddWorld} onAddLocation={handleAddLocation} onAddObject={handleAddObject} />}
+        {(nodeProps) => <NodeRenderer {...nodeProps} onAddCharacter={handleAddCharacter} onAddWorld={handleAddWorld} onAddLocation={handleAddLocation} onAddObject={handleAddObject} onOpenItem={handleOpenItem} onDeleteItem={handleDeleteItem} />}
       </Tree>
 
       <CreateCharacterDialog
@@ -330,11 +451,28 @@ export default function FileTree({ bookId, onNodeClick }) {
         onCreate={handleCreateObject}
         onClose={() => setIsCreateObjectDialogOpen(false)}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {itemToDelete?.displayType}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{itemToDelete?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-function NodeRenderer({ node, style, dragHandle, tree, onAddCharacter, onAddWorld, onAddLocation, onAddObject }) {
+function NodeRenderer({ node, style, dragHandle, tree, onAddCharacter, onAddWorld, onAddLocation, onAddObject, onOpenItem, onDeleteItem }) {
   const { type, name, children } = node.data;
   const isSelected = node.isSelected;
   const hasChildren = children && children.length > 0;
@@ -343,8 +481,9 @@ function NodeRenderer({ node, style, dragHandle, tree, onAddCharacter, onAddWorl
   const isDragging = node.isDragging;
   const isOver = node.isOver;
   const isOverParent = node.isOverParent;
+  const canHaveContextMenu = ['chapter', 'scene', 'character', 'world', 'location', 'object'].includes(type);
 
-  return (
+  const nodeContent = (
     <div
       ref={dragHandle}
       style={style}
@@ -436,6 +575,28 @@ function NodeRenderer({ node, style, dragHandle, tree, onAddCharacter, onAddWorl
       )}
     </div>
   );
+
+  if (canHaveContextMenu) {
+    return (
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          {nodeContent}
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={() => onOpenItem(node)}>
+            <Eye className="h-4 w-4 mr-2" />
+            Open
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => onDeleteItem(node)} variant="destructive">
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    );
+  }
+
+  return nodeContent;
 }
 
 function NodeIcon({ type, isOpen }) {

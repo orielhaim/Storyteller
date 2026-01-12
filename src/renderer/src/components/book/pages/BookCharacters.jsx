@@ -6,13 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
-import { Users, Plus, Search, Filter } from 'lucide-react';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Users, Plus, Search, Filter, ExternalLink, Trash2 } from 'lucide-react';
 import { useCharacterStore } from '@/stores/characterStore';
 import useImageLoader from '@/hooks/useImageLoader';
 import CharacterProfile from './CharacterProfile';
 import CreateCharacterDialog from './dialogs/CreateCharacterDialog';
 
-function CharacterCard({ character, size = 'medium', onClick }) {
+function CharacterCard({ character, size = 'medium', onClick, onDelete }) {
   const imageData = useImageLoader(character.avatar);
 
   const sizeClasses = {
@@ -22,44 +24,58 @@ function CharacterCard({ character, size = 'medium', onClick }) {
   };
 
   return (
-    <Card
-      className={`${sizeClasses[size]} cursor-pointer hover:shadow-lg transition-shadow`}
-      onClick={() => onClick(character)}
-    >
-      <CardContent className="p-4 flex flex-col items-center text-center">
-        <Avatar className="w-16 h-16 mb-3">
-          <AvatarImage src={`data:image/jpeg;${imageData}`} alt={character.firstName} />
-          <AvatarFallback>
-            {character.firstName.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <h3 className="font-semibold text-sm mb-1">{character.firstName} {character.lastName}</h3>
-        {character.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-            {character.description}
-          </p>
-        )}
-        {character.groups && character.groups.length > 0 && (
-          <div className="flex flex-wrap gap-1 justify-center">
-            {character.groups.slice(0, 2).map((group, index) => (
-              <Badge key={index} variant="outline" className="text-xs px-1 py-0">
-                {group}
-              </Badge>
-            ))}
-            {character.groups.length > 2 && (
-              <Badge variant="outline" className="text-xs px-1 py-0">
-                +{character.groups.length - 2}
-              </Badge>
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <Card
+          className={`${sizeClasses[size]} cursor-pointer hover:shadow-lg transition-shadow`}
+          onClick={() => onClick(character)}
+        >
+          <CardContent className="p-4 flex flex-col items-center text-center">
+            <Avatar className="w-16 h-16 mb-3">
+              <AvatarImage src={`data:image/jpeg;${imageData}`} alt={character.firstName} />
+              <AvatarFallback>
+                {character.firstName.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <h3 className="font-semibold text-sm mb-1">{character.firstName} {character.lastName}</h3>
+            {character.description && (
+              <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                {character.description}
+              </p>
             )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            {character.groups && character.groups.length > 0 && (
+              <div className="flex flex-wrap gap-1 justify-center">
+                {character.groups.slice(0, 2).map((group, index) => (
+                  <Badge key={index} variant="outline" className="text-xs px-1 py-0">
+                    {group}
+                  </Badge>
+                ))}
+                {character.groups.length > 2 && (
+                  <Badge variant="outline" className="text-xs px-1 py-0">
+                    +{character.groups.length - 2}
+                  </Badge>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={() => onClick(character)}>
+          <ExternalLink className="h-4 w-4 mr-2" />
+          Open
+        </ContextMenuItem>
+        <ContextMenuItem variant="destructive" onClick={() => onDelete(character)}>
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
 
 
-function CharacterSection({ title, characters, cardSize = 'medium', onCharacterClick }) {
+function CharacterSection({ title, characters, cardSize = 'medium', onCharacterClick, onCharacterDelete }) {
   if (!characters.length) return null;
 
   return (
@@ -72,6 +88,7 @@ function CharacterSection({ title, characters, cardSize = 'medium', onCharacterC
             character={character}
             size={cardSize}
             onClick={onCharacterClick}
+            onDelete={onCharacterDelete}
           />
         ))}
       </div>
@@ -80,11 +97,13 @@ function CharacterSection({ title, characters, cardSize = 'medium', onCharacterC
 }
 
 function BookCharacters({ book, onOpenCharacter, dockviewMode = false }) {
-  const { characters, loading, fetchCharacters, createCharacter } = useCharacterStore();
+  const { characters, loading, fetchCharacters, createCharacter, deleteCharacter } = useCharacterStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedCharacterId, setSelectedCharacterId] = useState(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [characterToDelete, setCharacterToDelete] = useState(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchCharacters(book.id);
@@ -125,6 +144,19 @@ function BookCharacters({ book, onOpenCharacter, dockviewMode = false }) {
 
   const handleBackToCast = () => {
     setSelectedCharacterId(null);
+  };
+
+  const handleDeleteCharacter = (character) => {
+    setCharacterToDelete(character);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteCharacter = async () => {
+    if (characterToDelete) {
+      await deleteCharacter(characterToDelete.id);
+      setIsDeleteDialogOpen(false);
+      setCharacterToDelete(null);
+    }
   };
 
   // Show character profile if one is selected
@@ -214,30 +246,35 @@ function BookCharacters({ book, onOpenCharacter, dockviewMode = false }) {
                 characters={groupedCharacters.protagonist || []}
                 cardSize="large"
                 onCharacterClick={handleCharacterClick}
+                onCharacterDelete={handleDeleteCharacter}
               />
               <CharacterSection
                 title="Supporting Characters"
                 characters={groupedCharacters.supporting || []}
                 cardSize="medium"
                 onCharacterClick={handleCharacterClick}
+                onCharacterDelete={handleDeleteCharacter}
               />
               <CharacterSection
                 title="Antagonists"
                 characters={groupedCharacters.antagonist || []}
                 cardSize="medium"
                 onCharacterClick={handleCharacterClick}
+                onCharacterDelete={handleDeleteCharacter}
               />
               <CharacterSection
                 title="Marginal Characters"
                 characters={groupedCharacters.marginal || []}
                 cardSize="small"
                 onCharacterClick={handleCharacterClick}
+                onCharacterDelete={handleDeleteCharacter}
               />
               <CharacterSection
                 title="Unsorted"
                 characters={groupedCharacters.unsorted || []}
                 cardSize="small"
                 onCharacterClick={handleCharacterClick}
+                onCharacterDelete={handleDeleteCharacter}
               />
 
             </>
@@ -250,6 +287,24 @@ function BookCharacters({ book, onOpenCharacter, dockviewMode = false }) {
         onCreate={(data) => { handleCreateCharacter(data); setIsCreateDialogOpen(false); }}
         onClose={() => setIsCreateDialogOpen(false)}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Character</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{characterToDelete?.firstName} {characterToDelete?.lastName}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteCharacter} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </Dialog>
     </div>
   );

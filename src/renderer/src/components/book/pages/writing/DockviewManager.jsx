@@ -81,6 +81,13 @@ const DockviewManager = forwardRef(({ components = {}, onReady: onReadyCallback,
         panel.api.close();
       }
     },
+    forceRemovePanel: (id) => {
+      if (!apiRef.current) return;
+      const panel = apiRef.current.getPanel(id);
+      if (panel) {
+        panel.api.close();
+      }
+    },
     getPanel: (id) => {
       return apiRef.current?.getPanel(id) || null;
     },

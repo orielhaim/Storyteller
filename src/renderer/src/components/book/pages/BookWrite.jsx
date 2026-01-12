@@ -22,6 +22,24 @@ function BookWrite({ book }) {
   const { characters } = useCharacterStore();
   const { worlds, locations, objects } = useWorldStore();
 
+  const handleItemDeleted = useCallback((type, id) => {
+    if (!dockviewRef.current) return;
+
+    if (type === 'chapter') {
+      dockviewRef.current.forceRemovePanel(`scenes-${id}`);
+    } else if (type === 'scene') {
+      dockviewRef.current.forceRemovePanel(`scene-${id}`);
+    } else if (type === 'character') {
+      dockviewRef.current.forceRemovePanel(`character-${id}`);
+    } else if (type === 'world') {
+      dockviewRef.current.forceRemovePanel(`world-${id}`);
+    } else if (type === 'location') {
+      dockviewRef.current.forceRemovePanel(`location-${id}`);
+    } else if (type === 'object') {
+      dockviewRef.current.forceRemovePanel(`object-${id}`);
+    }
+  }, []);
+
   const handleNodeClick = useCallback((type, id, data) => {
     if (!dockviewRef.current) return;
 
@@ -251,7 +269,7 @@ function BookWrite({ book }) {
   return (
     <ResizablePanelGroup direction="horizontal" style={{ height: '' }} className="h-[calc(100vh-4.5rem)]">
       <ResizablePanel minSize={150} maxSize={300} defaultSize={250} collapsible>
-        <FileTree bookId={book.id} onNodeClick={handleNodeClick} />
+        <FileTree bookId={book.id} onNodeClick={handleNodeClick} onItemDeleted={handleItemDeleted} />
         </ResizablePanel>
       <ResizablePanel className="overflow-hidden">
         <DockviewManager
