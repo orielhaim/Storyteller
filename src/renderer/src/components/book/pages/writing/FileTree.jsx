@@ -1,10 +1,14 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Tree } from 'react-arborist';
 import { useWritingStore } from '@/stores/writingStore';
 import { useCharacterStore } from '@/stores/characterStore';
 import { useWorldStore } from '@/stores/worldStore';
-import { Folder, FileText, ChevronRight, ChevronDown, Book, Users, User, Globe, MapPin, Package } from 'lucide-react';
+import { Folder, FileText, ChevronRight, ChevronDown, Book, Users, User, Globe, MapPin, Package, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import CreateCharacterDialog from '../dialogs/CreateCharacterDialog';
+import CreateWorldDialog from '../dialogs/CreateWorldDialog';
+import CreateLocationDialog from '../dialogs/CreateLocationDialog';
+import CreateObjectDialog from '../dialogs/CreateObjectDialog';
 
 function buildTreeData(bookId, chapters, scenes, characters, worlds, locations, objects) {
   if (!bookId) return [];
@@ -141,8 +145,12 @@ function buildTreeData(bookId, chapters, scenes, characters, worlds, locations, 
 
 export default function FileTree({ bookId, onNodeClick }) {
   const { chapters, scenes, fetchChapters, fetchScenesByBook, reorderScenes, reorderChapters, moveSceneToChapter } = useWritingStore();
-  const { characters, fetchCharacters } = useCharacterStore();
-  const { worlds, locations, objects, fetchWorlds, fetchLocations, fetchObjects } = useWorldStore();
+  const { characters, fetchCharacters, createCharacter } = useCharacterStore();
+  const { worlds, locations, objects, fetchWorlds, fetchLocations, fetchObjects, createWorld, createLocation, createObject } = useWorldStore();
+  const [isCreateCharacterDialogOpen, setIsCreateCharacterDialogOpen] = useState(false);
+  const [isCreateWorldDialogOpen, setIsCreateWorldDialogOpen] = useState(false);
+  const [isCreateLocationDialogOpen, setIsCreateLocationDialogOpen] = useState(false);
+  const [isCreateObjectDialogOpen, setIsCreateObjectDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!bookId) return;
@@ -155,6 +163,66 @@ export default function FileTree({ bookId, onNodeClick }) {
   }, [bookId, fetchChapters, fetchScenesByBook, fetchCharacters, fetchWorlds, fetchLocations, fetchObjects]);
 
   const treeData = useMemo(() => buildTreeData(bookId, chapters, scenes, characters, worlds, locations, objects), [bookId, chapters, scenes, characters, worlds, locations, objects]);
+
+  const handleAddCharacter = () => {
+    setIsCreateCharacterDialogOpen(true);
+  };
+
+  const handleCreateCharacter = async (characterData) => {
+    try {
+      await createCharacter(characterData);
+      setIsCreateCharacterDialogOpen(false);
+      // Refresh characters after creation
+      fetchCharacters(bookId);
+    } catch (error) {
+      console.error('Failed to create character:', error);
+    }
+  };
+
+  const handleAddWorld = () => {
+    setIsCreateWorldDialogOpen(true);
+  };
+
+  const handleCreateWorld = async (worldData) => {
+    try {
+      await createWorld(worldData);
+      setIsCreateWorldDialogOpen(false);
+      // Refresh worlds after creation
+      fetchWorlds(bookId);
+    } catch (error) {
+      console.error('Failed to create world:', error);
+    }
+  };
+
+  const handleAddLocation = () => {
+    setIsCreateLocationDialogOpen(true);
+  };
+
+  const handleCreateLocation = async (locationData) => {
+    try {
+      await createLocation(locationData);
+      setIsCreateLocationDialogOpen(false);
+      // Refresh locations after creation
+      fetchLocations(bookId);
+    } catch (error) {
+      console.error('Failed to create location:', error);
+    }
+  };
+
+  const handleAddObject = () => {
+    setIsCreateObjectDialogOpen(true);
+  };
+
+  const handleCreateObject = async (objectData) => {
+    try {
+      await createObject(objectData);
+      setIsCreateObjectDialogOpen(false);
+      // Refresh objects after creation
+      fetchObjects(bookId);
+    } catch (error) {
+      console.error('Failed to create object:', error);
+    }
+  };
 
   const handleActivate = (node) => {
     if (!onNodeClick || !node?.data) return;
@@ -223,6 +291,7 @@ export default function FileTree({ bookId, onNodeClick }) {
       <Tree
         key={`tree-${bookId}-${treeData.length}`}
         data={treeData}
+        width={"auto"}
         indent={16}
         rowHeight={32}
         onActivate={handleActivate}
@@ -230,13 +299,42 @@ export default function FileTree({ bookId, onNodeClick }) {
         openByDefault={true}
         disableDrag={(node) => node.data?.type === 'main' || node.data?.type === 'characters' || node.data?.type === 'character-role' || node.data?.type === 'world-category' || node.data?.type === 'worlds' || node.data?.type === 'locations' || node.data?.type === 'world-objects'}
       >
-        {NodeRenderer}
+        {(nodeProps) => <NodeRenderer {...nodeProps} onAddCharacter={handleAddCharacter} onAddWorld={handleAddWorld} onAddLocation={handleAddLocation} onAddObject={handleAddObject} />}
       </Tree>
+
+      <CreateCharacterDialog
+        bookId={bookId}
+        isOpen={isCreateCharacterDialogOpen}
+        onCreate={handleCreateCharacter}
+        onClose={() => setIsCreateCharacterDialogOpen(false)}
+      />
+
+      <CreateWorldDialog
+        bookId={bookId}
+        isOpen={isCreateWorldDialogOpen}
+        onCreate={handleCreateWorld}
+        onClose={() => setIsCreateWorldDialogOpen(false)}
+      />
+
+      <CreateLocationDialog
+        bookId={bookId}
+        worlds={worlds}
+        isOpen={isCreateLocationDialogOpen}
+        onCreate={handleCreateLocation}
+        onClose={() => setIsCreateLocationDialogOpen(false)}
+      />
+
+      <CreateObjectDialog
+        bookId={bookId}
+        isOpen={isCreateObjectDialogOpen}
+        onCreate={handleCreateObject}
+        onClose={() => setIsCreateObjectDialogOpen(false)}
+      />
     </div>
   );
 }
 
-function NodeRenderer({ node, style, dragHandle, tree }) {
+function NodeRenderer({ node, style, dragHandle, tree, onAddCharacter, onAddWorld, onAddLocation, onAddObject }) {
   const { type, name, children } = node.data;
   const isSelected = node.isSelected;
   const hasChildren = children && children.length > 0;
@@ -284,6 +382,58 @@ function NodeRenderer({ node, style, dragHandle, tree }) {
       <NodeIcon type={type} isOpen={node.isOpen} />
 
       <span className="truncate flex-1">{name}</span>
+
+      {type === 'characters' && onAddCharacter && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddCharacter();
+          }}
+          className="ml-2 p-1 hover:bg-accent rounded opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+          title="Add Character"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      )}
+
+      {type === 'worlds' && onAddWorld && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddWorld();
+          }}
+          className="ml-2 p-1 hover:bg-accent rounded opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+          title="Add World"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      )}
+
+      {type === 'locations' && onAddLocation && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddLocation();
+          }}
+          className="ml-2 p-1 hover:bg-accent rounded opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+          title="Add Location"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      )}
+
+      {type === 'world-objects' && onAddObject && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddObject();
+          }}
+          className="ml-2 p-1 hover:bg-accent rounded opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+          title="Add Object"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }

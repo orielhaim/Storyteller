@@ -34,6 +34,7 @@ We are building this project in phases. Here is our detailed development plan:
 - [ ] **Images**: Insert and edit images
 - [ ] **Mentions**: Insert and edit mentions to characters, worlds, locations, objects
 - [ ] **Revision History**: Basic undo/redo with draft snapshots
+- [ ] **Vim Motions**: Vim-like motions for navigation and editing
 
 ## Phase 4: Quality of Life Features
 

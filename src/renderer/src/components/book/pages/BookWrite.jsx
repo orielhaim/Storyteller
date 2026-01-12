@@ -8,6 +8,8 @@ import WorldDetail from './world/WorldDetail';
 import LocationDetail from './world/LocationDetail';
 import ObjectDetail from './world/ObjectDetail';
 import CharacterProfile from './CharacterProfile';
+import BookCharacters from './BookCharacters';
+import BookWorld from './BookWorld';
 import { useWritingStore } from '@/stores/writingStore';
 import { useCharacterStore } from '@/stores/characterStore';
 import { useWorldStore } from '@/stores/worldStore';
@@ -28,6 +30,18 @@ function BookWrite({ book }) {
       dockviewRef.current.addPanel(panelId, 'chapters', {
         bookId: book.id,
         title: 'Chapters',
+      });
+    } else if (type === 'characters') {
+      const panelId = 'characters-main';
+      dockviewRef.current.addPanel(panelId, 'characters', {
+        bookId: book.id,
+        title: 'Characters',
+      });
+    } else if (type === 'world-category') {
+      const panelId = 'world-main';
+      dockviewRef.current.addPanel(panelId, 'world', {
+        bookId: book.id,
+        title: 'World Building',
       });
     } else if (type === 'chapter') {
       const chapter = chapters.find(c => c.id === id);
@@ -102,11 +116,67 @@ function BookWrite({ book }) {
     });
   }, []);
 
+  const handleOpenCharacter = useCallback((character) => {
+    if (!dockviewRef.current) return;
+    const panelId = `character-${character.id}`;
+    dockviewRef.current.addPanel(panelId, 'character-editor', {
+      characterId: character.id,
+      characterName: `${character.firstName} ${character.lastName || ''}`.trim(),
+      title: `${character.firstName} ${character.lastName || ''}`.trim(),
+    });
+  }, []);
+
+  const handleOpenWorld = useCallback((world) => {
+    if (!dockviewRef.current) return;
+    const panelId = `world-${world.id}`;
+    dockviewRef.current.addPanel(panelId, 'world-editor', {
+      worldId: world.id,
+      worldName: world.name,
+      title: world.name,
+    });
+  }, []);
+
+  const handleOpenLocation = useCallback((location) => {
+    if (!dockviewRef.current) return;
+    const panelId = `location-${location.id}`;
+    dockviewRef.current.addPanel(panelId, 'location-editor', {
+      locationId: location.id,
+      locationName: location.name,
+      title: location.name,
+    });
+  }, []);
+
+  const handleOpenObject = useCallback((object) => {
+    if (!dockviewRef.current) return;
+    const panelId = `object-${object.id}`;
+    dockviewRef.current.addPanel(panelId, 'object-editor', {
+      objectId: object.id,
+      objectName: object.name,
+      title: object.name,
+    });
+  }, []);
+
   const components = useMemo(() => ({
     chapters: (props) => (
       <ChaptersWindow
         bookId={props.params.bookId}
         onOpenChapter={handleOpenChapter}
+      />
+    ),
+    characters: (props) => (
+      <BookCharacters
+        book={{ id: props.params.bookId }}
+        onOpenCharacter={handleOpenCharacter}
+        dockviewMode={true}
+      />
+    ),
+    world: (props) => (
+      <BookWorld
+        book={book}
+        onOpenWorld={handleOpenWorld}
+        onOpenLocation={handleOpenLocation}
+        onOpenObject={handleOpenObject}
+        dockviewMode={true}
       />
     ),
     scenes: (props) => (
@@ -151,7 +221,7 @@ function BookWrite({ book }) {
         showBackButton={false}
       />
     ),
-  }), [handleOpenChapter, handleOpenScene]);
+  }), [handleOpenChapter, handleOpenScene, handleOpenCharacter, handleOpenWorld, handleOpenLocation, handleOpenObject]);
 
   const handleDockviewReady = useCallback(() => {
     setDockviewReady(true);

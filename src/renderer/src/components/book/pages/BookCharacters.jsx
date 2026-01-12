@@ -5,13 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Users, Plus, Search, Filter } from 'lucide-react';
 import { useCharacterStore } from '@/stores/characterStore';
 import useImageLoader from '@/hooks/useImageLoader';
 import CharacterProfile from './CharacterProfile';
+import CreateCharacterDialog from './dialogs/CreateCharacterDialog';
 
 function CharacterCard({ character, size = 'medium', onClick }) {
   const imageData = useImageLoader(character.avatar);
@@ -59,102 +58,12 @@ function CharacterCard({ character, size = 'medium', onClick }) {
   );
 }
 
-function CreateCharacterDialog({ bookId, onCreate, onClose }) {
-  const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    role: 'supporting',
-    description: '',
-  });
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.first_name.trim()) return;
-
-    try {
-      await onCreate({ ...formData, bookId });
-      setFormData({ first_name: '', last_name: '', role: 'supporting', description: '' });
-    } catch (error) {
-      console.error('Failed to create character:', error);
-    }
-  };
-
-  return (
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Create New Character</DialogTitle>
-      </DialogHeader>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex flex-row gap-2">
-          <div className="space-y-2">
-            <Label htmlFor="characterFirst_name">First Name *</Label>
-            <Input
-              id="characterFirst_name"
-              value={formData.first_name}
-              onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
-              placeholder="Enter character first name"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="characterLast_name">Last Name</Label>
-            <Input
-              id="characterLast_name"
-              value={formData.last_name}
-              onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
-              placeholder="Enter character last name"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="characterRole">Role</Label>
-          <Select
-            value={formData.role}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="protagonist">Protagonist</SelectItem>
-              <SelectItem value="supporting">Supporting Character</SelectItem>
-              <SelectItem value="antagonist">Antagonist</SelectItem>
-              <SelectItem value="marginal">Marginal</SelectItem>
-              <SelectItem value="unsorted">Unsorted</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="characterDescription">Description</Label>
-          <Textarea
-            id="characterDescription"
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            placeholder="Brief one-liner description..."
-            rows={3}
-          />
-        </div>
-
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => { setFormData({ first_name: '', last_name: '', role: 'supporting', description: '' }); onClose(); }}>
-            Cancel
-          </Button>
-          <Button type="submit">
-            Create Character
-          </Button>
-        </div>
-      </form>
-    </DialogContent>
-  );
-}
 
 function CharacterSection({ title, characters, cardSize = 'medium', onCharacterClick }) {
   if (!characters.length) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mb-2">
       <h2 className="text-xl font-semibold">{title}</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {characters.map(character => (
@@ -170,7 +79,7 @@ function CharacterSection({ title, characters, cardSize = 'medium', onCharacterC
   );
 }
 
-function BookCharacters({ book }) {
+function BookCharacters({ book, onOpenCharacter, dockviewMode = false }) {
   const { characters, loading, fetchCharacters, createCharacter } = useCharacterStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -207,7 +116,11 @@ function BookCharacters({ book }) {
   };
 
   const handleCharacterClick = (character) => {
-    setSelectedCharacterId(character.id);
+    if (dockviewMode && onOpenCharacter) {
+      onOpenCharacter(character);
+    } else {
+      setSelectedCharacterId(character.id);
+    }
   };
 
   const handleBackToCast = () => {
@@ -225,10 +138,10 @@ function BookCharacters({ book }) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-4 h-full overflow-y-auto">
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         {/* Header */}
-        <Card>
+        <Card className="mb-2">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -331,12 +244,12 @@ function BookCharacters({ book }) {
           )}
         </div>
 
-        {/* Create Character Dialog Content */}
-        <CreateCharacterDialog
-          bookId={book.id}
-          onCreate={(data) => { handleCreateCharacter(data); setIsCreateDialogOpen(false); }}
-          onClose={() => setIsCreateDialogOpen(false)}
-        />
+      <CreateCharacterDialog
+        bookId={book.id}
+        isOpen={isCreateDialogOpen}
+        onCreate={(data) => { handleCreateCharacter(data); setIsCreateDialogOpen(false); }}
+        onClose={() => setIsCreateDialogOpen(false)}
+      />
       </Dialog>
     </div>
   );

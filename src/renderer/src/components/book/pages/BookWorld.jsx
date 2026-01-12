@@ -7,14 +7,14 @@ import { useWorldStore } from '@/stores/worldStore';
 import WorldCard from './world/WorldCard';
 import LocationCard from './world/LocationCard';
 import ObjectCard from './world/ObjectCard';
-import CreateWorldDialog from './world/CreateWorldDialog';
-import CreateLocationDialog from './world/CreateLocationDialog';
-import CreateObjectDialog from './world/CreateObjectDialog';
+import CreateWorldDialog from './dialogs/CreateWorldDialog';
+import CreateLocationDialog from './dialogs/CreateLocationDialog';
+import CreateObjectDialog from './dialogs/CreateObjectDialog';
 import WorldDetail from './world/WorldDetail';
 import LocationDetail from './world/LocationDetail';
 import ObjectDetail from './world/ObjectDetail';
 
-function BookWorld({ book }) {
+function BookWorld({ book, onOpenWorld, onOpenLocation, onOpenObject, dockviewMode = false }) {
   const {
     worlds,
     locations,
@@ -22,7 +22,10 @@ function BookWorld({ book }) {
     loading,
     fetchWorlds,
     fetchLocations,
-    fetchObjects
+    fetchObjects,
+    createWorld,
+    createLocation,
+    createObject
   } = useWorldStore();
 
   const [isCreateWorldDialogOpen, setIsCreateWorldDialogOpen] = useState(false);
@@ -41,20 +44,65 @@ function BookWorld({ book }) {
     fetchObjects(book.id);
   }, [book.id, fetchWorlds, fetchLocations, fetchObjects]);
 
+  const handleCreateWorld = async (worldData) => {
+    try {
+      await createWorld(worldData);
+      setIsCreateWorldDialogOpen(false);
+      // Refresh worlds after creation
+      fetchWorlds(book.id);
+    } catch (error) {
+      console.error('Failed to create world:', error);
+    }
+  };
+
+  const handleCreateLocation = async (locationData) => {
+    try {
+      await createLocation(locationData);
+      setIsCreateLocationDialogOpen(false);
+      // Refresh locations after creation
+      fetchLocations(book.id);
+    } catch (error) {
+      console.error('Failed to create location:', error);
+    }
+  };
+
+  const handleCreateObject = async (objectData) => {
+    try {
+      await createObject(objectData);
+      setIsCreateObjectDialogOpen(false);
+      // Refresh objects after creation
+      fetchObjects(book.id);
+    } catch (error) {
+      console.error('Failed to create object:', error);
+    }
+  };
+
   // Navigation handlers
   const handleWorldClick = (world) => {
-    setActiveTab('worlds');
-    setSelectedWorldId(world.id);
+    if (dockviewMode && onOpenWorld) {
+      onOpenWorld(world);
+    } else {
+      setActiveTab('worlds');
+      setSelectedWorldId(world.id);
+    }
   };
 
   const handleLocationClick = (location) => {
-    setActiveTab('locations');
-    setSelectedLocationId(location.id);
+    if (dockviewMode && onOpenLocation) {
+      onOpenLocation(location);
+    } else {
+      setActiveTab('locations');
+      setSelectedLocationId(location.id);
+    }
   };
 
   const handleObjectClick = (object) => {
-    setActiveTab('objects');
-    setSelectedObjectId(object.id);
+    if (dockviewMode && onOpenObject) {
+      onOpenObject(object);
+    } else {
+      setActiveTab('objects');
+      setSelectedObjectId(object.id);
+    }
   };
 
   const handleBackToWorld = () => {
@@ -63,21 +111,23 @@ function BookWorld({ book }) {
     setSelectedObjectId(null);
   };
 
-  // Show detail pages if an item is selected
-  if (selectedWorldId) {
-    return <WorldDetail worldId={selectedWorldId} onBack={handleBackToWorld} />;
-  }
+  // Show detail pages if an item is selected (only in non-dockview mode)
+  if (!dockviewMode) {
+    if (selectedWorldId) {
+      return <WorldDetail worldId={selectedWorldId} onBack={handleBackToWorld} />;
+    }
 
-  if (selectedLocationId) {
-    return <LocationDetail locationId={selectedLocationId} onBack={handleBackToWorld} />;
-  }
+    if (selectedLocationId) {
+      return <LocationDetail locationId={selectedLocationId} onBack={handleBackToWorld} />;
+    }
 
-  if (selectedObjectId) {
-    return <ObjectDetail objectId={selectedObjectId} onBack={handleBackToWorld} />;
+    if (selectedObjectId) {
+      return <ObjectDetail objectId={selectedObjectId} onBack={handleBackToWorld} />;
+    }
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-2 h-full overflow-y-auto">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -210,26 +260,26 @@ function BookWorld({ book }) {
       {/* Create World Dialog */}
       <CreateWorldDialog
         bookId={book.id}
-        open={isCreateWorldDialogOpen}
-        onOpenChange={setIsCreateWorldDialogOpen}
-        onCreate={() => setIsCreateWorldDialogOpen(false)}
+        isOpen={isCreateWorldDialogOpen}
+        onCreate={handleCreateWorld}
+        onClose={() => setIsCreateWorldDialogOpen(false)}
       />
 
       {/* Create Location Dialog */}
       <CreateLocationDialog
         bookId={book.id}
         worlds={worlds}
-        open={isCreateLocationDialogOpen}
-        onOpenChange={setIsCreateLocationDialogOpen}
-        onCreate={() => setIsCreateLocationDialogOpen(false)}
+        isOpen={isCreateLocationDialogOpen}
+        onCreate={handleCreateLocation}
+        onClose={() => setIsCreateLocationDialogOpen(false)}
       />
 
       {/* Create Object Dialog */}
       <CreateObjectDialog
         bookId={book.id}
-        open={isCreateObjectDialogOpen}
-        onOpenChange={setIsCreateObjectDialogOpen}
-        onCreate={() => setIsCreateObjectDialogOpen(false)}
+        isOpen={isCreateObjectDialogOpen}
+        onCreate={handleCreateObject}
+        onClose={() => setIsCreateObjectDialogOpen(false)}
       />
     </div>
   );
