@@ -120,7 +120,7 @@ export const sceneHandlers = {
     return result[0];
   }),
 
-  update: handleRequest(async (id, { name, content, position }) => {
+  update: handleRequest(async (id, { name, content, position, status }) => {
     const updateData = {
       updatedAt: Date.now(),
     };
@@ -128,6 +128,7 @@ export const sceneHandlers = {
     if (name !== undefined) updateData.name = name;
     if (content !== undefined) updateData.content = content;
     if (position !== undefined) updateData.position = position;
+    if (status !== undefined) updateData.status = status;
 
     const result = await db.update(scenes)
       .set(updateData)

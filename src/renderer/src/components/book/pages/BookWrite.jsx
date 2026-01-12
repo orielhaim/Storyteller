@@ -209,6 +209,7 @@ function BookWrite({ book }) {
       <SceneEditorWindow
         sceneId={props.params.sceneId}
         sceneName={props.params.sceneName}
+        onSceneDeleted={(sceneId) => handleItemDeleted('scene', sceneId)}
       />
     ),
     'character-editor': (props) => (

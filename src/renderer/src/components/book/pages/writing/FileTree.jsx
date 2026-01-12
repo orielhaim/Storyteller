@@ -9,6 +9,7 @@ import CreateCharacterDialog from '../dialogs/CreateCharacterDialog';
 import CreateWorldDialog from '../dialogs/CreateWorldDialog';
 import CreateLocationDialog from '../dialogs/CreateLocationDialog';
 import CreateObjectDialog from '../dialogs/CreateObjectDialog';
+import CreateSceneDialog from './dialogs/CreateSceneDialog';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -167,6 +168,8 @@ export default function FileTree({ bookId, onNodeClick, onItemDeleted }) {
   const [isCreateWorldDialogOpen, setIsCreateWorldDialogOpen] = useState(false);
   const [isCreateLocationDialogOpen, setIsCreateLocationDialogOpen] = useState(false);
   const [isCreateObjectDialogOpen, setIsCreateObjectDialogOpen] = useState(false);
+  const [isCreateSceneDialogOpen, setIsCreateSceneDialogOpen] = useState(false);
+  const [chapterIdForScene, setChapterIdForScene] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
 
@@ -240,6 +243,18 @@ export default function FileTree({ bookId, onNodeClick, onItemDeleted }) {
     } catch (error) {
       console.error('Failed to create object:', error);
     }
+  };
+
+  const handleAddScene = (chapterId) => {
+    setChapterIdForScene(chapterId);
+    setIsCreateSceneDialogOpen(true);
+  };
+
+  const handleCreateScene = async () => {
+    setIsCreateSceneDialogOpen(false);
+    setChapterIdForScene(null);
+    // Refresh scenes after creation
+    fetchScenesByBook(bookId);
   };
 
   const getItemInfo = (type, entityId) => {
@@ -420,7 +435,7 @@ export default function FileTree({ bookId, onNodeClick, onItemDeleted }) {
         openByDefault={true}
         disableDrag={(node) => node.data?.type === 'main' || node.data?.type === 'characters' || node.data?.type === 'character-role' || node.data?.type === 'world-category' || node.data?.type === 'worlds' || node.data?.type === 'locations' || node.data?.type === 'world-objects'}
       >
-        {(nodeProps) => <NodeRenderer {...nodeProps} onAddCharacter={handleAddCharacter} onAddWorld={handleAddWorld} onAddLocation={handleAddLocation} onAddObject={handleAddObject} onOpenItem={handleOpenItem} onDeleteItem={handleDeleteItem} />}
+        {(nodeProps) => <NodeRenderer {...nodeProps} onAddCharacter={handleAddCharacter} onAddWorld={handleAddWorld} onAddLocation={handleAddLocation} onAddObject={handleAddObject} onAddScene={handleAddScene} onOpenItem={handleOpenItem} onDeleteItem={handleDeleteItem} />}
       </Tree>
 
       <CreateCharacterDialog
@@ -452,6 +467,14 @@ export default function FileTree({ bookId, onNodeClick, onItemDeleted }) {
         onClose={() => setIsCreateObjectDialogOpen(false)}
       />
 
+      <CreateSceneDialog
+        chapterId={chapterIdForScene}
+        bookId={bookId}
+        open={isCreateSceneDialogOpen}
+        onOpenChange={setIsCreateSceneDialogOpen}
+        onCreate={handleCreateScene}
+      />
+
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -472,7 +495,7 @@ export default function FileTree({ bookId, onNodeClick, onItemDeleted }) {
   );
 }
 
-function NodeRenderer({ node, style, dragHandle, tree, onAddCharacter, onAddWorld, onAddLocation, onAddObject, onOpenItem, onDeleteItem }) {
+function NodeRenderer({ node, style, dragHandle, tree, onAddCharacter, onAddWorld, onAddLocation, onAddObject, onAddScene, onOpenItem, onDeleteItem }) {
   const { type, name, children } = node.data;
   const isSelected = node.isSelected;
   const hasChildren = children && children.length > 0;
@@ -521,6 +544,19 @@ function NodeRenderer({ node, style, dragHandle, tree, onAddCharacter, onAddWorl
       <NodeIcon type={type} isOpen={node.isOpen} />
 
       <span className="truncate flex-1">{name}</span>
+
+      {type === 'chapter' && onAddScene && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddScene(node.data.entityId);
+          }}
+          className="ml-2 p-1 hover:bg-accent rounded opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+          title="Add Scene"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      )}
 
       {type === 'characters' && onAddCharacter && (
         <button

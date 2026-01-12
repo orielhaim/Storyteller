@@ -4,16 +4,39 @@ import { useWritingStore } from '@/stores/writingStore';
 import { useDebouncedCallback } from '@/hooks/useDebounce.js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { FileText, Save, X } from 'lucide-react';
+import { FileText, Save, X, MoreVertical, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { BOOK_STATUS_CONFIG } from '@/config/statusConfig';
 
-function SceneEditorWindow({ sceneId, sceneName }) {
-  const { updateScene } = useWritingStore();
+function SceneEditorWindow({ sceneId, sceneName, onSceneDeleted }) {
+  const { updateScene, deleteScene } = useWritingStore();
   const [scene, setScene] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState('');
   const [isSavingName, setIsSavingName] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
 
   useEffect(() => {
@@ -93,6 +116,38 @@ function SceneEditorWindow({ sceneId, sceneName }) {
     }
   };
 
+  const handleStatusChange = async (newStatus) => {
+    if (!sceneId || !scene) return;
+
+    try {
+      await updateScene(sceneId, { status: newStatus });
+      setScene(prev => prev ? { ...prev, status: newStatus } : null);
+    } catch (error) {
+      console.error('Failed to update scene status:', error);
+    }
+  };
+
+  const handleClearStatus = async () => {
+    await handleStatusChange(null);
+  };
+
+  const handleDeleteScene = async () => {
+    if (!sceneId || !scene) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteScene(sceneId, scene.chapterId, scene.bookId);
+      // Notify parent component that scene was deleted
+      if (onSceneDeleted) {
+        onSceneDeleted(sceneId);
+      }
+    } catch (error) {
+      console.error('Failed to delete scene:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (isLoading || !scene || scene.id !== sceneId) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -134,13 +189,76 @@ function SceneEditorWindow({ sceneId, sceneName }) {
               </Button>
             </div>
           ) : (
-            <h3
-              className="font-medium cursor-pointer hover:text-primary transition-colors flex-1"
-              onDoubleClick={handleStartNameEdit}
-              title="Double-click to edit scene name"
-            >
-              {sceneName || scene?.name || 'Scene Editor'}
-            </h3>
+            <>
+              <h3
+                className="font-medium cursor-pointer hover:text-primary transition-colors flex-1"
+                onDoubleClick={handleStartNameEdit}
+                title="Double-click to edit scene name"
+              >
+                {sceneName || scene?.name || 'Scene Editor'}
+              </h3>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      {scene?.status ? BOOK_STATUS_CONFIG[scene.status]?.label : 'Status Change'}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {Object.entries(BOOK_STATUS_CONFIG)
+                        .filter(([key]) => key !== scene?.status)
+                        .map(([key, config]) => (
+                          <DropdownMenuItem
+                            key={key}
+                            onClick={() => handleStatusChange(key)}
+                          >
+                            {config.label}
+                          </DropdownMenuItem>
+                        ))}
+                      {scene?.status && (
+                        <DropdownMenuItem onClick={handleClearStatus}>
+                          Clear
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSeparator />
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Scene
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Scene</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this scene? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeleteScene}
+                          disabled={isDeleting}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {isDeleting ? 'Deleting...' : 'Delete'}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
           )}
           {isSaving && !isEditingName && (
             <span className="text-xs text-muted-foreground">Saving...</span>

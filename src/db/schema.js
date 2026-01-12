@@ -112,6 +112,7 @@ export const scenes = table("scenes", {
   bookId: t.int("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
   name: t.text().notNull(),
   content: t.text("content", { mode: "json" }).default(null),
+  status: t.text("status"),
   position: t.integer().notNull().default(0),
   createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
   updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
