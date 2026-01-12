@@ -166,8 +166,8 @@ function buildTreeData(bookId, chapters, scenes, characters, worlds, locations, 
 
 export default function FileTree({ bookId, onNodeClick, onItemDeleted }) {
   const { chapters, scenes, fetchChapters, fetchScenesByBook, reorderScenes, reorderChapters, moveSceneToChapter, deleteChapter, deleteScene } = useWritingStore();
-  const { characters, fetchCharacters, createCharacter, deleteCharacter } = useCharacterStore();
-  const { worlds, locations, objects, fetchWorlds, fetchLocations, fetchObjects, createWorld, createLocation, createObject, deleteWorld, deleteLocation, deleteObject } = useWorldStore();
+  const { characters, fetchCharacters, createCharacter, deleteCharacter, reorderCharacters, updateCharacter } = useCharacterStore();
+  const { worlds, locations, objects, fetchWorlds, fetchLocations, fetchObjects, createWorld, createLocation, createObject, deleteWorld, deleteLocation, deleteObject, reorderWorlds, reorderLocations, reorderObjects } = useWorldStore();
   const [isCreateCharacterDialogOpen, setIsCreateCharacterDialogOpen] = useState(false);
   const [isCreateWorldDialogOpen, setIsCreateWorldDialogOpen] = useState(false);
   const [isCreateLocationDialogOpen, setIsCreateLocationDialogOpen] = useState(false);
@@ -418,6 +418,70 @@ export default function FileTree({ bookId, onNodeClick, onItemDeleted }) {
         } else {
           await moveSceneToChapter(dragId, targetChapterId);
         }
+      } else if (dragType === 'character') {
+        const currentRole = dragNode.data.role;
+        let targetRole;
+
+        if (parentNode.data.type === 'character-role') {
+          targetRole = parentNode.data.entityId;
+        } else if (parentNode.data.type === 'character') {
+          targetRole = parentNode.data.role;
+        } else {
+          return;
+        }
+
+        if (currentRole !== targetRole) {
+          await updateCharacter(dragId, { role: targetRole });
+        }
+
+        // Use the updated role for calculating the new order
+        const updatedCharacters = characters.map(c =>
+          c.id === dragId ? { ...c, role: targetRole } : c
+        );
+
+        const roleCharacters = updatedCharacters.filter(c => (c.role || 'unsorted') === targetRole);
+        const characterIds = roleCharacters.map(c => c.id);
+
+        // Remove dragId if it was already in this role
+        const currentIndex = characterIds.indexOf(dragId);
+        if (currentIndex > -1) {
+          characterIds.splice(currentIndex, 1);
+        }
+
+        characterIds.splice(index, 0, dragId);
+
+        // Reorder all characters while keeping the ones from other roles in their relative positions
+        const otherRoleCharacters = updatedCharacters.filter(c => (c.role || 'unsorted') !== targetRole);
+        const allCharacterIds = [...otherRoleCharacters.map(c => c.id), ...characterIds];
+
+        await reorderCharacters(bookId, allCharacterIds);
+      } else if (dragType === 'world') {
+        if (parentNode.data.type !== 'worlds' && parentNode.data.type !== 'world') return;
+        const worldIds = worlds.map(w => w.id);
+        const currentIndex = worldIds.indexOf(dragId);
+        if (currentIndex > -1) {
+          worldIds.splice(currentIndex, 1);
+          worldIds.splice(index, 0, dragId);
+          await reorderWorlds(bookId, worldIds);
+        }
+      } else if (dragType === 'location') {
+        if (parentNode.data.type !== 'locations' && parentNode.data.type !== 'location') return;
+        const locationIds = locations.map(l => l.id);
+        const currentIndex = locationIds.indexOf(dragId);
+        if (currentIndex > -1) {
+          locationIds.splice(currentIndex, 1);
+          locationIds.splice(index, 0, dragId);
+          await reorderLocations(bookId, locationIds);
+        }
+      } else if (dragType === 'object') {
+        if (parentNode.data.type !== 'world-objects' && parentNode.data.type !== 'object') return;
+        const objectIds = objects.map(o => o.id);
+        const currentIndex = objectIds.indexOf(dragId);
+        if (currentIndex > -1) {
+          objectIds.splice(currentIndex, 1);
+          objectIds.splice(index, 0, dragId);
+          await reorderObjects(bookId, objectIds);
+        }
       }
     } catch (error) {
       console.error('Failed to move item:', error);
@@ -504,7 +568,7 @@ function NodeRenderer({ node, style, dragHandle, tree, onAddCharacter, onAddWorl
   const isSelected = node.isSelected;
   const hasChildren = children && children.length > 0;
   const isFolder = hasChildren || !node.isLeaf;
-  const isDraggable = type === 'scene' || type === 'chapter';
+  const isDraggable = ['scene', 'chapter', 'character', 'world', 'location', 'object'].includes(type);
   const isDragging = node.isDragging;
   const isOver = node.isOver;
   const isOverParent = node.isOverParent;
@@ -522,7 +586,7 @@ function NodeRenderer({ node, style, dragHandle, tree, onAddCharacter, onAddWorl
           : "text-sidebar-foreground hover:bg-sidebar-accent/50",
         isDraggable && "cursor-grab active:cursor-grabbing",
         isDragging && "opacity-50 bg-sidebar-accent/30",
-        (isOver || isOverParent) && (type === 'chapter' || type === 'scene' || type === 'main') && "bg-blue-500/20 border-l-2 border-blue-500"
+        (isOver || isOverParent) && ['chapter', 'scene', 'main', 'character-role', 'worlds', 'locations', 'world-objects'].includes(type) && "bg-blue-500/20 border-l-2 border-blue-500"
       )}
     >
       <div

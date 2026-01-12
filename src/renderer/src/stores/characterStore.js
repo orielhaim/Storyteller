@@ -244,4 +244,31 @@ export const useCharacterStore = create(immer((set, get) => ({
   invalidateCharacterCache: (bookId) => set(state => {
     delete state.characterCache[bookId];
   }),
+
+  reorderCharacters: async (bookId, characterIds) => {
+    set(state => { state.loading = true; state.error = null; });
+
+    try {
+      const res = await bookAPI.characters.reorder(bookId, characterIds);
+      if (!res.success) throw new Error(res.error);
+
+      set(state => {
+        if (state.characterCache[bookId]) {
+          delete state.characterCache[bookId];
+        }
+      });
+      await get().fetchCharacters(bookId);
+
+      set(state => { state.loading = false; });
+
+      return res.data;
+    } catch (e) {
+      console.error('Failed to reorder characters:', e);
+      set(state => {
+        state.loading = false;
+        state.error = e.message || 'Failed to reorder characters';
+      });
+      throw e;
+    }
+  },
 })));

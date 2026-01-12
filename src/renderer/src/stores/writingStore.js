@@ -285,24 +285,14 @@ export const useWritingStore = create(immer((set, get) => ({
     }
   },
 
-  updateScene: async (id, data) => {
+  updateScene: async (id, data, options = {}) => {
     set(state => { state.loading = true; state.error = null; });
 
     try {
       const res = await bookAPI.scenes.update(id, data);
       if (!res.success) throw new Error(res.error);
 
-      const currentScene = get().currentScene?.id === id ? get().currentScene : get().scenes.find(s => s.id === id);
-      const bookId = currentScene?.bookId;
-
-      set(state => {
-        Object.keys(state.sceneCacheByChapter).forEach(chapterId => {
-          delete state.sceneCacheByChapter[chapterId];
-        });
-        Object.keys(state.sceneCache).forEach(bId => {
-          delete state.sceneCache[bId];
-        });
-      });
+      const shouldInvalidateCaches = options.invalidateCaches || false;
 
       if (get().currentScene?.id === id) {
         set(state => { state.currentScene = res.data; });
@@ -313,8 +303,22 @@ export const useWritingStore = create(immer((set, get) => ({
         set(state => { state.scenes[sceneIndex] = res.data; });
       }
 
-      if (bookId) {
-        await get().fetchScenesByBook(bookId);
+      if (shouldInvalidateCaches) {
+        const currentScene = get().currentScene?.id === id ? get().currentScene : get().scenes.find(s => s.id === id);
+        const bookId = currentScene?.bookId;
+
+        set(state => {
+          Object.keys(state.sceneCacheByChapter).forEach(chapterId => {
+            delete state.sceneCacheByChapter[chapterId];
+          });
+          Object.keys(state.sceneCache).forEach(bId => {
+            delete state.sceneCache[bId];
+          });
+        });
+
+        if (bookId) {
+          await get().fetchScenesByBook(bookId);
+        }
       }
 
       set(state => { state.loading = false; });

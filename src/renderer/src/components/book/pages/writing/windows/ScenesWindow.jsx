@@ -3,7 +3,18 @@ import { useWritingStore } from '@/stores/writingStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Pencil, Trash2, FileText, Folder, GripVertical, AlertTriangle, Save, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileText, Folder, GripVertical, AlertTriangle, Save, X, MoreVertical } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { BOOK_STATUS_CONFIG } from '@/config/statusConfig';
 import {
   DndContext,
   closestCenter,
@@ -38,7 +49,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-function SortableSceneItem({ scene, onSceneClick, onEdit, onDelete }) {
+function SortableSceneItem({ scene, onSceneClick, onEdit, onDelete, onStatusChange, onClearStatus }) {
   const {
     attributes,
     listeners,
@@ -73,38 +84,85 @@ function SortableSceneItem({ scene, onSceneClick, onEdit, onDelete }) {
           <GripVertical className="h-4 w-4 text-muted-foreground" />
         </div>
         <FileText className="h-4 w-4 text-muted-foreground" />
-        <h3 className="font-medium">{scene.name}</h3>
+        <div className="flex-1">
+          <h3 className="font-medium">{scene.name}</h3>
+          {scene.status && (
+            <div className="flex items-center gap-1 mt-1">
+              <span className={`text-xs px-2 py-0.5 rounded-full ${BOOK_STATUS_CONFIG[scene.status]?.className || 'bg-gray-100 text-gray-800'}`}>
+                {BOOK_STATUS_CONFIG[scene.status]?.label || scene.status}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(scene);
-          }}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-destructive hover:text-destructive"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(scene);
-          }}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                {scene.status ? BOOK_STATUS_CONFIG[scene.status]?.label : 'Set Status'}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {Object.entries(BOOK_STATUS_CONFIG)
+                  .filter(([key]) => key !== scene.status)
+                  .map(([key, config]) => (
+                    <DropdownMenuItem
+                      key={key}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onStatusChange(scene.id, key);
+                      }}
+                    >
+                      {config.label}
+                    </DropdownMenuItem>
+                  ))}
+                {scene.status && (
+                  <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation();
+                    onClearStatus(scene.id);
+                  }}>
+                    Clear
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={(e) => {
+              e.stopPropagation();
+              onEdit(scene);
+            }}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(scene);
+              }}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
 }
 
 function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
-  const { scenes, loading, deleteScene, reorderScenes, chapters, updateChapter, deleteChapter } = useWritingStore();
+  const { scenes, loading, deleteScene, reorderScenes, chapters, updateChapter, deleteChapter, updateScene } = useWritingStore();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -224,6 +282,18 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
     }
   };
 
+  const handleStatusChange = async (sceneId, newStatus) => {
+    try {
+      await updateScene(sceneId, { status: newStatus });
+    } catch (error) {
+      console.error('Failed to update scene status:', error);
+    }
+  };
+
+  const handleClearStatus = async (sceneId) => {
+    await handleStatusChange(sceneId, null);
+  };
+
   return (
     <div className="h-full flex flex-col p-4">
       <Card className="mb-4 py-4">
@@ -330,6 +400,8 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
                     onSceneClick={handleSceneClick}
                     onEdit={handleEdit}
                     onDelete={handleDeleteClick}
+                    onStatusChange={handleStatusChange}
+                    onClearStatus={handleClearStatus}
                   />
                 ))}
               </div>

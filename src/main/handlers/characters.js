@@ -1,4 +1,4 @@
-import { eq, desc, and, or } from 'drizzle-orm';
+import { eq, desc, and, or, asc, sql } from 'drizzle-orm';
 import db from '../db.js';
 import { characters, characterRelationships } from '../../db/schema.js';
 import { imageHandlers } from './imageHandler.js';
@@ -36,7 +36,7 @@ const TYPE_TO_NEUTRAL = {
 
 export const characterHandlers = {
   getAllByBook: handleRequest(async (bookId) => {
-    return await db.select().from(characters).where(eq(characters.bookId, bookId)).orderBy(desc(characters.createdAt));
+    return await db.select().from(characters).where(eq(characters.bookId, bookId)).orderBy(asc(characters.position), desc(characters.createdAt));
   }),
 
   getById: handleRequest(async (id) => {
@@ -44,8 +44,19 @@ export const characterHandlers = {
     return result[0] || null;
   }),
 
-  create: handleRequest(async ({ bookId, first_name, last_name, gender, role, avatar, description, attributes, groups, tags }) => {
+  create: handleRequest(async ({ bookId, first_name, last_name, gender, role, avatar, description, attributes, groups, tags, position }) => {
     const now = Date.now();
+
+    // If position not provided, get max position and add 1
+    let finalPosition = position;
+    if (finalPosition === null || finalPosition === undefined) {
+      const maxResult = await db
+        .select({ max: sql`MAX(${characters.position})` })
+        .from(characters)
+        .where(eq(characters.bookId, bookId));
+      finalPosition = (maxResult[0]?.max ?? -1) + 1;
+    }
+
     const result = await db.insert(characters).values({
       bookId,
       firstName: first_name,
@@ -57,13 +68,14 @@ export const characterHandlers = {
       attributes: attributes || {},
       groups: groups || [],
       tags: tags || [],
+      position: finalPosition,
       createdAt: now,
       updatedAt: now,
     }).returning();
     return result[0];
   }),
 
-  update: handleRequest(async (id, { first_name, last_name, gender, role, avatar, description, attributes, groups, tags }) => {
+  update: handleRequest(async (id, { first_name, last_name, gender, role, avatar, description, attributes, groups, tags, position }) => {
     const updateData = {
       updatedAt: Date.now(),
     };
@@ -77,6 +89,7 @@ export const characterHandlers = {
     if (attributes !== undefined) updateData.attributes = attributes;
     if (groups !== undefined) updateData.groups = groups;
     if (tags !== undefined) updateData.tags = tags;
+    if (position !== undefined) updateData.position = position;
 
     const result = await db.update(characters)
       .set(updateData)
@@ -204,5 +217,19 @@ export const characterHandlers = {
     );
 
     return { deleted: true };
+  }),
+
+  reorder: handleRequest(async (bookId, characterIds) => {
+    const updates = characterIds.map((characterId, index) =>
+      db.update(characters)
+        .set({ position: index, updatedAt: Date.now() })
+        .where(and(
+          eq(characters.id, characterId),
+          eq(characters.bookId, bookId)
+        ))
+    );
+
+    await Promise.all(updates);
+    return { reordered: true };
   }),
 };

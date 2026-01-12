@@ -42,6 +42,7 @@ export function registerIpcHandlers() {
   ipcMain.handle('characters:addRelationship', characterHandlers.addRelationship);
   ipcMain.handle('characters:updateRelationship', characterHandlers.updateRelationship);
   ipcMain.handle('characters:removeRelationship', characterHandlers.removeRelationship);
+  ipcMain.handle('characters:reorder', characterHandlers.reorder);
 
   // World channels
   ipcMain.handle('worlds:getAllByBook', worldHandlers.getAllByBook);
@@ -49,6 +50,7 @@ export function registerIpcHandlers() {
   ipcMain.handle('worlds:create', worldHandlers.create);
   ipcMain.handle('worlds:update', worldHandlers.update);
   ipcMain.handle('worlds:delete', worldHandlers.delete);
+  ipcMain.handle('worlds:reorder', worldHandlers.reorder);
 
   // Location channels
   ipcMain.handle('locations:getAllByBook', locationHandlers.getAllByBook);
@@ -56,6 +58,7 @@ export function registerIpcHandlers() {
   ipcMain.handle('locations:create', locationHandlers.create);
   ipcMain.handle('locations:update', locationHandlers.update);
   ipcMain.handle('locations:delete', locationHandlers.delete);
+  ipcMain.handle('locations:reorder', locationHandlers.reorder);
 
   // Object channels
   ipcMain.handle('objects:getAllByBook', objectHandlers.getAllByBook);
@@ -63,6 +66,7 @@ export function registerIpcHandlers() {
   ipcMain.handle('objects:create', objectHandlers.create);
   ipcMain.handle('objects:update', objectHandlers.update);
   ipcMain.handle('objects:delete', objectHandlers.delete);
+  ipcMain.handle('objects:reorder', objectHandlers.reorder);
 
   // Chapter channels
   ipcMain.handle('chapters:getAllByBook', chapterHandlers.getAllByBook);

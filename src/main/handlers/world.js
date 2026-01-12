@@ -1,4 +1,4 @@
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, asc, sql, and } from 'drizzle-orm';
 import db from '../db.js';
 import { worlds, locations, objects } from '../../db/schema.js';
 import { imageHandlers } from './imageHandler.js';
@@ -7,7 +7,7 @@ import handleRequest from '../utils/handleRequest.js';
 // Worlds handlers
 export const worldHandlers = {
   getAllByBook: handleRequest(async (bookId) => {
-    return await db.select().from(worlds).where(eq(worlds.bookId, bookId)).orderBy(desc(worlds.createdAt));
+    return await db.select().from(worlds).where(eq(worlds.bookId, bookId)).orderBy(asc(worlds.position), desc(worlds.createdAt));
   }),
 
   getById: handleRequest(async (id) => {
@@ -15,20 +15,32 @@ export const worldHandlers = {
     return result[0] || null;
   }),
 
-  create: handleRequest(async ({ bookId, name, description, referenceImage }) => {
+  create: handleRequest(async ({ bookId, name, description, referenceImage, position }) => {
     const now = Date.now();
+
+    // If position not provided, get max position and add 1
+    let finalPosition = position;
+    if (finalPosition === null || finalPosition === undefined) {
+      const maxResult = await db
+        .select({ max: sql`MAX(${worlds.position})` })
+        .from(worlds)
+        .where(eq(worlds.bookId, bookId));
+      finalPosition = (maxResult[0]?.max ?? -1) + 1;
+    }
+
     const result = await db.insert(worlds).values({
       bookId,
       name,
       description: description || null,
       referenceImage: referenceImage || null,
+      position: finalPosition,
       createdAt: now,
       updatedAt: now,
     }).returning();
     return result[0];
   }),
 
-  update: handleRequest(async (id, { name, description, referenceImage }) => {
+  update: handleRequest(async (id, { name, description, referenceImage, position }) => {
     const updateData = {
       updatedAt: Date.now(),
     };
@@ -37,6 +49,7 @@ export const worldHandlers = {
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (referenceImage !== undefined) updateData.referenceImage = referenceImage;
+    if (position !== undefined) updateData.position = position;
 
     const result = await db.update(worlds)
       .set(updateData)
@@ -55,12 +68,26 @@ export const worldHandlers = {
     await db.delete(worlds).where(eq(worlds.id, id));
     return { deleted: true };
   }),
+
+  reorder: handleRequest(async (bookId, worldIds) => {
+    const updates = worldIds.map((worldId, index) =>
+      db.update(worlds)
+        .set({ position: index, updatedAt: Date.now() })
+        .where(and(
+          eq(worlds.id, worldId),
+          eq(worlds.bookId, bookId)
+        ))
+    );
+
+    await Promise.all(updates);
+    return { reordered: true };
+  }),
 };
 
 // Locations handlers
 export const locationHandlers = {
   getAllByBook: handleRequest(async (bookId) => {
-    return await db.select().from(locations).where(eq(locations.bookId, bookId)).orderBy(desc(locations.createdAt));
+    return await db.select().from(locations).where(eq(locations.bookId, bookId)).orderBy(asc(locations.position), desc(locations.createdAt));
   }),
 
   getById: handleRequest(async (id) => {
@@ -68,8 +95,19 @@ export const locationHandlers = {
     return result[0] || null;
   }),
 
-  create: handleRequest(async ({ bookId, worldId, name, city, state, nation, description, referenceImage }) => {
+  create: handleRequest(async ({ bookId, worldId, name, city, state, nation, description, referenceImage, position }) => {
     const now = Date.now();
+
+    // If position not provided, get max position and add 1
+    let finalPosition = position;
+    if (finalPosition === null || finalPosition === undefined) {
+      const maxResult = await db
+        .select({ max: sql`MAX(${locations.position})` })
+        .from(locations)
+        .where(eq(locations.bookId, bookId));
+      finalPosition = (maxResult[0]?.max ?? -1) + 1;
+    }
+
     const result = await db.insert(locations).values({
       bookId,
       worldId: worldId || null,
@@ -79,13 +117,14 @@ export const locationHandlers = {
       nation: nation || null,
       description: description || null,
       referenceImage: referenceImage || null,
+      position: finalPosition,
       createdAt: now,
       updatedAt: now,
     }).returning();
     return result[0];
   }),
 
-  update: handleRequest(async (id, { worldId, name, city, state, nation, description, referenceImage }) => {
+  update: handleRequest(async (id, { worldId, name, city, state, nation, description, referenceImage, position }) => {
     const updateData = {
       updatedAt: Date.now(),
     };
@@ -98,6 +137,7 @@ export const locationHandlers = {
     if (nation !== undefined) updateData.nation = nation;
     if (description !== undefined) updateData.description = description;
     if (referenceImage !== undefined) updateData.referenceImage = referenceImage;
+    if (position !== undefined) updateData.position = position;
 
     const result = await db.update(locations)
       .set(updateData)
@@ -116,12 +156,26 @@ export const locationHandlers = {
     await db.delete(locations).where(eq(locations.id, id));
     return { deleted: true };
   }),
+
+  reorder: handleRequest(async (bookId, locationIds) => {
+    const updates = locationIds.map((locationId, index) =>
+      db.update(locations)
+        .set({ position: index, updatedAt: Date.now() })
+        .where(and(
+          eq(locations.id, locationId),
+          eq(locations.bookId, bookId)
+        ))
+    );
+
+    await Promise.all(updates);
+    return { reordered: true };
+  }),
 };
 
 // Objects handlers
 export const objectHandlers = {
   getAllByBook: handleRequest(async (bookId) => {
-    return await db.select().from(objects).where(eq(objects.bookId, bookId)).orderBy(desc(objects.createdAt));
+    return await db.select().from(objects).where(eq(objects.bookId, bookId)).orderBy(asc(objects.position), desc(objects.createdAt));
   }),
 
   getById: handleRequest(async (id) => {
@@ -129,21 +183,33 @@ export const objectHandlers = {
     return result[0] || null;
   }),
 
-  create: handleRequest(async ({ bookId, name, description, groups, referenceImage }) => {
+  create: handleRequest(async ({ bookId, name, description, groups, referenceImage, position }) => {
     const now = Date.now();
+
+    // If position not provided, get max position and add 1
+    let finalPosition = position;
+    if (finalPosition === null || finalPosition === undefined) {
+      const maxResult = await db
+        .select({ max: sql`MAX(${objects.position})` })
+        .from(objects)
+        .where(eq(objects.bookId, bookId));
+      finalPosition = (maxResult[0]?.max ?? -1) + 1;
+    }
+
     const result = await db.insert(objects).values({
       bookId,
       name,
       description: description || null,
       groups: groups || [],
       referenceImage: referenceImage || null,
+      position: finalPosition,
       createdAt: now,
       updatedAt: now,
     }).returning();
     return result[0];
   }),
 
-  update: handleRequest(async (id, { name, description, groups, referenceImage }) => {
+  update: handleRequest(async (id, { name, description, groups, referenceImage, position }) => {
     const updateData = {
       updatedAt: Date.now(),
     };
@@ -153,6 +219,7 @@ export const objectHandlers = {
     if (description !== undefined) updateData.description = description;
     if (groups !== undefined) updateData.groups = groups;
     if (referenceImage !== undefined) updateData.referenceImage = referenceImage;
+    if (position !== undefined) updateData.position = position;
 
     const result = await db.update(objects)
       .set(updateData)
@@ -170,5 +237,19 @@ export const objectHandlers = {
 
     await db.delete(objects).where(eq(objects.id, id));
     return { deleted: true };
+  }),
+
+  reorder: handleRequest(async (bookId, objectIds) => {
+    const updates = objectIds.map((objectId, index) =>
+      db.update(objects)
+        .set({ position: index, updatedAt: Date.now() })
+        .where(and(
+          eq(objects.id, objectId),
+          eq(objects.bookId, bookId)
+        ))
+    );
+
+    await Promise.all(updates);
+    return { reordered: true };
   }),
 };

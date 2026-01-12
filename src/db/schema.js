@@ -47,6 +47,7 @@ export const characters = table("characters", {
   attributes: t.text("attributes", { mode: "json" }).default({}), // JSON for custom fields and detailed info
   groups: t.text("groups", { mode: "json" }).default([]), // array of group names
   tags: t.text("tags", { mode: "json" }).default([]), // array of tags
+  position: t.integer().notNull().default(0),
   createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
   updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
 });
@@ -67,6 +68,7 @@ export const worlds = table("worlds", {
   name: t.text().notNull(),
   description: t.text(),
   referenceImage: t.text("reference_image"),
+  position: t.integer().notNull().default(0),
   createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
   updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
 });
@@ -81,6 +83,7 @@ export const locations = table("locations", {
   nation: t.text(),
   description: t.text(),
   referenceImage: t.text("reference_image"),
+  position: t.integer().notNull().default(0),
   createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
   updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
 });
@@ -92,6 +95,7 @@ export const objects = table("objects", {
   description: t.text(),
   groups: t.text("groups", { mode: "json" }).default([]), // array of group names
   referenceImage: t.text("reference_image"),
+  position: t.integer().notNull().default(0),
   createdAt: t.integer("created_at").notNull().$defaultFn(() => Date.now()),
   updatedAt: t.integer("updated_at").notNull().$defaultFn(() => Date.now()),
 });

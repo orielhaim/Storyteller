@@ -45,6 +45,7 @@ contextBridge.exposeInMainWorld('bookAPI', {
     addRelationship: (data) => ipcRenderer.invoke('characters:addRelationship', data),
     updateRelationship: (id, data) => ipcRenderer.invoke('characters:updateRelationship', id, data),
     removeRelationship: (id) => ipcRenderer.invoke('characters:removeRelationship', id),
+    reorder: (bookId, characterIds) => ipcRenderer.invoke('characters:reorder', bookId, characterIds),
   },
 
   // Worlds API
@@ -54,6 +55,7 @@ contextBridge.exposeInMainWorld('bookAPI', {
     create: (data) => ipcRenderer.invoke('worlds:create', data),
     update: (id, data) => ipcRenderer.invoke('worlds:update', id, data),
     delete: (id) => ipcRenderer.invoke('worlds:delete', id),
+    reorder: (bookId, worldIds) => ipcRenderer.invoke('worlds:reorder', bookId, worldIds),
   },
 
   // Locations API
@@ -63,6 +65,7 @@ contextBridge.exposeInMainWorld('bookAPI', {
     create: (data) => ipcRenderer.invoke('locations:create', data),
     update: (id, data) => ipcRenderer.invoke('locations:update', id, data),
     delete: (id) => ipcRenderer.invoke('locations:delete', id),
+    reorder: (bookId, locationIds) => ipcRenderer.invoke('locations:reorder', bookId, locationIds),
   },
 
   // Objects API
@@ -72,6 +75,7 @@ contextBridge.exposeInMainWorld('bookAPI', {
     create: (data) => ipcRenderer.invoke('objects:create', data),
     update: (id, data) => ipcRenderer.invoke('objects:update', id, data),
     delete: (id) => ipcRenderer.invoke('objects:delete', id),
+    reorder: (bookId, objectIds) => ipcRenderer.invoke('objects:reorder', bookId, objectIds),
   },
 
   // Chapters API

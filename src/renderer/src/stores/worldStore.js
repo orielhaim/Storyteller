@@ -581,4 +581,64 @@ export const useWorldStore = create(immer((set, get) => ({
     state.currentObject = null;
     state.error = null;
   }),
+
+  reorderWorlds: async (bookId, worldIds) => {
+    set(state => { state.loading = true; state.error = null; });
+    try {
+      const res = await bookAPI.worlds.reorder(bookId, worldIds);
+      if (!res.success) throw new Error(res.error);
+      
+      set(state => {
+        delete state.worldCache[bookId];
+      });
+      
+      await get().fetchWorlds(bookId);
+      set(state => { state.loading = false; });
+      return res.data;
+    } catch (e) {
+      console.error('Failed to reorder worlds:', e);
+      set(state => { state.loading = false; state.error = e.message; });
+      throw e;
+    }
+  },
+
+  reorderLocations: async (bookId, locationIds) => {
+    set(state => { state.loading = true; state.error = null; });
+    try {
+      const res = await bookAPI.locations.reorder(bookId, locationIds);
+      if (!res.success) throw new Error(res.error);
+      
+      set(state => {
+        delete state.locationCache[bookId];
+      });
+      
+      await get().fetchLocations(bookId);
+      set(state => { state.loading = false; });
+      return res.data;
+    } catch (e) {
+      console.error('Failed to reorder locations:', e);
+      set(state => { state.loading = false; state.error = e.message; });
+      throw e;
+    }
+  },
+
+  reorderObjects: async (bookId, objectIds) => {
+    set(state => { state.loading = true; state.error = null; });
+    try {
+      const res = await bookAPI.objects.reorder(bookId, objectIds);
+      if (!res.success) throw new Error(res.error);
+      
+      set(state => {
+        delete state.objectCache[bookId];
+      });
+      
+      await get().fetchObjects(bookId);
+      set(state => { state.loading = false; });
+      return res.data;
+    } catch (e) {
+      console.error('Failed to reorder objects:', e);
+      set(state => { state.loading = false; state.error = e.message; });
+      throw e;
+    }
+  },
 })));
