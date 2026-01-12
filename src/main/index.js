@@ -1,6 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import windowStateKeeper from 'electron-window-state';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log/main';
 import dotenv from 'dotenv';
@@ -71,10 +72,19 @@ autoUpdater.on('error', (err) => {
   });
 });
 
+let win;
+
 function createWindow() {
-  const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+  let mainWindowState = windowStateKeeper({
+    defaultWidth: 900,
+    defaultHeight: 700
+  });
+
+  win = new BrowserWindow({
+    width: mainWindowState.width,
+    height: mainWindowState.height,
+    x: mainWindowState.x,
+    y: mainWindowState.y,
     show: false,
     autoHideMenuBar: true,
     icon: join(__dirname, '../../resources/icon.png'),
@@ -85,11 +95,13 @@ function createWindow() {
     }
   })
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+  mainWindowState.manage(win);
+
+  win.on('ready-to-show', () => {
+    win.show()
   })
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
+  win.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
   })
@@ -97,10 +109,10 @@ function createWindow() {
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
-    mainWindow.webContents.openDevTools();
+    win.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    win.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    win.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
 
