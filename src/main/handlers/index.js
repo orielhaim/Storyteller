@@ -5,6 +5,7 @@ import { characterHandlers } from './characters.js';
 import { worldHandlers, locationHandlers, objectHandlers } from './world.js';
 import { chapterHandlers, sceneHandlers } from './writing.js';
 import { imageHandlers } from './imageHandler.js';
+import { storeHandlers } from './store.js';
 
 export function registerIpcHandlers() {
   // Books channels
@@ -90,4 +91,12 @@ export function registerIpcHandlers() {
   ipcMain.handle('image:save', imageHandlers.saveImage);
   ipcMain.handle('image:getData', imageHandlers.getImageData);
   ipcMain.handle('image:delete', imageHandlers.deleteImage);
+
+  // Store channels
+  ipcMain.handle('store:get', storeHandlers.get);
+  ipcMain.handle('store:set', storeHandlers.set);
+  ipcMain.handle('store:delete', storeHandlers.delete);
+  ipcMain.handle('store:clear', storeHandlers.clear);
+  ipcMain.handle('store:has', storeHandlers.has);
+  ipcMain.handle('store:getAll', storeHandlers.getAll);
 }

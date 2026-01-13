@@ -3,10 +3,48 @@ import { ArrowLeft, Download, RefreshCw, CheckCircle, AlertCircle, XCircle, Gith
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useNavigate } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import { useUpdaterStore } from '@/stores/updaterStore';
+import { useSettingsStore } from '@/stores/settingsStore';
+import { SettingItem } from '@/components/settings/SettingItem';
+
+const SETTINGS_SCHEMA = [
+  {
+    category: "Editor",
+    description: "Customize your writing experience",
+    items: [
+      {
+        path: "editor.wordCountEnabled",
+        label: "Word Count",
+        description: "Show word count in the editor footer",
+        type: "switch"
+      },
+      {
+        path: "editor.spellCheck",
+        label: "Spell Check",
+        description: "Enable native spell checking",
+        type: "switch",
+        disabled: true
+      }
+    ]
+  },
+  {
+    category: "General",
+    description: "Application preferences",
+    hidden: true,
+    items: [
+      {
+        path: "general.notifications",
+        label: "Notifications",
+        description: "Enable system notifications for updates",
+        type: "switch"
+      }
+    ]
+  }
+];
 
 function Settings() {
   const navigate = useNavigate();
@@ -16,16 +54,19 @@ function Settings() {
     status,
     updateInfo,
     downloadProgress,
-    init,
+    init: initUpdater,
     checkForUpdates,
     startDownload,
     installAndRestart,
     markAsViewed,
   } = useUpdaterStore();
+  
+  const { loadSettings } = useSettingsStore();
 
   useEffect(() => {
-    init();
-  }, [init]);
+    initUpdater();
+    loadSettings();
+  }, [initUpdater, loadSettings]);
 
   useEffect(() => {
     if (status === 'available' || status === 'ready') {
@@ -181,17 +222,30 @@ function Settings() {
             {renderUpdateSection()}
           </section>
 
-          <section>
-            <h2 className="text-xl font-semibold mb-4">General</h2>
-            <Card>
-              <CardHeader>
-                <CardTitle>Application Settings</CardTitle>
-                <CardDescription>
-                  More settings will be available in future updates
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </section>
+          {/* Dynamic Settings Sections */}
+          {SETTINGS_SCHEMA.filter(section => !section.hidden).map((section) => (
+            <section key={section.category}>
+              <h2 className="text-xl font-semibold mb-4">{section.category}</h2>
+              <Card>
+                <CardHeader>
+                  <CardTitle>{section.category} Settings</CardTitle>
+                  <CardDescription>{section.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="divide-y">
+                  {section.items.map((item) => (
+                    <SettingItem 
+                      key={item.path}
+                      path={item.path}
+                      label={item.label}
+                      description={item.description}
+                      type={item.type}
+                      disabled={item.disabled}
+                    />
+                  ))}
+                </CardContent>
+              </Card>
+            </section>
+          ))}
           <Separator />
 
           <div className="flex items-center justify-between text-sm text-muted-foreground">
