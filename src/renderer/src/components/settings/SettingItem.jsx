@@ -1,10 +1,9 @@
 import React from 'react';
 import { Switch } from '@/components/ui/switch';
 import { useSettingsStore } from '@/stores/settingsStore';
-import get from 'lodash/get'; // או פונקציית עזר
+import get from 'lodash/get';
 
 export const SettingItem = ({ path, label, description, type = 'switch', disabled = false }) => {
-  // שליפת הערך הספציפי מהסטייט
   const value = useSettingsStore((state) => get(state.settings, path));
   const updateSetting = useSettingsStore((state) => state.updateSetting);
 
@@ -23,10 +22,9 @@ export const SettingItem = ({ path, label, description, type = 'switch', disable
         )}
       </div>
       
-      {/* כאן אפשר להוסיף סוגים נוספים בעתיד כמו Select, Input וכו' */}
       {type === 'switch' && (
         <Switch
-          checked={!!value} // מבטיח בוליאני
+          checked={!!value}
           onCheckedChange={handleChange}
           disabled={disabled}
         />

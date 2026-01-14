@@ -104,6 +104,7 @@ export function SimpleEditor({ initialContent, onContentChange }) {
   const toolbarRef = useRef(null)
   const { getSetting } = useSettingsStore()
   const wordCountEnabled = getSetting('editor.wordCountEnabled')
+  const spellCheckEnabled = getSetting('editor.spellCheck')
 
   const [counts, setCounts] = useState({ words: 0, characters: 0 })
 
@@ -120,6 +121,7 @@ export function SimpleEditor({ initialContent, onContentChange }) {
         autocomplete: "off",
         autocorrect: "off",
         autocapitalize: "off",
+        spellcheck: spellCheckEnabled ? "true" : "false",
         "aria-label": "Main content area, start typing to enter text.",
         class: "simple-editor",
       },

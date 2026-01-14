@@ -26,8 +26,7 @@ const SETTINGS_SCHEMA = [
         path: "editor.spellCheck",
         label: "Spell Check",
         description: "Enable native spell checking",
-        type: "switch",
-        disabled: true
+        type: "switch"
       }
     ]
   },

@@ -111,7 +111,7 @@ function Book() {
         currentPage={page}
         onPageChange={handlePageChange}
       />
-      <main className={page === 'write' ? 'flex-1 overflow-hidden' : 'container mx-auto px-4 py-6'}>
+      <main className={page === 'write' ? 'flex-1 overflow-hidden' : 'p-4 w-full'}>
         {renderPage()}
       </main>
     </div>
