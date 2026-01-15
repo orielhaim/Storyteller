@@ -37,12 +37,12 @@ const UpdateModal = ({ isOpen, onClose, updateInfo, currentVersion, onInstallNow
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[80vh]">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div>
               <DialogTitle className="text-xl">
-                🎉 {updateInfo.releaseName || 'New Update Available'}
+                🎉 New Update Available
               </DialogTitle>
               <DialogDescription className="text-base">
                 Upgrade from <Badge variant="secondary" className="text-xs">v{currentVersion}</Badge> to <Badge variant="secondary" className="text-xs">v{updateInfo.version}</Badge>
@@ -50,13 +50,14 @@ const UpdateModal = ({ isOpen, onClose, updateInfo, currentVersion, onInstallNow
             </div>
           </div>
         </DialogHeader>
+        {console.log(updateInfo)}
 
         <div className="space-y-4">
           {updateInfo.releaseNotes && (
             <div className="space-y-2">
               <h4 className="font-medium text-sm">What's New:</h4>
               <div
-                className="text-sm text-muted-foreground prose prose-sm max-w-none dark:prose-invert"
+                className="text-sm text-muted-foreground prose prose-sm max-w-none dark:prose-invert overflow-y-auto max-h-100"
                 dir="auto"
                 dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(updateInfo.releaseNotes) }}
               />
