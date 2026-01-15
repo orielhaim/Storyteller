@@ -15,6 +15,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { BOOK_STATUS_CONFIG } from '@/config/statusConfig';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   DndContext,
   closestCenter,
@@ -49,7 +51,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-function SortableSceneItem({ scene, onSceneClick, onEdit, onDelete, onStatusChange, onClearStatus }) {
+function SceneItem({ scene, onSceneClick, onEdit, onDelete, onStatusChange, onClearStatus }) {
   const {
     attributes,
     listeners,
@@ -171,8 +173,12 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
   const [isEditingChapter, setIsEditingChapter] = useState(false);
   const [editChapterName, setEditChapterName] = useState('');
   const [editChapterDescription, setEditChapterDescription] = useState('');
+  const [editChapterStatus, setEditChapterStatus] = useState(null);
+  const [editChapterStartDate, setEditChapterStartDate] = useState(null);
+  const [editChapterEndDate, setEditChapterEndDate] = useState(null);
   const [isSavingChapter, setIsSavingChapter] = useState(false);
   const [chapterDeleteDialogOpen, setChapterDeleteDialogOpen] = useState(false);
+  const [chapterDateError, setChapterDateError] = useState('');
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -208,7 +214,11 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
     if (chapter) {
       setEditChapterName(chapter.name);
       setEditChapterDescription(chapter.description || '');
+      setEditChapterStatus(chapter.status);
+      setEditChapterStartDate(chapter.startDate ? new Date(chapter.startDate).toISOString().split('T')[0] : null);
+      setEditChapterEndDate(chapter.endDate ? new Date(chapter.endDate).toISOString().split('T')[0] : null);
     }
+    setChapterDateError('');
   }, [chapter]);
 
   const handleCreate = () => {
@@ -255,16 +265,36 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
     if (chapter) {
       setEditChapterName(chapter.name);
       setEditChapterDescription(chapter.description || '');
+      setEditChapterStatus(chapter.status);
+      setEditChapterStartDate(chapter.startDate ? new Date(chapter.startDate).toISOString().split('T')[0] : null);
+      setEditChapterEndDate(chapter.endDate ? new Date(chapter.endDate).toISOString().split('T')[0] : null);
     }
     setIsEditingChapter(false);
+    setChapterDateError('');
   };
 
   const handleSaveChapterEdit = async () => {
+    // Clear previous error
+    setChapterDateError('');
+
+    // Validate dates
+    if (editChapterStartDate && editChapterEndDate) {
+      const startDate = new Date(editChapterStartDate);
+      const endDate = new Date(editChapterEndDate);
+      if (endDate < startDate) {
+        setChapterDateError('End date cannot be before start date');
+        return;
+      }
+    }
+
     setIsSavingChapter(true);
     try {
       await updateChapter(chapterId, {
         name: editChapterName,
         description: editChapterDescription,
+        status: editChapterStatus,
+        startDate: editChapterStartDate || null,
+        endDate: editChapterEndDate || null,
       });
       setIsEditingChapter(false);
     } catch (error) {
@@ -316,6 +346,35 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
                       placeholder="Chapter description..."
                       rows={3}
                     />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Start Date</label>
+                        <DatePicker
+                          value={editChapterStartDate}
+                          onChange={(date) => {
+                            setEditChapterStartDate(date);
+                            setChapterDateError(''); // Clear error when dates change
+                          }}
+                          placeholder="Select start date"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">End Date</label>
+                        <DatePicker
+                          value={editChapterEndDate}
+                          onChange={(date) => {
+                            setEditChapterEndDate(date);
+                            setChapterDateError(''); // Clear error when dates change
+                          }}
+                          placeholder="Select end date"
+                        />
+                      </div>
+                    </div>
+                    {chapterDateError && (
+                      <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-2">
+                        {chapterDateError}
+                      </div>
+                    )}
                     <div className="flex gap-2">
                       <Button
                         onClick={handleSaveChapterEdit}
@@ -337,23 +396,61 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
                   </div>
                 ) : (
                   <div>
-                    <h2 className="text-xl font-semibold mb-1">{chapter?.name || chapterName}</h2>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h2 className="text-xl font-semibold">{chapter?.name || chapterName}</h2>
+                      {chapter?.status && (
+                        <span className={`text-xs px-2 py-1 rounded-full ${BOOK_STATUS_CONFIG[chapter.status]?.className || 'bg-gray-100 text-gray-800'}`}>
+                          {BOOK_STATUS_CONFIG[chapter.status]?.label || chapter.status}
+                        </span>
+                      )}
+                    </div>
+                    {(chapter?.startDate || chapter?.endDate) && (
+                      <div className="text-sm text-muted-foreground mb-2">
+                        {chapter.startDate && new Date(chapter.startDate).toLocaleDateString()}
+                        {chapter.startDate && chapter.endDate && ' - '}
+                        {chapter.endDate && new Date(chapter.endDate).toLocaleDateString()}
+                      </div>
+                    )}
                     {chapter?.description && (
-                      <p className="text-sm text-muted-foreground mb-3">{chapter.description}</p>
+                      <p className="text-sm text-muted-foreground">{chapter.description}</p>
                     )}
                   </div>
                 )}
               </div>
             </div>
             {!isEditingChapter && (
-              <Button
-                onClick={handleStartChapterEdit}
-                variant="ghost"
-                size="sm"
-              >
-                <Pencil className="h-4 w-4 mr-2" />
-                Edit Chapter
-              </Button>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={chapter?.status || 'none'}
+                  onValueChange={async (value) => {
+                    try {
+                      await updateChapter(chapterId, { status: value === 'none' ? null : value });
+                    } catch (error) {
+                      console.error('Failed to update chapter status:', error);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No status</SelectItem>
+                    {Object.entries(BOOK_STATUS_CONFIG).map(([key, config]) => (
+                      <SelectItem key={key} value={key}>
+                        {config.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={handleStartChapterEdit}
+                  variant="ghost"
+                  size="sm"
+                >
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit Chapter
+                </Button>
+              </div>
             )}
             {!isEditingChapter && (
               <Button onClick={() => setCreateDialogOpen(true)} size="sm">
@@ -394,7 +491,7 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
             >
               <div className="space-y-2">
                 {chapterScenes.map((scene) => (
-                  <SortableSceneItem
+                  <SceneItem
                     key={scene.id}
                     scene={scene}
                     onSceneClick={handleSceneClick}

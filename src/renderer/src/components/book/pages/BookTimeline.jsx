@@ -3,12 +3,15 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Calendar, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { useCharacterStore } from '@/stores/characterStore';
+import { useWritingStore } from '@/stores/writingStore';
 import Timeline from './timeline/Timeline';
 
 function BookTimeline({ book }) {
   const { characters, loading, fetchCharacters } = useCharacterStore();
+  const { chapters, fetchChapters } = useWritingStore();
   const [relationships, setRelationships] = useState({});
   const [relationshipsLoading, setRelationshipsLoading] = useState(true);
+  const [chaptersLoading, setChaptersLoading] = useState(true);
   const [imageDataMap, setImageDataMap] = useState({});
   const timelineRef = useRef(null);
 
@@ -16,7 +19,21 @@ function BookTimeline({ book }) {
     fetchCharacters(book.id);
   }, [book.id, fetchCharacters]);
 
-  // Load images for all characters
+  useEffect(() => {
+    const loadChapters = async () => {
+      setChaptersLoading(true);
+      try {
+        await fetchChapters(book.id);
+      } catch (error) {
+        console.error('Failed to fetch chapters:', error);
+      } finally {
+        setChaptersLoading(false);
+      }
+    };
+
+    loadChapters();
+  }, [book.id, fetchChapters]);
+
   useEffect(() => {
     if (characters.length === 0) return;
 
@@ -48,7 +65,6 @@ function BookTimeline({ book }) {
     loadImages();
   }, [characters]);
 
-  // Fetch relationships for all characters
   useEffect(() => {
     if (characters.length === 0) {
       setRelationshipsLoading(false);
@@ -84,19 +100,92 @@ function BookTimeline({ book }) {
     fetchAllRelationships();
   }, [characters]);
 
-  // Transform characters and relationships into timeline format
   const { timelineItems, timelineGroups } = useMemo(() => {
     const items = [];
     const groups = [];
     const characterMap = new Map();
     const processedRelationships = new Set();
 
-    // Create character map for quick lookup
     characters.forEach((character) => {
       characterMap.set(character.id, character);
     });
 
-    // Group characters by role
+    const validChapters = chapters.filter(chapter => chapter.startDate || chapter.endDate);
+    if (validChapters.length > 0) {
+      groups.push({
+        id: 'chapters-group',
+        content: `<div class="font-semibold text-sm text-gray-700 flex items-center justify-between w-full gap-2">
+          <span>Chapters</span>
+          <span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${validChapters.length}</span>
+        </div>`,
+        nestedGroups: validChapters.map(chapter => `chapter-${chapter.id}`),
+        showNested: true,
+        order: 0
+      });
+
+      validChapters.forEach((chapter) => {
+        let startDate, endDate;
+
+        if (chapter.startDate && chapter.endDate) {
+          // Both dates exist - create a range
+          startDate = new Date(chapter.startDate);
+          endDate = new Date(chapter.endDate);
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(23, 59, 59, 999);
+        } else if (chapter.startDate) {
+          // Only start date - single day event
+          startDate = new Date(chapter.startDate);
+          endDate = new Date(chapter.startDate);
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(23, 59, 59, 999);
+        } else if (chapter.endDate) {
+          // Only end date - single day event
+          startDate = new Date(chapter.endDate);
+          endDate = new Date(chapter.endDate);
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(23, 59, 59, 999);
+        }
+
+        if (startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+          groups.push({
+            id: `chapter-${chapter.id}`,
+            content: `<div class="flex items-center gap-2">
+              <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                <span class="text-white text-xs">📖</span>
+              </div>
+              <span class="font-medium text-sm">${chapter.name}</span>
+            </div>`,
+          });
+
+          const chapterContent = `
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span class="text-white text-xs">📖</span>
+                </div>
+                <span class="font-semibold text-blue-900 text-sm">${chapter.name}</span>
+              </div>
+              <div class="text-xs text-blue-700">
+                <div class="text-blue-600">${chapter.startDate ? startDate.toLocaleDateString() : ''} ${chapter.startDate && chapter.endDate ? ' - ' : ''} ${chapter.endDate ? endDate.toLocaleDateString() : ''}</div>
+                ${chapter.description ? `<div class="mt-1 text-blue-500 italic">${chapter.description}</div>` : ''}
+              </div>
+            </div>
+          `;
+
+          items.push({
+            id: `chapter-${chapter.id}`,
+            group: `chapter-${chapter.id}`,
+            start: startDate,
+            end: endDate,
+            content: chapterContent,
+            title: `${chapter.name}: ${chapter.startDate ? startDate.toLocaleDateString() : ''} ${chapter.startDate && chapter.endDate ? ' - ' : ''} ${chapter.endDate ? endDate.toLocaleDateString() : ''}`,
+            className: 'chapter-event',
+            type: 'range'
+          });
+        }
+      });
+    }
+
     const charactersByRole = characters.reduce((acc, character) => {
       const role = character.role || 'marginal';
       if (!acc[role]) acc[role] = [];
@@ -104,7 +193,6 @@ function BookTimeline({ book }) {
       return acc;
     }, {});
 
-    // Role labels and order
     const roleConfig = {
       protagonist: { label: 'Protagonists', order: 1 },
       supporting: { label: 'Supporting Characters', order: 2 },
@@ -112,10 +200,11 @@ function BookTimeline({ book }) {
       marginal: { label: 'Marginal Characters', order: 4 }
     };
 
-    // Create parent groups for roles
+    const roleGroups = [];
     Object.entries(roleConfig).forEach(([roleKey, config]) => {
       const roleCharacters = charactersByRole[roleKey] || [];
       if (roleCharacters.length > 0) {
+        roleGroups.push(`role-${roleKey}`);
         groups.push({
           id: `role-${roleKey}`,
           content: `<div class="font-semibold text-sm text-gray-700 flex items-center justify-between w-full gap-2">
@@ -129,12 +218,23 @@ function BookTimeline({ book }) {
       }
     });
 
-    // Create character groups
+    if (roleGroups.length > 0) {
+      groups.push({
+        id: 'characters-group',
+        content: `<div class="font-semibold text-sm text-gray-700 flex items-center justify-between w-full gap-2">
+          <span>Characters</span>
+          <span class="text-xs bg-green-200 px-2 py-1 rounded-full">${characters.length}</span>
+        </div>`,
+        nestedGroups: roleGroups,
+        showNested: true,
+        order: 1
+      });
+    }
+
     characters.forEach((character) => {
       const characterName = `${character.firstName} ${character.lastName || ''}`.trim();
       const avatarData = imageDataMap[character.id];
 
-      // Create group with image
       const groupContent = avatarData
         ? `<div class="flex items-center gap-2">
             <img src="${avatarData}" class="w-8 h-8 rounded-full object-cover" alt="${characterName}" />
@@ -152,16 +252,14 @@ function BookTimeline({ book }) {
         content: groupContent,
       });
 
-      // Add birth date event
       const birthDate = character.attributes?.birthDate;
       if (birthDate) {
         try {
           const date = new Date(birthDate);
-          // Set to midnight to show only date, no time
           date.setHours(0, 0, 0, 0);
           if (!isNaN(date.getTime())) {
             const birthContent = `
-              <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 shadow-sm max-w-xs">
+              <div>
                 <div class="flex items-center gap-2 mb-2">
                   <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                     <span class="text-white text-xs">🎂</span>
@@ -190,16 +288,14 @@ function BookTimeline({ book }) {
         }
       }
 
-      // Add death date event
       const deathDate = character.attributes?.deathDate;
       if (deathDate) {
         try {
           const date = new Date(deathDate);
-          // Set to midnight to show only date, no time
           date.setHours(0, 0, 0, 0);
           if (!isNaN(date.getTime())) {
             const deathContent = `
-              <div class="bg-red-50 border border-red-200 rounded-lg p-3 shadow-sm max-w-xs">
+              <div>
                 <div class="flex items-center gap-2 mb-2">
                   <div class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
                     <span class="text-white text-xs">💀</span>
@@ -229,12 +325,10 @@ function BookTimeline({ book }) {
       }
     });
 
-    // Process relationships for marriage/engagement events
     Object.entries(relationships).forEach(([characterId, rels]) => {
       rels.forEach((rel) => {
         const relKey = `${Math.min(parseInt(characterId), rel.relatedCharacterId)}-${Math.max(parseInt(characterId), rel.relatedCharacterId)}`;
 
-        // Skip if already processed (relationships are bidirectional)
         if (processedRelationships.has(relKey)) return;
         processedRelationships.add(relKey);
 
@@ -246,16 +340,13 @@ function BookTimeline({ book }) {
         const characterName = `${character.firstName} ${character.lastName || ''}`.trim();
         const relatedName = `${relatedCharacter.firstName} ${relatedCharacter.lastName || ''}`.trim();
 
-        // Marriage events
         if (rel.relationshipType === 'spouse' && rel.metadata?.marriageDate) {
           try {
             const date = new Date(rel.metadata.marriageDate);
-            // Set to midnight to show only date, no time
             date.setHours(0, 0, 0, 0);
             if (!isNaN(date.getTime())) {
-              // Create marriage event content
               const marriageContent = `
-                <div class="bg-pink-50 border border-pink-200 rounded-lg p-3 shadow-sm max-w-xs">
+                <div>
                   <div class="flex items-center gap-2 mb-2">
                     <div class="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
                       <span class="text-white text-xs">💍</span>
@@ -269,7 +360,6 @@ function BookTimeline({ book }) {
                 </div>
               `;
 
-              // Add event for both characters
               items.push({
                 id: `marriage-${characterId}-${rel.relatedCharacterId}`,
                 group: parseInt(characterId),
@@ -294,16 +384,13 @@ function BookTimeline({ book }) {
           }
         }
 
-        // Engagement events
         if (rel.relationshipType === 'engaged' && rel.metadata?.engagementDate) {
           try {
             const date = new Date(rel.metadata.engagementDate);
-            // Set to midnight to show only date, no time
             date.setHours(0, 0, 0, 0);
             if (!isNaN(date.getTime())) {
-              // Create engagement event content
               const engagementContent = `
-                <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 shadow-sm max-w-xs">
+                <div>
                   <div class="flex items-center gap-2 mb-2">
                     <div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
                       <span class="text-white text-xs">💎</span>
@@ -392,13 +479,12 @@ function BookTimeline({ book }) {
           date.setHours(0, 0, 0, 0);
           if (!isNaN(date.getTime())) {
             if (children.length === 1) {
-              // Single child
               const child = children[0];
               const childName = `${child.firstName} ${child.lastName || ''}`.trim();
               const parentName = `${parent.firstName} ${parent.lastName || ''}`.trim();
 
               const childBirthContent = `
-                <div class="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm max-w-xs">
+                <div>
                   <div class="flex items-center gap-2 mb-2">
                     <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                       <span class="text-white text-xs">👶</span>
@@ -423,14 +509,13 @@ function BookTimeline({ book }) {
                 className: 'child-birth-event',
               });
             } else {
-              // Multiple children on same date
               const childNames = children
                 .map(c => `${c.firstName} ${c.lastName || ''}`.trim())
                 .join(', ');
               const parentName = `${parent.firstName} ${parent.lastName || ''}`.trim();
 
               const multipleChildrenContent = `
-                <div class="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm max-w-xs">
+                <div>
                   <div class="flex items-center gap-2 mb-2">
                     <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                       <span class="text-white text-xs">👶</span>
@@ -462,7 +547,7 @@ function BookTimeline({ book }) {
     });
 
     return { timelineItems: items, timelineGroups: groups };
-  }, [characters, relationships, imageDataMap]);
+  }, [chapters, characters, relationships, imageDataMap]);
 
   const timelineOptions = useMemo(() => ({
     width: '100%',
@@ -474,8 +559,8 @@ function BookTimeline({ book }) {
     orientation: 'top',
     editable: false,
     selectable: true,
-    groupOrder: 'order', // Sort groups by their order property
-    groupHeightMode: 'auto', // Auto height for groups to handle nested content properly
+    groupOrder: 'order',
+    groupHeightMode: 'auto',
   }), []);
 
   const handleFit = () => {
@@ -496,7 +581,7 @@ function BookTimeline({ book }) {
     }
   };
 
-  const isLoading = loading || relationshipsLoading;
+  const isLoading = loading || relationshipsLoading || chaptersLoading;
 
   if (isLoading) {
     return (
@@ -548,10 +633,10 @@ function BookTimeline({ book }) {
           <div className="text-center space-y-2">
             <Calendar className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
             <p className="text-muted-foreground">
-              No character dates available
+              No timeline data available
             </p>
             <p className="text-sm text-muted-foreground">
-              Add birth or death dates to characters to see them on the timeline
+              Add dates to chapters or character events to see them on the timeline
             </p>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { Separator } from '@/components/ui/separator';
 import {
   User, Users, Plus
 } from 'lucide-react';
+import { format, isValid } from 'date-fns';
 import useImageLoader from '@/hooks/useImageLoader';
 import { SECTIONS } from '../CharacterProfile';
 import { FIELDS as QUICK_STATS_FIELDS } from './QuickStatsTab';
@@ -25,10 +26,23 @@ const KNOWN_KEYS = new Set(ALL_KNOWN_FIELDS.map(f => f.key));
 
 const ViewField = ({ label, value, ignore }) => {
   if (ignore || !value || (typeof value === 'string' && !value.trim())) return null;
+
+  // Format date values using date-fns
+  const formatValue = (val) => {
+    if (val instanceof Date) {
+      return isValid(val) ? format(val, 'dd/MM/yyyy') : val.toString();
+    }
+    if (typeof val === 'string') {
+      const date = new Date(val);
+      return isValid(date) ? format(date, 'dd/MM/yyyy') : val;
+    }
+    return val;
+  };
+
   return (
     <div className="space-y-1">
       <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{label}</div>
-      <div className="text-sm whitespace-pre-wrap">{value}</div>
+      <div className="text-sm whitespace-pre-wrap">{formatValue(value)}</div>
     </div>
   );
 };

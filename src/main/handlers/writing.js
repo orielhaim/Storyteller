@@ -40,13 +40,16 @@ export const chapterHandlers = {
     return result[0];
   }),
 
-  update: handleRequest(async (id, { name, description, position }) => {
+  update: handleRequest(async (id, { name, description, status, startDate, endDate, position }) => {
     const updateData = {
       updatedAt: Date.now(),
     };
 
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
+    if (status !== undefined) updateData.status = status;
+    if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate).getTime() : null;
+    if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate).getTime() : null;
     if (position !== undefined) updateData.position = position;
 
     const result = await db.update(chapters)

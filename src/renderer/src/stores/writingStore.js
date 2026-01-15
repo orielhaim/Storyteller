@@ -133,25 +133,22 @@ export const useWritingStore = create(immer((set, get) => ({
   },
 
   createChapter: async (bookId, data) => {
-    set(state => { state.loading = true; state.error = null; });
-
     try {
       const res = await bookAPI.chapters.create({ bookId, ...data });
       if (!res.success) throw new Error(res.error);
 
       set(state => {
+        state.chapters.push(res.data);
+
         if (state.chapterCache[bookId]) {
-          delete state.chapterCache[bookId];
+          state.chapterCache[bookId] = state.chapters;
         }
       });
-
-      await get().fetchChapters(bookId);
 
       return res.data;
     } catch (e) {
       console.error('Failed to create chapter:', e);
       set(state => {
-        state.loading = false;
         state.error = e.message || 'Failed to create chapter';
       });
       throw e;
@@ -159,34 +156,29 @@ export const useWritingStore = create(immer((set, get) => ({
   },
 
   updateChapter: async (id, data) => {
-    set(state => { state.loading = true; state.error = null; });
-
     try {
       const res = await bookAPI.chapters.update(id, data);
       if (!res.success) throw new Error(res.error);
 
       set(state => {
-        Object.keys(state.chapterCache).forEach(bookId => {
-          delete state.chapterCache[bookId];
-        });
+        if (state.currentChapter?.id === id) {
+          state.currentChapter = { ...state.currentChapter, ...res.data };
+        }
+
+        const chapterIndex = state.chapters.findIndex(c => c.id === id);
+        if (chapterIndex !== -1) {
+          state.chapters[chapterIndex] = { ...state.chapters[chapterIndex], ...res.data };
+        }
+
+        if (state.chapters[chapterIndex]?.bookId) {
+          state.chapterCache[state.chapters[chapterIndex].bookId] = state.chapters;
+        }
       });
-
-      if (get().currentChapter?.id === id) {
-        set(state => { state.currentChapter = res.data; });
-      }
-
-      const chapterIndex = get().chapters.findIndex(c => c.id === id);
-      if (chapterIndex !== -1) {
-        set(state => { state.chapters[chapterIndex] = res.data; });
-      }
-
-      set(state => { state.loading = false; });
 
       return res.data;
     } catch (e) {
       console.error('Failed to update chapter:', e);
       set(state => {
-        state.loading = false;
         state.error = e.message || 'Failed to update chapter';
       });
       throw e;
@@ -194,35 +186,31 @@ export const useWritingStore = create(immer((set, get) => ({
   },
 
   deleteChapter: async (id, bookId) => {
-    set(state => { state.loading = true; state.error = null; });
-
     try {
       const res = await bookAPI.chapters.delete(id);
       if (!res.success) throw new Error(res.error);
-
-      set(state => {
-        if (state.chapterCache[bookId]) {
-          delete state.chapterCache[bookId];
-        }
-        Object.keys(state.sceneCacheByChapter).forEach(chapterId => {
-          delete state.sceneCacheByChapter[chapterId];
-        });
-      });
 
       set(state => {
         state.chapters = state.chapters.filter(c => c.id !== id);
         if (state.currentChapter?.id === id) {
           state.currentChapter = null;
         }
+
+        if (state.chapterCache[bookId]) {
+          state.chapterCache[bookId] = state.chapters;
+        }
       });
 
-      set(state => { state.loading = false; });
+      set(state => {
+        Object.keys(state.sceneCacheByChapter).forEach(chapterId => {
+          delete state.sceneCacheByChapter[chapterId];
+        });
+      });
 
       return res.data;
     } catch (e) {
       console.error('Failed to delete chapter:', e);
       set(state => {
-        state.loading = false;
         state.error = e.message || 'Failed to delete chapter';
       });
       throw e;
@@ -230,26 +218,23 @@ export const useWritingStore = create(immer((set, get) => ({
   },
 
   reorderChapters: async (bookId, chapterIds) => {
-    set(state => { state.loading = true; state.error = null; });
-
     try {
       const res = await bookAPI.chapters.reorder(bookId, chapterIds);
       if (!res.success) throw new Error(res.error);
 
       set(state => {
+        const reorderedChapters = chapterIds.map(id => state.chapters.find(c => c.id === id)).filter(Boolean);
+        state.chapters = reorderedChapters;
+
         if (state.chapterCache[bookId]) {
-          delete state.chapterCache[bookId];
+          state.chapterCache[bookId] = state.chapters;
         }
       });
-      await get().fetchChapters(bookId);
-
-      set(state => { state.loading = false; });
 
       return res.data;
     } catch (e) {
       console.error('Failed to reorder chapters:', e);
       set(state => {
-        state.loading = false;
         state.error = e.message || 'Failed to reorder chapters';
       });
       throw e;
@@ -257,28 +242,28 @@ export const useWritingStore = create(immer((set, get) => ({
   },
 
   createScene: async (chapterId, bookId, data) => {
-    set(state => { state.loading = true; state.error = null; });
-
     try {
       const res = await bookAPI.scenes.create({ chapterId, bookId, ...data });
       if (!res.success) throw new Error(res.error);
 
       set(state => {
-        if (state.sceneCacheByChapter[chapterId]) {
-          delete state.sceneCacheByChapter[chapterId];
-        }
+        state.scenes.push(res.data);
+
         if (state.sceneCache[bookId]) {
-          delete state.sceneCache[bookId];
+          state.sceneCache[bookId] = state.scenes;
         }
       });
 
-      await get().fetchScenesByBook(bookId);
+      set(state => {
+        if (state.sceneCacheByChapter[chapterId]) {
+          delete state.sceneCacheByChapter[chapterId];
+        }
+      });
 
       return res.data;
     } catch (e) {
       console.error('Failed to create scene:', e);
       set(state => {
-        state.loading = false;
         state.error = e.message || 'Failed to create scene';
       });
       throw e;
@@ -286,22 +271,26 @@ export const useWritingStore = create(immer((set, get) => ({
   },
 
   updateScene: async (id, data, options = {}) => {
-    set(state => { state.loading = true; state.error = null; });
-
     try {
       const res = await bookAPI.scenes.update(id, data);
       if (!res.success) throw new Error(res.error);
 
       const shouldInvalidateCaches = options.invalidateCaches || false;
 
-      if (get().currentScene?.id === id) {
-        set(state => { state.currentScene = res.data; });
-      }
+      set(state => {
+        if (state.currentScene?.id === id) {
+          state.currentScene = { ...state.currentScene, ...res.data };
+        }
 
-      const sceneIndex = get().scenes.findIndex(s => s.id === id);
-      if (sceneIndex !== -1) {
-        set(state => { state.scenes[sceneIndex] = res.data; });
-      }
+        const sceneIndex = state.scenes.findIndex(s => s.id === id);
+        if (sceneIndex !== -1) {
+          state.scenes[sceneIndex] = { ...state.scenes[sceneIndex], ...res.data };
+        }
+
+        if (state.scenes[sceneIndex]?.bookId && !shouldInvalidateCaches) {
+          state.sceneCache[state.scenes[sceneIndex].bookId] = state.scenes;
+        }
+      });
 
       if (shouldInvalidateCaches) {
         const currentScene = get().currentScene?.id === id ? get().currentScene : get().scenes.find(s => s.id === id);
@@ -321,13 +310,10 @@ export const useWritingStore = create(immer((set, get) => ({
         }
       }
 
-      set(state => { state.loading = false; });
-
       return res.data;
     } catch (e) {
       console.error('Failed to update scene:', e);
       set(state => {
-        state.loading = false;
         state.error = e.message || 'Failed to update scene';
       });
       throw e;
@@ -335,37 +321,31 @@ export const useWritingStore = create(immer((set, get) => ({
   },
 
   deleteScene: async (id, chapterId, bookId) => {
-    set(state => { state.loading = true; state.error = null; });
-
     try {
       const res = await bookAPI.scenes.delete(id);
       if (!res.success) throw new Error(res.error);
-
-      set(state => {
-        if (state.sceneCacheByChapter[chapterId]) {
-          delete state.sceneCacheByChapter[chapterId];
-        }
-        if (state.sceneCache[bookId]) {
-          delete state.sceneCache[bookId];
-        }
-      });
 
       set(state => {
         state.scenes = state.scenes.filter(s => s.id !== id);
         if (state.currentScene?.id === id) {
           state.currentScene = null;
         }
+
+        if (state.sceneCache[bookId]) {
+          state.sceneCache[bookId] = state.scenes;
+        }
       });
 
-      await get().fetchScenesByBook(bookId);
-
-      set(state => { state.loading = false; });
+      set(state => {
+        if (state.sceneCacheByChapter[chapterId]) {
+          delete state.sceneCacheByChapter[chapterId];
+        }
+      });
 
       return res.data;
     } catch (e) {
       console.error('Failed to delete scene:', e);
       set(state => {
-        state.loading = false;
         state.error = e.message || 'Failed to delete scene';
       });
       throw e;
@@ -373,8 +353,6 @@ export const useWritingStore = create(immer((set, get) => ({
   },
 
   reorderScenes: async (chapterId, sceneIds) => {
-    set(state => { state.loading = true; state.error = null; });
-
     try {
       const res = await bookAPI.scenes.reorder(chapterId, sceneIds);
       if (!res.success) throw new Error(res.error);
@@ -383,25 +361,25 @@ export const useWritingStore = create(immer((set, get) => ({
       const bookId = chapter?.bookId;
 
       set(state => {
-        if (state.sceneCacheByChapter[chapterId]) {
-          delete state.sceneCacheByChapter[chapterId];
-        }
+        const reorderedScenes = sceneIds.map(id => state.scenes.find(s => s.id === id)).filter(Boolean);
+        const otherScenes = state.scenes.filter(s => !sceneIds.includes(s.id));
+        state.scenes = [...otherScenes, ...reorderedScenes];
+
         if (bookId && state.sceneCache[bookId]) {
-          delete state.sceneCache[bookId];
+          state.sceneCache[bookId] = state.scenes;
         }
       });
 
-      if (bookId) {
-        await get().fetchScenesByBook(bookId);
-      }
-
-      set(state => { state.loading = false; });
+      set(state => {
+        if (state.sceneCacheByChapter[chapterId]) {
+          delete state.sceneCacheByChapter[chapterId];
+        }
+      });
 
       return res.data;
     } catch (e) {
       console.error('Failed to reorder scenes:', e);
       set(state => {
-        state.loading = false;
         state.error = e.message || 'Failed to reorder scenes';
       });
       throw e;
@@ -409,8 +387,6 @@ export const useWritingStore = create(immer((set, get) => ({
   },
 
   moveSceneToChapter: async (sceneId, targetChapterId) => {
-    set(state => { state.loading = true; state.error = null; });
-
     try {
       const res = await bookAPI.scenes.moveToChapter(sceneId, targetChapterId);
       if (!res.success) throw new Error(res.error);
@@ -420,35 +396,29 @@ export const useWritingStore = create(immer((set, get) => ({
       const bookId = scene?.bookId;
 
       set(state => {
+        const sceneIndex = state.scenes.findIndex(s => s.id === sceneId);
+        if (sceneIndex !== -1) {
+          state.scenes[sceneIndex] = { ...state.scenes[sceneIndex], ...res.data.scene };
+        }
+
+        if (bookId && state.sceneCache[bookId]) {
+          state.sceneCache[bookId] = state.scenes;
+        }
+      });
+
+      set(state => {
         if (oldChapterId && state.sceneCacheByChapter[oldChapterId]) {
           delete state.sceneCacheByChapter[oldChapterId];
         }
         if (state.sceneCacheByChapter[targetChapterId]) {
           delete state.sceneCacheByChapter[targetChapterId];
         }
-        if (bookId && state.sceneCache[bookId]) {
-          delete state.sceneCache[bookId];
-        }
       });
-
-      const sceneIndex = get().scenes.findIndex(s => s.id === sceneId);
-      if (sceneIndex !== -1) {
-        set(state => {
-          state.scenes[sceneIndex] = res.data.scene;
-        });
-      }
-
-      if (bookId) {
-        await get().fetchScenesByBook(bookId);
-      }
-
-      set(state => { state.loading = false; });
 
       return res.data;
     } catch (e) {
       console.error('Failed to move scene:', e);
       set(state => {
-        state.loading = false;
         state.error = e.message || 'Failed to move scene';
       });
       throw e;

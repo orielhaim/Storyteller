@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useWritingStore } from '@/stores/writingStore';
 import { Button } from '@/components/ui/button';
-import { Plus, Pencil, Trash2, ChevronRight, Book, GripVertical } from 'lucide-react';
+import { Plus, Trash2, ChevronRight, Book, GripVertical } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -21,10 +21,10 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
+import { BOOK_STATUS_CONFIG } from '@/config/statusConfig';
 import CreateChapterDialog from '../dialogs/CreateChapterDialog';
-import EditChapterDialog from '../dialogs/EditChapterDialog';
 
-function SortableChapterItem({ chapter, onChapterClick, onEdit, onDelete }) {
+function SortableChapterItem({ chapter, onChapterClick, onDelete }) {
   const {
     attributes,
     listeners,
@@ -64,6 +64,20 @@ function SortableChapterItem({ chapter, onChapterClick, onEdit, onDelete }) {
             <h3 className="font-medium">{chapter.name}</h3>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </div>
+          <div className="flex items-center gap-2 mt-1">
+            {chapter.status && (
+              <span className={`text-xs px-2 py-0.5 rounded-full ${BOOK_STATUS_CONFIG[chapter.status]?.className || 'bg-gray-100 text-gray-800'}`}>
+                {BOOK_STATUS_CONFIG[chapter.status]?.label || chapter.status}
+              </span>
+            )}
+            {(chapter.startDate || chapter.endDate) && (
+              <span className="text-xs text-muted-foreground">
+                {chapter.startDate && new Date(chapter.startDate).toLocaleDateString()}
+                {chapter.startDate && chapter.endDate && ' - '}
+                {chapter.endDate && new Date(chapter.endDate).toLocaleDateString()}
+              </span>
+            )}
+          </div>
           {chapter.description && (
             <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
               {chapter.description}
@@ -72,17 +86,6 @@ function SortableChapterItem({ chapter, onChapterClick, onEdit, onDelete }) {
         </div>
       </div>
       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(chapter);
-          }}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
         <Button
           variant="ghost"
           size="icon"
@@ -112,7 +115,6 @@ import {
 function ChaptersWindow({ bookId, onOpenChapter }) {
   const { chapters, loading, fetchChapters, deleteChapter, reorderChapters } = useWritingStore();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedChapter, setSelectedChapter] = useState(null);
 
@@ -149,15 +151,6 @@ function ChaptersWindow({ bookId, onOpenChapter }) {
   }, [bookId, fetchChapters]);
 
   const handleCreate = () => {
-    fetchChapters(bookId);
-  };
-
-  const handleEdit = (chapter) => {
-    setSelectedChapter(chapter);
-    setEditDialogOpen(true);
-  };
-
-  const handleUpdate = () => {
     fetchChapters(bookId);
   };
 
@@ -230,7 +223,6 @@ function ChaptersWindow({ bookId, onOpenChapter }) {
                     key={chapter.id}
                     chapter={chapter}
                     onChapterClick={handleChapterClick}
-                    onEdit={handleEdit}
                     onDelete={handleDeleteClick}
                   />
                 ))}
@@ -245,13 +237,6 @@ function ChaptersWindow({ bookId, onOpenChapter }) {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onCreate={handleCreate}
-      />
-
-      <EditChapterDialog
-        chapter={selectedChapter}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        onUpdate={handleUpdate}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

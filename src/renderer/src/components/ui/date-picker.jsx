@@ -1,5 +1,8 @@
+"use client"
+
 import * as React from "react"
 import { CalendarIcon } from "lucide-react"
+import { format, isValid, parse, startOfDay } from "date-fns" // וודא שהתקנת את date-fns
 
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -9,109 +12,135 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
-function formatDate(date) {
-  if (!date) {
-    return ""
-  }
+// רשימת פורמטים שהמערכת תנסה לזהות כשהמשתמש מקליד ידנית
+const DATE_FORMATS_TO_TRY = [
+  "dd/MM/yyyy",
+  "dd-MM-yyyy",
+  "dd.MM.yyyy",
+  "d/M/yyyy",
+  "d.M.yyyy",
+  "dd/MM/yy",
+  "d/M/yy",
+  "yyyy-MM-dd", // ISO format
+]
 
-  return date.toLocaleDateString("en-US", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  })
-}
+// הפורמט שיוצג בתוך האינפוט לאחר בחירה
+const DISPLAY_FORMAT = "dd/MM/yyyy"
 
-function isValidDate(date) {
-  if (!date) {
-    return false
-  }
-  return !isNaN(date.getTime())
-}
-
-export function DatePicker({ value, onChange, placeholder = "Select date", className = "" }) {
+export function DatePicker({
+  value,
+  onChange,
+  placeholder = "DD/MM/YYYY",
+  className,
+}) {
   const [open, setOpen] = React.useState(false)
-  const [date, setDate] = React.useState(value ? new Date(value) : undefined)
-  const [month, setMonth] = React.useState(date)
-  const [inputValue, setInputValue] = React.useState(formatDate(date))
+  const [inputValue, setInputValue] = React.useState("")
 
-  React.useEffect(() => {
-    if (value) {
-      const newDate = new Date(value)
-      setDate(newDate)
-      setMonth(newDate)
-      setInputValue(formatDate(newDate))
-    } else {
-      setDate(undefined)
-      setMonth(undefined)
-      setInputValue("")
+  // --- 1. המרה בטוחה של הערך הנכנס (תיקון באג "יום אחורה") ---
+  const selectedDate = React.useMemo(() => {
+    if (!value) return undefined
+    
+    // אם קיבלנו מחרוזת, ננסה להמיר אותה לתאריך מקומי ללא השפעת אזורי זמן
+    let dateObj = typeof value === 'string' ? new Date(value) : value;
+
+    if (isValid(dateObj)) {
+        // הטריק: אנחנו לוקחים את התאריך ומאפסים אותו לחצות של הזמן המקומי של המשתמש
+        // זה מונע תזוזות של ימים בגלל UTC
+        return startOfDay(dateObj)
     }
+    return undefined
   }, [value])
 
-  const handleInputChange = (e) => {
-    const inputVal = e.target.value.trim()
-    setInputValue(e.target.value) // Keep the actual input value for display
 
-    // If input is empty, clear the date
-    if (inputVal === "") {
-      setDate(undefined)
-      setMonth(undefined)
-      onChange?.(null) // Send null to clear the date
+  // --- 2. עדכון האינפוט כשהערך החיצוני משתנה ---
+  React.useEffect(() => {
+    if (selectedDate) {
+      setInputValue(format(selectedDate, DISPLAY_FORMAT))
+    } else {
+      setInputValue("")
+    }
+  }, [selectedDate])
+
+
+  // --- 3. לוגיקה חכמה לזיהוי הקלדת המשתמש ---
+  const handleInputChange = (e) => {
+    const newVal = e.target.value
+    setInputValue(newVal)
+
+    if (!newVal.trim()) {
+      onChange?.(undefined)
       return
     }
 
-    const parsedDate = new Date(inputVal)
-    if (isValidDate(parsedDate)) {
-      setDate(parsedDate)
-      setMonth(parsedDate)
-      onChange?.(parsedDate.toISOString().split('T')[0]) // Send date in YYYY-MM-DD format
+    // ניסיון לפרסר את הטקסט לפי רשימת הפורמטים
+    let parsedDate;
+
+    for (const fmt of DATE_FORMATS_TO_TRY) {
+      const result = parse(newVal, fmt, new Date())
+      if (isValid(result) && result.getFullYear() > 1900) {
+        parsedDate = startOfDay(result)
+        break
+      }
+    }
+
+    if (parsedDate) {
+      onChange?.(parsedDate)
     }
   }
 
-  const handleDateSelect = (selectedDate) => {
-    setDate(selectedDate)
-    setInputValue(formatDate(selectedDate))
+  const handleBlur = () => {
+    if (selectedDate) {
+        setInputValue(format(selectedDate, DISPLAY_FORMAT))
+    } else if (inputValue.trim() !== "") {
+        // אם המשתמש כתב ג'יבריש ואין תאריך נבחר, ננקה או נשאיר (לבחירתך, כאן אני מנקה)
+        setInputValue("")
+    }
+  }
+
+  const handleCalendarSelect = (date) => {
+    if (!date) {
+        onChange?.(undefined)
+        setInputValue("")
+        return
+    }
+    const normalized = startOfDay(date)
+    onChange?.(normalized)
+    setInputValue(format(normalized, DISPLAY_FORMAT))
     setOpen(false)
-    onChange?.(selectedDate.toISOString().split('T')[0]) // Send date in YYYY-MM-DD format
   }
 
   return (
-    <div className="relative">
+    <div className={cn("relative w-full", className)}>
       <Input
+        type="text"
         value={inputValue}
-        placeholder={placeholder}
-        className={`bg-background pr-10 ${className}`}
         onChange={handleInputChange}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowDown") {
-            e.preventDefault()
-            setOpen(true)
-          }
-        }}
+        onBlur={handleBlur}
+        placeholder={placeholder}
+        className="pr-10"
+        autoComplete="off"
       />
+      
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="ghost"
-            className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
+            size="icon"
+            className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:bg-transparent"
+            tabIndex={-1} // כדי שהטאב לא יעצור על הכפתור אלא רק על האינפוט
           >
-            <CalendarIcon className="size-3.5" />
-            <span className="sr-only">Select date</span>
+            <CalendarIcon className="size-4" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent
-          className="w-auto overflow-hidden p-0"
-          align="end"
-          alignOffset={-8}
-          sideOffset={10}
-        >
+        <PopoverContent className="w-auto p-0" align="end">
           <Calendar
             mode="single"
-            selected={date}
-            captionLayout="dropdown"
-            month={month}
-            onMonthChange={setMonth}
-            onSelect={handleDateSelect}
+            selected={selectedDate}
+            onSelect={handleCalendarSelect}
+            defaultMonth={selectedDate}
+            initialFocus
           />
         </PopoverContent>
       </Popover>

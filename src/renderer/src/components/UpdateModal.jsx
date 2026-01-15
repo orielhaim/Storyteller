@@ -42,7 +42,7 @@ const UpdateModal = ({ isOpen, onClose, updateInfo, currentVersion, onInstallNow
           <div className="flex items-center gap-3">
             <div>
               <DialogTitle className="text-xl">
-                🎉 New Update Available
+                🎉 {updateInfo.releaseName || 'New Update Available'}
               </DialogTitle>
               <DialogDescription className="text-base">
                 Upgrade from <Badge variant="secondary" className="text-xs">v{currentVersion}</Badge> to <Badge variant="secondary" className="text-xs">v{updateInfo.version}</Badge>
@@ -50,7 +50,6 @@ const UpdateModal = ({ isOpen, onClose, updateInfo, currentVersion, onInstallNow
             </div>
           </div>
         </DialogHeader>
-        {console.log(updateInfo)}
 
         <div className="space-y-4">
           {updateInfo.releaseNotes && (

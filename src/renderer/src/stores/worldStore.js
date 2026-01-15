@@ -3,7 +3,6 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
 export const useWorldStore = create(immer((set, get) => ({
-  // Current book worlds
   worlds: [],
   locations: [],
   objects: [],
@@ -22,7 +21,6 @@ export const useWorldStore = create(immer((set, get) => ({
 
   // Fetch all worlds for a book (with caching)
   fetchWorlds: async (bookId) => {
-    // Check cache first
     const cachedWorlds = get().worldCache[bookId];
     if (cachedWorlds) {
       set(state => { state.worlds = cachedWorlds; });
