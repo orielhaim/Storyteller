@@ -20,6 +20,7 @@ autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
 
 autoUpdater.autoDownload = false;
+console.log('UPDATER_TEST', process.env['UPDATER_TEST']);
 autoUpdater.forceDevUpdateConfig = (is.dev && process.env['UPDATER_TEST']);
 
 import { registerIpcHandlers } from './handlers/index.js';

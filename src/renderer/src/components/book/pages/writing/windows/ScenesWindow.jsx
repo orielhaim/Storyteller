@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useWritingStore } from '@/stores/writingStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -179,6 +179,10 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
   const [isSavingChapter, setIsSavingChapter] = useState(false);
   const [chapterDeleteDialogOpen, setChapterDeleteDialogOpen] = useState(false);
   const [chapterDateError, setChapterDateError] = useState('');
+  const [isCompact, setIsCompact] = useState(false);
+  const [isEditingCompact, setIsEditingCompact] = useState(false);
+  const headerRef = useRef(null);
+  const editingRef = useRef(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -220,6 +224,38 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
     }
     setChapterDateError('');
   }, [chapter]);
+
+  useEffect(() => {
+    const checkCompactModes = () => {
+      if (headerRef.current) {
+        const threshold = 530;
+        setIsCompact(headerRef.current.offsetWidth < threshold);
+      }
+      if (editingRef.current) {
+        const threshold = 400;
+        setIsEditingCompact(editingRef.current.offsetWidth < threshold);
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(checkCompactModes);
+    if (headerRef.current) {
+      resizeObserver.observe(headerRef.current);
+    }
+    if (editingRef.current) {
+      resizeObserver.observe(editingRef.current);
+    }
+
+    checkCompactModes();
+
+    return () => {
+      if (headerRef.current) {
+        resizeObserver.unobserve(headerRef.current);
+      }
+      if (editingRef.current) {
+        resizeObserver.unobserve(editingRef.current);
+      }
+    };
+  }, []);
 
   const handleCreate = () => {
     // Scenes will be automatically updated in the global array
@@ -328,7 +364,7 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
     <div className="h-full flex flex-col p-4">
       <Card className="mb-4 py-4">
         <CardContent>
-          <div className="flex items-start justify-between">
+          <div ref={headerRef} className="flex items-start justify-between">
             <div className="flex items-start gap-3 flex-1">
               <Folder className="h-6 w-6 text-primary mt-1" />
               <div className="flex-1">
@@ -380,22 +416,24 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
                         onClick={handleSaveChapterEdit}
                         disabled={isSavingChapter || !editChapterName.trim()}
                         size="sm"
+                        className="shrink-0"
                       >
-                        <Save className="h-4 w-4 mr-2" />
-                        {isSavingChapter ? 'Saving...' : 'Save'}
+                        <Save className="h-4 w-4 shrink-0" />
+                        {!isEditingCompact && <span className="ml-2">{isSavingChapter ? 'Saving...' : 'Save'}</span>}
                       </Button>
                       <Button
                         onClick={handleCancelChapterEdit}
                         variant="outline"
                         size="sm"
+                        className="shrink-0"
                       >
-                        <X className="h-4 w-4 mr-2" />
-                        Cancel
+                        <X className="h-4 w-4 shrink-0" />
+                        {!isEditingCompact && <span className="ml-2">Cancel</span>}
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <div>
+                  <div ref={editingRef}>
                     <div className="flex items-center gap-2 mb-1">
                       <h2 className="text-xl font-semibold">{chapter?.name || chapterName}</h2>
                       {chapter?.status && (
@@ -419,7 +457,7 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
               </div>
             </div>
             {!isEditingChapter && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0 shrink-0">
                 <Select
                   value={chapter?.status || 'none'}
                   onValueChange={async (value) => {
@@ -430,7 +468,7 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
                     }
                   }}
                 >
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-32 min-w-0">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -446,16 +484,21 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
                   onClick={handleStartChapterEdit}
                   variant="ghost"
                   size="sm"
+                  className="shrink-0"
                 >
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Edit Chapter
+                  <Pencil className="h-4 w-4 shrink-0" />
+                  {!isCompact && <span className="ml-2">Edit Chapter</span>}
                 </Button>
               </div>
             )}
             {!isEditingChapter && (
-              <Button onClick={() => setCreateDialogOpen(true)} size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Scene
+              <Button
+                onClick={() => setCreateDialogOpen(true)}
+                size="sm"
+                className="shrink-0 min-w-0"
+              >
+                <Plus className="h-4 w-4 shrink-0" />
+                {!isCompact && <span className="ml-2">Add Scene</span>}
               </Button>
             )}
           </div>

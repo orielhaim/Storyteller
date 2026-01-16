@@ -59,7 +59,7 @@ function Settings() {
     installAndRestart,
     markAsViewed,
   } = useUpdaterStore();
-  
+
   const { loadSettings } = useSettingsStore();
 
   useEffect(() => {
@@ -198,22 +198,18 @@ function Settings() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto p-6 space-y-8 max-w-4xl">
-        <header className="flex items-center gap-4">
+        <header className="flex items-center gap-4 mb-4">
           <Button
             onClick={() => navigate('/')}
             variant="ghost"
             size="sm"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Library
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-            <p className="text-muted-foreground mt-1">Manage your application preferences</p>
-          </div>
+          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         </header>
 
-        <Separator />
+        <Separator className="mb-4" />
 
         <main className="space-y-6">
           <section>
@@ -232,7 +228,7 @@ function Settings() {
                 </CardHeader>
                 <CardContent className="divide-y">
                   {section.items.map((item) => (
-                    <SettingItem 
+                    <SettingItem
                       key={item.path}
                       path={item.path}
                       label={item.label}

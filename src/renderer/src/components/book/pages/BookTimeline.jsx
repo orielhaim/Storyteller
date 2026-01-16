@@ -118,8 +118,6 @@ function BookTimeline({ book }) {
           <span>Chapters</span>
           <span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${validChapters.length}</span>
         </div>`,
-        nestedGroups: validChapters.map(chapter => `chapter-${chapter.id}`),
-        showNested: true,
         order: 0
       });
 
@@ -147,16 +145,6 @@ function BookTimeline({ book }) {
         }
 
         if (startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-          groups.push({
-            id: `chapter-${chapter.id}`,
-            content: `<div class="flex items-center gap-2">
-              <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                <span class="text-white text-xs">📖</span>
-              </div>
-              <span class="font-medium text-sm">${chapter.name}</span>
-            </div>`,
-          });
-
           const chapterContent = `
             <div>
               <div class="flex items-center gap-2 mb-2">
@@ -174,7 +162,7 @@ function BookTimeline({ book }) {
 
           items.push({
             id: `chapter-${chapter.id}`,
-            group: `chapter-${chapter.id}`,
+            group: 'chapters-group',
             start: startDate,
             end: endDate,
             content: chapterContent,
@@ -552,7 +540,7 @@ function BookTimeline({ book }) {
   const timelineOptions = useMemo(() => ({
     width: '100%',
     height: '600px',
-    stack: false,
+    stack: true,
     showCurrentTime: true,
     zoomMin: 1000 * 60 * 60 * 24, // 1 day
     zoomMax: 1000 * 60 * 60 * 24 * 365 * 100, // 100 years
