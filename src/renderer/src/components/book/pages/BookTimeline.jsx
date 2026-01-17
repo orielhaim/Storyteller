@@ -1,6 +1,7 @@
 /* global bookAPI */
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Loader2, Calendar, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { useCharacterStore } from '@/stores/characterStore';
 import { useWritingStore } from '@/stores/writingStore';
@@ -8,11 +9,13 @@ import Timeline from './timeline/Timeline';
 
 function BookTimeline({ book }) {
   const { characters, loading, fetchCharacters } = useCharacterStore();
-  const { chapters, fetchChapters } = useWritingStore();
+  const { chapters, scenes, fetchChapters, fetchScenesByBook } = useWritingStore();
   const [relationships, setRelationships] = useState({});
   const [relationshipsLoading, setRelationshipsLoading] = useState(true);
   const [chaptersLoading, setChaptersLoading] = useState(true);
+  const [scenesLoading, setScenesLoading] = useState(true);
   const [imageDataMap, setImageDataMap] = useState({});
+  const [timelineDisplayMode, setTimelineDisplayMode] = useState('separate'); // 'separate' or 'connected'
   const timelineRef = useRef(null);
 
   useEffect(() => {
@@ -33,6 +36,21 @@ function BookTimeline({ book }) {
 
     loadChapters();
   }, [book.id, fetchChapters]);
+
+  useEffect(() => {
+    const loadScenes = async () => {
+      setScenesLoading(true);
+      try {
+        await fetchScenesByBook(book.id);
+      } catch (error) {
+        console.error('Failed to fetch scenes:', error);
+      } finally {
+        setScenesLoading(false);
+      }
+    };
+
+    loadScenes();
+  }, [book.id, fetchScenesByBook]);
 
   useEffect(() => {
     if (characters.length === 0) return;
@@ -106,73 +124,235 @@ function BookTimeline({ book }) {
     const characterMap = new Map();
     const processedRelationships = new Set();
 
-    characters.forEach((character) => {
-      characterMap.set(character.id, character);
+    // Book Timeline - Add above characters
+    const bookGroups = [];
+    const chapterMap = new Map();
+    const sceneMap = new Map();
+
+    // Create chapter and scene maps
+    chapters.forEach(chapter => {
+      chapterMap.set(chapter.id, chapter);
     });
 
-    const validChapters = chapters.filter(chapter => chapter.startDate || chapter.endDate);
-    if (validChapters.length > 0) {
+    scenes.forEach(scene => {
+      sceneMap.set(scene.id, scene);
+    });
+
+    // Filter scenes that have dates
+    const scenesWithDates = scenes.filter(scene => scene.startDate || scene.endDate);
+
+    if (timelineDisplayMode === 'separate') {
+      // Separate mode: Group by chapters with beautiful HTML design
+      const chaptersWithScenes = new Map();
+
+      scenesWithDates.forEach(scene => {
+        const chapterId = scene.chapterId;
+        if (!chaptersWithScenes.has(chapterId)) {
+          chaptersWithScenes.set(chapterId, []);
+        }
+        chaptersWithScenes.get(chapterId).push(scene);
+      });
+
+      chaptersWithScenes.forEach((chapterScenes, chapterId) => {
+        const chapter = chapterMap.get(chapterId);
+        if (!chapter) return;
+
+        const chapterGroupId = `chapter-${chapterId}`;
+
+        // Create nested group for chapter with enhanced design
+        groups.push({
+          id: chapterGroupId,
+          content: `<div class="flex items-center justify-between w-full gap-3 p-2 bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg shadow-sm">
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 bg-blue-500 rounded-full shadow-sm"></div>
+              <span class="font-bold text-sm text-blue-900">${chapter.name}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-full border border-blue-200">${chapterScenes.length} scenes</span>
+            </div>
+          </div>`,
+          nestedGroups: [`scenes-${chapterId}`],
+          showNested: true,
+          order: 0
+        });
+
+        // Create scenes group within chapter with enhanced design
+        groups.push({
+          id: `scenes-${chapterId}`,
+          content: `<div class="flex items-center gap-2 ml-6 p-1">
+            <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+            <span class="text-xs font-medium text-blue-700 italic">Scenes</span>
+          </div>`,
+          order: 0
+        });
+
+        // Add scene items with enhanced design
+        chapterScenes.forEach(scene => {
+          const startDate = scene.startDate ? new Date(scene.startDate) : null;
+          const endDate = scene.endDate ? new Date(scene.endDate) : null;
+
+          if (startDate && endDate) {
+            // Range item - set to full day
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(23, 59, 59, 999);
+            items.push({
+              id: `scene-${scene.id}`,
+              group: `scenes-${chapterId}`,
+              start: startDate,
+              end: endDate,
+              content: `<div class="flex items-center gap-2 p-1 bg-blue-50 border border-blue-200 rounded-md shadow-sm">
+                <div class="w-2 h-2 bg-blue-600 rounded-full shrink-0"></div>
+                <span class="text-xs font-semibold text-blue-900 truncate">${scene.name}</span>
+              </div>`,
+              title: `${scene.name} (${chapter.name})`,
+              className: 'scene-event',
+            });
+          } else if (startDate) {
+            // Point item at start date - set to start of day
+            startDate.setHours(0, 0, 0, 0);
+            items.push({
+              id: `scene-${scene.id}`,
+              group: `scenes-${chapterId}`,
+              start: startDate,
+              type: 'point',
+              content: `<div class="flex items-center gap-2 p-1 bg-blue-50 border border-blue-200 rounded-md shadow-sm">
+                <div class="w-2 h-2 bg-blue-600 rounded-full shrink-0"></div>
+                <span class="text-xs font-semibold text-blue-900 truncate">${scene.name}</span>
+              </div>`,
+              title: `${scene.name} (${chapter.name})`,
+              className: 'scene-event',
+            });
+          } else if (endDate) {
+            // Point item at end date - set to start of day
+            endDate.setHours(0, 0, 0, 0);
+            items.push({
+              id: `scene-${scene.id}`,
+              group: `scenes-${chapterId}`,
+              start: endDate,
+              type: 'point',
+              content: `<div class="flex items-center gap-2 p-1 bg-blue-50 border border-blue-200 rounded-md shadow-sm">
+                <div class="w-2 h-2 bg-blue-600 rounded-full shrink-0"></div>
+                <span class="text-xs font-semibold text-blue-900 truncate">${scene.name}</span>
+              </div>`,
+              title: `${scene.name} (${chapter.name})`,
+              className: 'scene-event',
+            });
+          }
+        });
+
+        bookGroups.push(chapterGroupId);
+      });
+    } else {
+      // Connected mode: All scenes in one timeline - no nesting, just the main group
+      const bookTimelineGroupId = 'book-timeline-connected';
+
       groups.push({
-        id: 'chapters-group',
-        content: `<div class="font-semibold text-sm text-gray-700 flex items-center justify-between w-full gap-2">
-          <span>Chapters</span>
-          <span class="text-xs bg-blue-200 px-2 py-1 rounded-full">${validChapters.length}</span>
+        id: bookTimelineGroupId,
+        content: `<div class="flex items-center justify-between w-full gap-3 p-3 bg-linear-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="w-4 h-4 bg-emerald-500 rounded-full shadow-sm flex items-center justify-center">
+              <div class="w-2 h-2 bg-white rounded-full"></div>
+            </div>
+            <span class="font-bold text-base text-emerald-900">Book Timeline</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full border border-emerald-200">${scenesWithDates.length} scenes</span>
+          </div>
         </div>`,
         order: 0
       });
 
-      validChapters.forEach((chapter) => {
-        let startDate, endDate;
+      // Add scene items with chapter and scene names - enhanced design
+      scenesWithDates.forEach(scene => {
+        const chapter = chapterMap.get(scene.chapterId);
+        if (!chapter) return;
 
-        if (chapter.startDate && chapter.endDate) {
-          // Both dates exist - create a range
-          startDate = new Date(chapter.startDate);
-          endDate = new Date(chapter.endDate);
+        const startDate = scene.startDate ? new Date(scene.startDate) : null;
+        const endDate = scene.endDate ? new Date(scene.endDate) : null;
+
+        const sceneContent = `${chapter.name}: ${scene.name}`;
+
+        if (startDate && endDate) {
+          // Range item - set to full day
           startDate.setHours(0, 0, 0, 0);
           endDate.setHours(23, 59, 59, 999);
-        } else if (chapter.startDate) {
-          // Only start date - single day event
-          startDate = new Date(chapter.startDate);
-          endDate = new Date(chapter.startDate);
-          startDate.setHours(0, 0, 0, 0);
-          endDate.setHours(23, 59, 59, 999);
-        } else if (chapter.endDate) {
-          // Only end date - single day event
-          startDate = new Date(chapter.endDate);
-          endDate = new Date(chapter.endDate);
-          startDate.setHours(0, 0, 0, 0);
-          endDate.setHours(23, 59, 59, 999);
-        }
-
-        if (startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-          const chapterContent = `
-            <div>
-              <div class="flex items-center gap-2 mb-2">
-                <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span class="text-white text-xs">📖</span>
-                </div>
-                <span class="font-semibold text-blue-900 text-sm">${chapter.name}</span>
-              </div>
-              <div class="text-xs text-blue-700">
-                <div class="text-blue-600">${chapter.startDate ? startDate.toLocaleDateString() : ''} ${chapter.startDate && chapter.endDate ? ' - ' : ''} ${chapter.endDate ? endDate.toLocaleDateString() : ''}</div>
-                ${chapter.description ? `<div class="mt-1 text-blue-500 italic">${chapter.description}</div>` : ''}
-              </div>
-            </div>
-          `;
-
           items.push({
-            id: `chapter-${chapter.id}`,
-            group: 'chapters-group',
+            id: `scene-${scene.id}`,
+            group: bookTimelineGroupId,
             start: startDate,
             end: endDate,
-            content: chapterContent,
-            title: `${chapter.name}: ${chapter.startDate ? startDate.toLocaleDateString() : ''} ${chapter.startDate && chapter.endDate ? ' - ' : ''} ${chapter.endDate ? endDate.toLocaleDateString() : ''}`,
-            className: 'chapter-event',
-            type: 'range'
+            content: `<div class="flex items-center gap-2 p-2 bg-emerald-50 border border-emerald-200 rounded-md shadow-sm w-full">
+              <div class="w-3 h-3 bg-emerald-600 rounded-full shrink-0"></div>
+              <div class="flex flex-col">
+                <span class="text-xs font-semibold text-emerald-900">${chapter.name}</span>
+                <span class="text-xs text-emerald-700">${scene.name}</span>
+              </div>
+            </div>`,
+            title: sceneContent,
+            className: 'scene-event',
+          });
+        } else if (startDate) {
+          // Point item at start date - set to start of day
+          startDate.setHours(0, 0, 0, 0);
+          items.push({
+            id: `scene-${scene.id}`,
+            group: bookTimelineGroupId,
+            start: startDate,
+            type: 'point',
+            content: `<div class="flex items-center gap-2 p-2 bg-emerald-50 border border-emerald-200 rounded-md shadow-sm">
+              <div class="w-3 h-3 bg-emerald-600 rounded-full shrink-0"></div>
+              <div class="flex flex-col">
+                <span class="text-xs font-semibold text-emerald-900">${chapter.name}</span>
+                <span class="text-xs text-emerald-700">${scene.name}</span>
+              </div>
+            </div>`,
+            title: sceneContent,
+            className: 'scene-event',
+          });
+        } else if (endDate) {
+          // Point item at end date - set to start of day
+          endDate.setHours(0, 0, 0, 0);
+          items.push({
+            id: `scene-${scene.id}`,
+            group: bookTimelineGroupId,
+            start: endDate,
+            type: 'point',
+            content: `<div class="flex items-center gap-2 p-2 bg-emerald-50 border border-emerald-200 rounded-md shadow-sm">
+              <div class="w-3 h-3 bg-emerald-600 rounded-full shrink-0"></div>
+              <div class="flex flex-col">
+                <span class="text-xs font-semibold text-emerald-900">${chapter.name}</span>
+                <span class="text-xs text-emerald-700">${scene.name}</span>
+              </div>
+            </div>`,
+            title: sceneContent,
+            className: 'scene-event',
           });
         }
       });
     }
+
+    // Add book timeline group if there are scenes
+    if (timelineDisplayMode === 'separate' && bookGroups.length > 0) {
+      groups.push({
+        id: 'book-timeline',
+        content: `<div class="flex items-center justify-between w-full gap-3">
+          <div class="flex items-center gap-3">
+            <span class="font-bold text-base">Book Timeline</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-blue-700 bg-blue-200 px-3 py-1 rounded-full border border-blue-300">${chapters.length} Chapters</span>
+          </div>
+        </div>`,
+        nestedGroups: bookGroups,
+        showNested: true,
+        order: 0
+      });
+    }
+
+    characters.forEach((character) => {
+      characterMap.set(character.id, character);
+    });
+
 
     const charactersByRole = characters.reduce((acc, character) => {
       const role = character.role || 'marginal';
@@ -535,7 +715,7 @@ function BookTimeline({ book }) {
     });
 
     return { timelineItems: items, timelineGroups: groups };
-  }, [chapters, characters, relationships, imageDataMap]);
+  }, [chapters, scenes, characters, relationships, imageDataMap, timelineDisplayMode]);
 
   const timelineOptions = useMemo(() => ({
     width: '100%',
@@ -569,7 +749,7 @@ function BookTimeline({ book }) {
     }
   };
 
-  const isLoading = loading || relationshipsLoading || chaptersLoading;
+  const isLoading = loading || relationshipsLoading || chaptersLoading || scenesLoading;
 
   if (isLoading) {
     return (
@@ -585,7 +765,33 @@ function BookTimeline({ book }) {
   return (
     <div className="min-w-0 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-lg">Timeline</h2>
+        <div className="flex items-center gap-6">
+          <h2 className="font-bold text-xl text-gray-800">Timeline</h2>
+          <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-lg border border-gray-200 shadow-sm">
+            <ToggleGroup type="single" value={timelineDisplayMode} onValueChange={(value) => value && setTimelineDisplayMode(value)} className="bg-transparent">
+              <ToggleGroupItem
+                value="separate"
+                aria-label="Display chapters separately"
+                className="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 data-[state=on]:bg-blue-500 data-[state=on]:text-white data-[state=off]:text-gray-700 data-[state=off]:hover:bg-gray-200"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  Separate
+                </div>
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="connected"
+                aria-label="Display all scenes connected"
+                className="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 data-[state=on]:bg-emerald-500 data-[state=on]:text-white data-[state=off]:text-gray-700 data-[state=off]:hover:bg-gray-200"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  Connected
+                </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+        </div>
         {timelineItems.length > 0 && (
           <div className="flex items-center gap-2">
             <Button
@@ -624,7 +830,7 @@ function BookTimeline({ book }) {
               No timeline data available
             </p>
             <p className="text-sm text-muted-foreground">
-              Add dates to chapters or character events to see them on the timeline
+              Add dates to character events to see them on the timeline
             </p>
           </div>
         </div>

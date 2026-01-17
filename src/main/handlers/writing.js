@@ -40,7 +40,7 @@ export const chapterHandlers = {
     return result[0];
   }),
 
-  update: handleRequest(async (id, { name, description, status, startDate, endDate, position }) => {
+  update: handleRequest(async (id, { name, description, status, position }) => {
     const updateData = {
       updatedAt: Date.now(),
     };
@@ -48,8 +48,6 @@ export const chapterHandlers = {
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (status !== undefined) updateData.status = status;
-    if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate).getTime() : null;
-    if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate).getTime() : null;
     if (position !== undefined) updateData.position = position;
 
     const result = await db.update(chapters)
@@ -123,7 +121,7 @@ export const sceneHandlers = {
     return result[0];
   }),
 
-  update: handleRequest(async (id, { name, content, position, status }) => {
+  update: handleRequest(async (id, { name, content, position, status, startDate, endDate }) => {
     const updateData = {
       updatedAt: Date.now(),
     };
@@ -132,6 +130,8 @@ export const sceneHandlers = {
     if (content !== undefined) updateData.content = content;
     if (position !== undefined) updateData.position = position;
     if (status !== undefined) updateData.status = status;
+    if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate).getTime() : null;
+    if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate).getTime() : null;
 
     const result = await db.update(scenes)
       .set(updateData)

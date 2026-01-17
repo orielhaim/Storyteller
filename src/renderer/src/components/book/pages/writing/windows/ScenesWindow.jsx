@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { BOOK_STATUS_CONFIG } from '@/config/statusConfig';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DatePicker } from '@/components/ui/date-picker';
 import {
   DndContext,
   closestCenter,
@@ -93,6 +92,13 @@ function SceneItem({ scene, onSceneClick, onEdit, onDelete, onStatusChange, onCl
               <span className={`text-xs px-2 py-0.5 rounded-full ${BOOK_STATUS_CONFIG[scene.status]?.className || 'bg-gray-100 text-gray-800'}`}>
                 {BOOK_STATUS_CONFIG[scene.status]?.label || scene.status}
               </span>
+            </div>
+          )}
+          {(scene.startDate || scene.endDate) && (
+            <div className="text-xs text-muted-foreground mt-1">
+              {scene.startDate && new Date(scene.startDate).toLocaleDateString()}
+              {scene.startDate && scene.endDate && ' - '}
+              {scene.endDate && new Date(scene.endDate).toLocaleDateString()}
             </div>
           )}
         </div>
@@ -174,11 +180,8 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
   const [editChapterName, setEditChapterName] = useState('');
   const [editChapterDescription, setEditChapterDescription] = useState('');
   const [editChapterStatus, setEditChapterStatus] = useState(null);
-  const [editChapterStartDate, setEditChapterStartDate] = useState(null);
-  const [editChapterEndDate, setEditChapterEndDate] = useState(null);
   const [isSavingChapter, setIsSavingChapter] = useState(false);
   const [chapterDeleteDialogOpen, setChapterDeleteDialogOpen] = useState(false);
-  const [chapterDateError, setChapterDateError] = useState('');
   const [isCompact, setIsCompact] = useState(false);
   const [isEditingCompact, setIsEditingCompact] = useState(false);
   const headerRef = useRef(null);
@@ -219,10 +222,7 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
       setEditChapterName(chapter.name);
       setEditChapterDescription(chapter.description || '');
       setEditChapterStatus(chapter.status);
-      setEditChapterStartDate(chapter.startDate ? new Date(chapter.startDate).toISOString().split('T')[0] : null);
-      setEditChapterEndDate(chapter.endDate ? new Date(chapter.endDate).toISOString().split('T')[0] : null);
     }
-    setChapterDateError('');
   }, [chapter]);
 
   useEffect(() => {
@@ -302,35 +302,17 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
       setEditChapterName(chapter.name);
       setEditChapterDescription(chapter.description || '');
       setEditChapterStatus(chapter.status);
-      setEditChapterStartDate(chapter.startDate ? new Date(chapter.startDate).toISOString().split('T')[0] : null);
-      setEditChapterEndDate(chapter.endDate ? new Date(chapter.endDate).toISOString().split('T')[0] : null);
     }
     setIsEditingChapter(false);
-    setChapterDateError('');
   };
 
   const handleSaveChapterEdit = async () => {
-    // Clear previous error
-    setChapterDateError('');
-
-    // Validate dates
-    if (editChapterStartDate && editChapterEndDate) {
-      const startDate = new Date(editChapterStartDate);
-      const endDate = new Date(editChapterEndDate);
-      if (endDate < startDate) {
-        setChapterDateError('End date cannot be before start date');
-        return;
-      }
-    }
-
     setIsSavingChapter(true);
     try {
       await updateChapter(chapterId, {
         name: editChapterName,
         description: editChapterDescription,
         status: editChapterStatus,
-        startDate: editChapterStartDate || null,
-        endDate: editChapterEndDate || null,
       });
       setIsEditingChapter(false);
     } catch (error) {
@@ -382,35 +364,6 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
                       placeholder="Chapter description..."
                       rows={3}
                     />
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Start Date</label>
-                        <DatePicker
-                          value={editChapterStartDate}
-                          onChange={(date) => {
-                            setEditChapterStartDate(date);
-                            setChapterDateError(''); // Clear error when dates change
-                          }}
-                          placeholder="Select start date"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">End Date</label>
-                        <DatePicker
-                          value={editChapterEndDate}
-                          onChange={(date) => {
-                            setEditChapterEndDate(date);
-                            setChapterDateError(''); // Clear error when dates change
-                          }}
-                          placeholder="Select end date"
-                        />
-                      </div>
-                    </div>
-                    {chapterDateError && (
-                      <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-2">
-                        {chapterDateError}
-                      </div>
-                    )}
                     <div className="flex gap-2">
                       <Button
                         onClick={handleSaveChapterEdit}
@@ -442,13 +395,6 @@ function ScenesWindow({ chapterId, bookId, chapterName, onOpenScene }) {
                         </span>
                       )}
                     </div>
-                    {(chapter?.startDate || chapter?.endDate) && (
-                      <div className="text-sm text-muted-foreground mb-2">
-                        {chapter.startDate && new Date(chapter.startDate).toLocaleDateString()}
-                        {chapter.startDate && chapter.endDate && ' - '}
-                        {chapter.endDate && new Date(chapter.endDate).toLocaleDateString()}
-                      </div>
-                    )}
                     {chapter?.description && (
                       <p className="text-sm text-muted-foreground">{chapter.description}</p>
                     )}

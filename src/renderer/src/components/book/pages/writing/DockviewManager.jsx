@@ -91,6 +91,13 @@ const DockviewManager = forwardRef(({ components = {}, onReady: onReadyCallback,
     getPanel: (id) => {
       return apiRef.current?.getPanel(id) || null;
     },
+    updatePanelTitle: (id, newTitle) => {
+      if (!apiRef.current) return;
+      const panel = apiRef.current.getPanel(id);
+      if (panel) {
+        panel.api.setTitle(newTitle);
+      }
+    },
     getAllPanels: () => {
       return apiRef.current?.panels || [];
     },

@@ -27,6 +27,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { BOOK_STATUS_CONFIG } from '@/config/statusConfig';
+import EditSceneDialog from '../dialogs/EditSceneDialog';
 
 function SceneEditorWindow({ sceneId, sceneName, onSceneDeleted }) {
   const { updateScene, deleteScene } = useWritingStore();
@@ -37,6 +38,7 @@ function SceneEditorWindow({ sceneId, sceneName, onSceneDeleted }) {
   const [editName, setEditName] = useState('');
   const [isSavingName, setIsSavingName] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
 
   useEffect(() => {
@@ -204,6 +206,17 @@ function SceneEditorWindow({ sceneId, sceneName, onSceneDeleted }) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setEditDialogOpen(true)}
+                      className="w-full justify-start"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Edit Scene
+                    </Button>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                       {scene?.status ? BOOK_STATUS_CONFIG[scene.status]?.label : 'Status Change'}
@@ -274,6 +287,28 @@ function SceneEditorWindow({ sceneId, sceneName, onSceneDeleted }) {
           onContentChange={handleContentChange}
         />
       </div>
+
+      <EditSceneDialog
+        scene={scene}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onUpdate={() => {
+          // Refresh scene data
+          if (sceneId) {
+            const fetchSceneData = async () => {
+              try {
+                const res = await window.bookAPI.scenes.getById(sceneId);
+                if (res.success) {
+                  setScene(res.data);
+                }
+              } catch (error) {
+                console.error('Failed to refresh scene:', error);
+              }
+            };
+            fetchSceneData();
+          }
+        }}
+      />
     </div>
   );
 }

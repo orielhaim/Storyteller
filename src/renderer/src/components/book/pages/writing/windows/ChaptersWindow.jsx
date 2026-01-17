@@ -70,13 +70,6 @@ function SortableChapterItem({ chapter, onChapterClick, onDelete }) {
                 {BOOK_STATUS_CONFIG[chapter.status]?.label || chapter.status}
               </span>
             )}
-            {(chapter.startDate || chapter.endDate) && (
-              <span className="text-xs text-muted-foreground">
-                {chapter.startDate && new Date(chapter.startDate).toLocaleDateString()}
-                {chapter.startDate && chapter.endDate && ' - '}
-                {chapter.endDate && new Date(chapter.endDate).toLocaleDateString()}
-              </span>
-            )}
           </div>
           {chapter.description && (
             <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
