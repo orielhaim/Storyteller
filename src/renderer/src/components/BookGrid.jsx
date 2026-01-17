@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, memo } from 'react';
 import {
   DndContext,
   DragOverlay,
-  closestCenter,
+  rectIntersection,
   PointerSensor,
   useSensor,
   useSensors,
@@ -187,7 +187,6 @@ const ConfirmationDialog = memo(function ConfirmationDialog({
 
 function BookGrid({ items, onSeriesClick, enableDragDrop = true, onSeriesUpdate }) {
   const [activeDragItem, setActiveDragItem] = useState(null);
-  const [overTargetId, setOverTargetId] = useState(null);
   const [pendingDrop, setPendingDrop] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -214,21 +213,12 @@ function BookGrid({ items, onSeriesClick, enableDragDrop = true, onSeriesUpdate 
 
   const handleDragStart = useCallback((event) => {
     const { active } = event;
-    const draggedId = String(active.id);
-
-    const item = items.find(i =>
-      draggedId === `book-${i.id}` || draggedId === `series-${i.id}`
-    );
+    const item = active.data.current?.book || active.data.current?.series;
 
     if (item) {
       setActiveDragItem(item);
       document.body.style.cursor = 'grabbing';
     }
-  }, [items]);
-
-  const handleDragOver = useCallback((event) => {
-    const { over } = event;
-    setOverTargetId(over?.id ? String(over.id) : null);
   }, []);
 
   const handleDragEnd = useCallback((event) => {
@@ -236,15 +226,11 @@ function BookGrid({ items, onSeriesClick, enableDragDrop = true, onSeriesUpdate 
 
     document.body.style.cursor = '';
     setActiveDragItem(null);
-    setOverTargetId(null);
 
     if (!over) return;
 
-    const activeId = String(active.id);
-    const overId = String(over.id);
-
-    const draggedItem = items.find(i => `book-${i.id}` === activeId);
-    const targetItem = items.find(i => `series-${i.id}` === overId);
+    const draggedItem = active.data.current?.book;
+    const targetItem = over.data.current?.series;
 
     if (draggedItem?.type === 'book' && targetItem?.type === 'series') {
       if (draggedItem.isInSeries) {
@@ -260,7 +246,6 @@ function BookGrid({ items, onSeriesClick, enableDragDrop = true, onSeriesUpdate 
   const handleDragCancel = useCallback(() => {
     document.body.style.cursor = '';
     setActiveDragItem(null);
-    setOverTargetId(null);
   }, []);
 
   const handleConfirmDrop = useCallback(async () => {
@@ -345,7 +330,7 @@ function BookGrid({ items, onSeriesClick, enableDragDrop = true, onSeriesUpdate 
                 series={seriesItem}
                 onClick={onSeriesClick}
                 onSeriesUpdate={onSeriesUpdate}
-                isDropTarget={isBookDragging && overTargetId === `series-${seriesItem.id}` || isBookDragging}
+                isDropTarget={isBookDragging}
               />
             ))}
           </ItemGrid>
@@ -366,10 +351,9 @@ function BookGrid({ items, onSeriesClick, enableDragDrop = true, onSeriesUpdate 
     <>
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={rectIntersection}
         measuring={MEASURING_CONFIG}
         onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
