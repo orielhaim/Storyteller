@@ -20,6 +20,8 @@ contextBridge.exposeInMainWorld('bookAPI', {
     create: (data) => ipcRenderer.invoke('series:create', data),
     update: (id, data) => ipcRenderer.invoke('series:update', id, data),
     delete: (id) => ipcRenderer.invoke('series:delete', id),
+    archive: (id) => ipcRenderer.invoke('series:archive', id),
+    unarchive: (id) => ipcRenderer.invoke('series:unarchive', id),
   },
 
   // Book-Series relationship API

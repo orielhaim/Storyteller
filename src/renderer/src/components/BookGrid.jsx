@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useMemo, memo } from 'react';
 import {
   DndContext,
   DragOverlay,
   closestCenter,
-  KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
+  MeasuringStrategy,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -23,148 +23,343 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import {
+  BookOpen,
+  Library,
+  ArrowRight,
+  Loader2
+} from 'lucide-react';
 
 import BookCard from './BookCard';
 import SeriesCard from './SeriesCard';
-
 import useImageLoader from '@/hooks/useImageLoader';
-
 import { useBooksStore } from '@/stores/booksStore';
+import { cn } from '@/lib/utils';
 
-const DraggableBook = ({ book, id, onSeriesUpdate }) => {
-  const imageUrl = useImageLoader(book.image);
-  return (
-    <BookCard
-      id={id}
-      book={book}
-      imageUrl={imageUrl}
-      seriesName={book.seriesName}
-      draggable={true}
-      onSeriesUpdate={onSeriesUpdate}
-    />
-  );
+const MEASURING_CONFIG = {
+  droppable: {
+    strategy: MeasuringStrategy.Always,
+  },
 };
 
-const DroppableSeries = ({ seriesItem, id, onClick, isDropTarget }) => {
-  const imageUrl = useImageLoader(seriesItem.image);
-  return (
-    <SeriesCard
-      id={id}
-      series={seriesItem}
-      imageUrl={imageUrl}
-      onClick={() => onClick(seriesItem)}
-      isDropTarget={isDropTarget}
-    />
-  );
+const DROP_ANIMATION = {
+  duration: 250,
+  easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
 };
+
+const SectionHeader = memo(function SectionHeader({ icon: Icon, title, count, variant = "default" }) {
+  return (
+    <div className="flex items-center gap-3 mb-6">
+      <div className={cn(
+        "flex items-center justify-center size-9 rounded-lg",
+        variant === "books" && "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+        variant === "series" && "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+        variant === "default" && "bg-muted text-muted-foreground"
+      )}>
+        <Icon className="size-5" strokeWidth={1.5} />
+      </div>
+      <div className="flex items-center gap-3">
+        <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+        <Badge variant="secondary" className="tabular-nums">
+          {count}
+        </Badge>
+      </div>
+    </div>
+  );
+});
+
+const ItemGrid = memo(function ItemGrid({ children }) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 lg:gap-6">
+      {children}
+    </div>
+  );
+});
+
+const DragOverlayContent = memo(function DragOverlayContent({ item }) {
+  const imageUrl = useImageLoader(item.image);
+
+  return (
+    <div className="relative">
+      <div className="absolute -inset-2 bg-primary/20 rounded-2xl blur-xl" />
+      <Card className={cn(
+        "relative w-36 sm:w-40 overflow-hidden py-0!",
+        "rotate-3 scale-105",
+        "shadow-2xl shadow-black/30 dark:shadow-black/50",
+        "ring-2 ring-primary"
+      )}>
+        <CardContent className="p-0">
+          <div className="aspect-2/3 bg-muted relative overflow-hidden">
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={item.name}
+                className="size-full object-cover"
+                draggable={false}
+              />
+            ) : (
+              <div className="size-full flex items-center justify-center bg-linear-to-br from-muted to-muted/50">
+                <BookOpen className="size-10 text-muted-foreground/50" strokeWidth={1} />
+              </div>
+            )}
+            <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/30 to-transparent" />
+            <div className="absolute bottom-0 inset-x-0 p-3">
+              <p className="font-semibold text-sm text-white line-clamp-2 text-center drop-shadow-lg">
+                {item.name}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+});
+
+const ConfirmationDialog = memo(function ConfirmationDialog({
+  open,
+  onOpenChange,
+  book,
+  series,
+  onConfirm,
+  isLoading
+}) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="sm:max-w-md">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <Library className="size-5 text-primary" />
+            Add to Series
+          </AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="space-y-4 pt-2">
+              <p className="text-muted-foreground">
+                You're about to add this book to a series:
+              </p>
+              <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                <div className="flex-1 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Book</p>
+                  <p className="font-semibold text-foreground text-sm line-clamp-1">
+                    {book?.name}
+                  </p>
+                </div>
+                <ArrowRight className="size-4 text-muted-foreground shrink-0" />
+                <div className="flex-1 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Series</p>
+                  <p className="font-semibold text-foreground text-sm line-clamp-1">
+                    {series?.name}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="gap-2 sm:gap-0">
+          <AlertDialogCancel disabled={isLoading}>
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="gap-2"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Adding...
+              </>
+            ) : (
+              <>
+                <Library className="size-4" />
+                Add to Series
+              </>
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+});
 
 function BookGrid({ items, onSeriesClick, enableDragDrop = true, onSeriesUpdate }) {
   const [activeDragItem, setActiveDragItem] = useState(null);
-  const [pendingDrop, setPendingDrop] = useState(null); // { book, series }
+  const [overTargetId, setOverTargetId] = useState(null);
+  const [pendingDrop, setPendingDrop] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const addBookToSeries = useBooksStore((state) => state.addBookToSeries);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor)
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      }
+    })
   );
 
-  const books = items.filter(item => item.type === 'book');
-  const series = items.filter(item => item.type === 'series');
+  const { books, series, bookIds } = useMemo(() => {
+    const booksArr = items.filter(item => item.type === 'book');
+    const seriesArr = items.filter(item => item.type === 'series');
 
-  const handleDragStart = (event) => {
+    return {
+      books: booksArr,
+      series: seriesArr,
+      bookIds: booksArr.map(b => `book-${b.id}`),
+    };
+  }, [items]);
+
+  const handleDragStart = useCallback((event) => {
     const { active } = event;
-    const item = items.find(i => 
-      active.id === `book-${i.id}` || active.id === `series-${i.id}`
-    );
-    setActiveDragItem(item);
-  };
+    const draggedId = String(active.id);
 
-  const handleDragEnd = (event) => {
+    const item = items.find(i =>
+      draggedId === `book-${i.id}` || draggedId === `series-${i.id}`
+    );
+
+    if (item) {
+      setActiveDragItem(item);
+      document.body.style.cursor = 'grabbing';
+    }
+  }, [items]);
+
+  const handleDragOver = useCallback((event) => {
+    const { over } = event;
+    setOverTargetId(over?.id ? String(over.id) : null);
+  }, []);
+
+  const handleDragEnd = useCallback((event) => {
     const { active, over } = event;
+
+    document.body.style.cursor = '';
     setActiveDragItem(null);
+    setOverTargetId(null);
 
     if (!over) return;
 
-    const draggedItem = items.find(i => `book-${i.id}` === active.id);
-    const targetItem = items.find(i => `series-${i.id}` === over.id);
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    const draggedItem = items.find(i => `book-${i.id}` === activeId);
+    const targetItem = items.find(i => `series-${i.id}` === overId);
 
     if (draggedItem?.type === 'book' && targetItem?.type === 'series') {
-      
       if (draggedItem.isInSeries) {
-        toast.error(`"${draggedItem.name}" is already in a series`);
+        toast.error('Already in a series', {
+          description: `"${draggedItem.name}" is already part of another series.`,
+        });
         return;
       }
-
       setPendingDrop({ book: draggedItem, series: targetItem });
     }
-  };
+  }, [items]);
 
-  const confirmDrop = async () => {
+  const handleDragCancel = useCallback(() => {
+    document.body.style.cursor = '';
+    setActiveDragItem(null);
+    setOverTargetId(null);
+  }, []);
+
+  const handleConfirmDrop = useCallback(async () => {
     if (!pendingDrop) return;
-    const { book, series } = pendingDrop;
+
+    const { book, series: targetSeries } = pendingDrop;
+    setIsProcessing(true);
 
     try {
-      await addBookToSeries(book.id, series.id);
-      toast.success(`"${book.name}" added to "${series.name}"`);
+      await addBookToSeries(book.id, targetSeries.id);
+      toast.success('Book added to series', {
+        description: `"${book.name}" is now part of "${targetSeries.name}".`,
+      });
+      onSeriesUpdate?.();
     } catch (error) {
-      toast.error('Failed to add book to series');
-      console.error(error);
+      toast.error('Failed to add book', {
+        description: 'Something went wrong. Please try again.',
+      });
+      console.error('Failed to add book to series:', error);
     } finally {
+      setIsProcessing(false);
       setPendingDrop(null);
     }
-  };
+  }, [pendingDrop, addBookToSeries, onSeriesUpdate]);
+
+  const handleDialogClose = useCallback((open) => {
+    if (!open && !isProcessing) {
+      setPendingDrop(null);
+    }
+  }, [isProcessing]);
 
   if (items.length === 0) {
-    return (
-      <></>
-    );
+    return null;
   }
 
-  const content = (
-    <div className="space-y-10 animate-in fade-in duration-500">
+  const isBookDragging = activeDragItem?.type === 'book';
+
+  const gridContent = (
+    <div className="space-y-12">
       {books.length > 0 && (
         <section>
-          <h2 className="text-lg font-semibold mb-4 tracking-tight">Books</h2>
-          <SortableContext items={books.map(b => `book-${b.id}`)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <SectionHeader
+            icon={BookOpen}
+            title="Books"
+            count={books.length}
+            variant="books"
+          />
+          <SortableContext items={bookIds} strategy={rectSortingStrategy}>
+            <ItemGrid>
               {books.map((book) => (
-                <DraggableBook
-                  key={`book-${book.id}`}
+                <BookCard
+                  key={book.id}
                   id={`book-${book.id}`}
                   book={book}
+                  seriesName={book.seriesName}
                   onSeriesUpdate={onSeriesUpdate}
+                  draggable={enableDragDrop}
                 />
               ))}
-            </div>
+            </ItemGrid>
           </SortableContext>
         </section>
       )}
 
+      {books.length > 0 && series.length > 0 && (
+        <Separator className="my-8" />
+      )}
+
       {series.length > 0 && (
         <section>
-          <h2 className="text-lg font-semibold mb-4 tracking-tight">Series</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <SectionHeader
+            icon={Library}
+            title="Series"
+            count={series.length}
+            variant="series"
+          />
+          <ItemGrid>
             {series.map((seriesItem) => (
-              <DroppableSeries
-                key={`series-${seriesItem.id}`}
+              <SeriesCard
+                key={seriesItem.id}
                 id={`series-${seriesItem.id}`}
-                seriesItem={seriesItem}
+                series={seriesItem}
                 onClick={onSeriesClick}
-                isDropTarget={activeDragItem?.type === 'book'}
                 onSeriesUpdate={onSeriesUpdate}
+                isDropTarget={isBookDragging && overTargetId === `series-${seriesItem.id}` || isBookDragging}
               />
             ))}
-          </div>
+          </ItemGrid>
         </section>
       )}
     </div>
   );
 
   if (!enableDragDrop) {
-    return content;
+    return (
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {gridContent}
+      </div>
+    );
   }
 
   return (
@@ -172,60 +367,31 @@ function BookGrid({ items, onSeriesClick, enableDragDrop = true, onSeriesUpdate 
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        measuring={MEASURING_CONFIG}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
       >
-        {content}
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {gridContent}
+        </div>
 
-        <DragOverlay dropAnimation={{ duration: 250, easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)' }}>
-          {activeDragItem ? (
-            <OverlayItem item={activeDragItem} />
-          ) : null}
+        <DragOverlay dropAnimation={DROP_ANIMATION}>
+          {activeDragItem && <DragOverlayContent item={activeDragItem} />}
         </DragOverlay>
       </DndContext>
 
-      <AlertDialog open={!!pendingDrop} onOpenChange={(open) => !open && setPendingDrop(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Add to Series?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to add <span className="font-semibold text-foreground">"{pendingDrop?.book.name}"</span> to the series <span className="font-semibold text-foreground">"{pendingDrop?.series.name}"</span>?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDrop}>Add to Series</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmationDialog
+        open={!!pendingDrop}
+        onOpenChange={handleDialogClose}
+        book={pendingDrop?.book}
+        series={pendingDrop?.series}
+        onConfirm={handleConfirmDrop}
+        isLoading={isProcessing}
+      />
     </>
   );
 }
 
-const OverlayItem = ({ item }) => {
-  const imageUrl = useImageLoader(item.image);
-  
-  return (
-    <div className="opacity-90 rotate-3 scale-105 cursor-grabbing shadow-2xl">
-      <Card className="w-40 sm:w-48 overflow-hidden">
-        <CardContent className="p-0">
-          <div className="aspect-2/3 bg-muted flex items-center justify-center relative">
-            {imageUrl ? (
-              <img src={imageUrl} alt={item.name} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-4xl">📖</span>
-            )}
-            <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-          <div className="p-3 bg-card">
-            <h4 className="font-medium text-xs sm:text-sm line-clamp-1 text-center">
-              {item.name}
-            </h4>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-export default BookGrid;
+export default memo(BookGrid);

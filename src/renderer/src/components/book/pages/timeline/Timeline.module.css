@@ -1,0 +1,42 @@
+:global(.vis-timeline) :global(.vis-label.vis-nested-group) :global(.vis-inner) {
+  padding-left: 0 !important;
+  text-align: left !important;
+}
+
+:global(.vis-timeline) :global(.vis-label.vis-nested-group) {
+  background-color: transparent !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+:global(.vis-role-group) {
+  background-color: #f9fafb !important;
+}
+
+:global(.vis-role-group) :global(.vis-inner) {
+  width: 100% !important;
+  display: block !important;
+}
+
+:global(.role-group-header) {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+:global(.vis-character-group) {
+  background-color: white !important;
+}
+
+:global(.vis-sitemap) {
+  display: none !important;
+}
+
+:global(.vis-timeline) {
+  border: none;
+}
+
+:global(.vis-panel.vis-center),
+:global(.vis-panel.vis-left),
+:global(.vis-panel.vis-right) {
+  border: none;
+}

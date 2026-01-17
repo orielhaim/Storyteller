@@ -1,126 +1,289 @@
-import { useTransition, useEffect, useState } from 'react';
+import { useTransition, useEffect, useState, useCallback, memo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookOpen, FolderTree, PenTool, Layout, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import {
+  BookOpen,
+  FolderTree,
+  PenTool,
+  Layout,
+  Loader2,
+  Sparkles,
+  Users,
+  MapPin,
+  Clock,
+  ArrowRight,
+  Github,
+  ExternalLink
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const FEATURES = [
   {
     icon: FolderTree,
-    color: "text-blue-600 dark:text-blue-400",
-    bg: "bg-blue-50 dark:bg-blue-950/50",
     title: "Project Management",
-    description: "Organize entire Series & Books. Manage hierarchy with drag-and-drop structure for Parts, Chapters, and Scenes."
+    description: "Organize entire series and books with an intuitive drag-and-drop hierarchy. Structure your work with Parts, Chapters, and Scenes — all in one unified workspace.",
+    highlights: ["Series & Books", "Drag & Drop", "Smart Organization"],
+    gradient: "from-blue-500 to-cyan-500",
+    bgGradient: "from-blue-500/10 to-cyan-500/10",
   },
   {
     icon: PenTool,
-    color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-50 dark:bg-emerald-950/50",
-    title: "The Editor",
-    description: "A smooth, Notion-like writing experience. Rich text editing with a dedicated distraction-free mode for pure focus."
+    title: "Distraction-Free Editor",
+    description: "Experience a smooth, Notion-like writing environment without the lag. Rich text editing meets minimalist design for pure creative focus.",
+    highlights: ["Rich Text", "Focus Mode", "Auto-Save"],
+    gradient: "from-emerald-500 to-teal-500",
+    bgGradient: "from-emerald-500/10 to-teal-500/10",
   },
   {
     icon: BookOpen,
-    color: "text-purple-600 dark:text-purple-400",
-    bg: "bg-purple-50 dark:bg-purple-950/50",
     title: "World Building",
-    description: "Deep dive into your universe with Character databases, Location tracking, and dynamic Timelines (Coming Soon)."
+    description: "Build immersive universes with detailed character databases, location tracking, and visual timelines. Everything your story needs, interconnected.",
+    highlights: ["Characters", "Locations", "Timelines"],
+    gradient: "from-violet-500 to-purple-500",
+    bgGradient: "from-violet-500/10 to-purple-500/10",
   },
   {
     icon: Layout,
-    color: "text-orange-600 dark:text-orange-400",
-    bg: "bg-orange-50 dark:bg-orange-950/50",
-    title: "Flexible Interface",
-    description: "Multi-tab support and split views. Keep your character notes pinned right next to your active writing scene."
-  }
+    title: "Flexible Workspace",
+    description: "Multi-tab support and split views let you work your way. Pin character notes next to your scene, or compare chapters side-by-side.",
+    highlights: ["Split View", "Multi-Tab", "Customizable"],
+    gradient: "from-orange-500 to-amber-500",
+    bgGradient: "from-orange-500/10 to-amber-500/10",
+  },
 ];
 
-function FeatureCard({ feature }) {
+const STATS = [
+  { icon: Users, label: "Character Profiles" },
+  { icon: MapPin, label: "World Building" },
+  { icon: Clock, label: "Timeline View" },
+];
+
+const FeatureCard = memo(function FeatureCard({
+  feature,
+  index
+}) {
+  const Icon = feature.icon;
+
   return (
-    <Card className="group border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-slate-300 dark:hover:border-slate-700">
-      <CardHeader className="pb-2">
-        <div className="flex items-center gap-4">
-          <div className={cn("p-2.5 rounded-xl transition-colors", feature.bg)}>
-            <feature.icon className={cn("h-6 w-6", feature.color)} />
-          </div>
-          <CardTitle className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            {feature.title}
-          </CardTitle>
+    <div
+      className={cn(
+        "group relative overflow-hidden rounded-2xl border border-slate-200/60 dark:border-slate-800/60",
+        "bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl",
+        "p-6 transition-all duration-500 ease-out",
+        "hover:border-slate-300 dark:hover:border-slate-700",
+        "hover:shadow-2xl hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50",
+        "hover:-translate-y-1"
+      )}
+      style={{
+        animationDelay: `${index * 100}ms`,
+      }}
+    >
+      <div
+        className={cn(
+          "absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100",
+          "bg-linear-to-br",
+          feature.bgGradient
+        )}
+      />
+
+      <div className="relative z-10">
+        <div
+          className={cn(
+            "mb-4 inline-flex items-center justify-center",
+            "size-12 rounded-xl",
+            "bg-linear-to-br shadow-lg",
+            feature.gradient
+          )}
+        >
+          <Icon className="size-6 text-white" strokeWidth={1.5} />
         </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+
+        <h3 className="mb-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+          {feature.title}
+        </h3>
+
+        <p className="mb-4 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
           {feature.description}
         </p>
-      </CardContent>
-    </Card>
+
+        <div className="flex flex-wrap gap-2">
+          {feature.highlights.map((highlight) => (
+            <Badge
+              key={highlight}
+              variant="secondary"
+              className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 font-medium"
+            >
+              {highlight}
+            </Badge>
+          ))}
+        </div>
+      </div>
+    </div>
   );
-}
+});
+
+// Stat component
+const StatItem = memo(function StatItem({
+  stat
+}) {
+  const Icon = stat.icon;
+
+  return (
+    <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+      <Icon className="size-5 text-slate-400 dark:text-slate-500" strokeWidth={1.5} />
+      <span className="text-sm font-medium">{stat.label}</span>
+    </div>
+  );
+});
 
 export default function Welcome() {
   const [isPending, startTransition] = useTransition();
   const [version, setVersion] = useState('');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+
     const fetchVersion = async () => {
-      const version = await window.generalAPI.getVersion();
-      setVersion(version);
-      console.log('App Version:', version); // ידפיס למשל "1.0.0"
+      try {
+        const appVersion = await window.generalAPI.getVersion();
+        setVersion(appVersion);
+      } catch (error) {
+        console.error('Failed to fetch version:', error);
+        setVersion('0.0.0');
+      }
     };
 
     fetchVersion();
   }, []);
 
-  const handleGetStarted = () => {
+  const handleGetStarted = useCallback(() => {
     startTransition(() => {
-      setTimeout(() => {
+      // Small delay for visual feedback
+      requestAnimationFrame(() => {
         localStorage.setItem('hasSeenWelcome', 'true');
         window.location.reload();
-      }, 300);
+      });
     });
-  };
+  }, []);
+
+  const handleOpenGitHub = useCallback(() => {
+    window.open('https://github.com/orielhaim/Storyteller', '_blank');
+  }, []);
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6 lg:p-12">
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-slate-100 via-slate-50 to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-950 -z-10" />
-      
-      <div className="max-w-5xl w-full space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        
-        <div className="text-center space-y-6 max-w-3xl mx-auto">
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
-            Welcome to <span className="text-primary bg-clip-text bg-linear-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400">Storyteller</span>
-          </h1>
-          <p className="text-xl sm:text-2xl text-slate-600 dark:text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed">
-            The modern, open-source writing studio designed for the next generation of authors.
-          </p>
-        </div>
+    <div className="relative min-h-screen w-full overflow-hidden bg-slate-50 dark:bg-slate-950">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.15),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.1),transparent)]" />
 
-        <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
-          {FEATURES.map((feature) => (
-            <FeatureCard key={feature.title} feature={feature} />
-          ))}
-        </div>
+        {/* Grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.015] dark:opacity-[0.02]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(0 0 0)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e")`,
+          }}
+        />
 
-        {/* Action Area */}
-        <div className="flex flex-col items-center justify-center gap-4 pt-4">
-          <Button 
-            size="lg" 
-            onClick={handleGetStarted} 
-            disabled={isPending}
-            className={`h-14 px-10 text-lg rounded-full shadow-xl shadow-blue-500/20 transition-all hover:scale-105 active:scale-95 ${isPending ? '' : 'cursor-pointer'}`}
-          >
-            {isPending ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Setting up Studio...
-              </>
-            ) : (
-              "Get Started"
-            )}
-          </Button>
-          <p className="text-sm text-slate-400 dark:text-slate-600 font-medium">
-            v{version} • GPLv3
-          </p>
+        {/* Floating orbs */}
+        <div className="absolute -top-40 -right-40 size-80 rounded-full bg-linear-to-br from-blue-400/20 to-violet-400/20 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 size-80 rounded-full bg-linear-to-br from-emerald-400/20 to-cyan-400/20 blur-3xl" />
+      </div>
+
+      {/* Main content */}
+      <div className="relative z-10 flex min-h-screen items-center justify-center p-6 lg:p-12">
+        <div
+          className={cn(
+            "w-full max-w-6xl space-y-16",
+            "transition-all duration-1000 ease-out",
+            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+          )}
+        >
+          <header className="mx-auto max-w-4xl space-y-8 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm px-4 py-2">
+              <Sparkles className="size-4 text-amber-500" />
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                Open Source Writing Studio
+              </span>
+            </div>
+
+            <h1 className="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
+              <span className="text-slate-900 dark:text-slate-50">Welcome to </span>
+              <span className="bg-linear-to-r from-blue-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
+                Storyteller
+              </span>
+            </h1>
+
+            <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-slate-400 sm:text-xl">
+              The modern desktop writing studio designed for the next generation of authors.
+              Combine the simplicity of a distraction-free editor with powerful world-building tools.
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-6 pt-2">
+              {STATS.map((stat) => (
+                <StatItem key={stat.label} stat={stat} />
+              ))}
+            </div>
+          </header>
+
+          <section className="grid gap-6 sm:grid-cols-2 lg:gap-8">
+            {FEATURES.map((feature, index) => (
+              <FeatureCard
+                key={feature.title}
+                feature={feature}
+                index={index}
+              />
+            ))}
+          </section>
+
+          <footer className="flex flex-col items-center gap-6 pt-4">
+            <div className="flex flex-col items-center gap-4 sm:flex-row">
+              <Button
+                size="lg"
+                onClick={handleGetStarted}
+                disabled={isPending}
+                className={cn(
+                  "h-14 min-w-[200px] rounded-full px-8 text-lg font-semibold",
+                  "bg-linear-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700",
+                  "shadow-xl shadow-blue-500/25 dark:shadow-blue-500/15",
+                  "transition-all duration-300",
+                  !isPending && "hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/30 active:scale-[0.98]"
+                )}
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 size-5 animate-spin" />
+                    <span>Setting up...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Get Started</span>
+                    <ArrowRight className="ml-2 size-5" />
+                  </>
+                )}
+              </Button>
+
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={handleOpenGitHub}
+                className="h-14 rounded-full px-8 text-lg font-medium border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
+              >
+                <Github className="mr-2 size-5" />
+                <span>View on GitHub</span>
+                <ExternalLink className="ml-2 size-4 opacity-50" />
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-3 text-sm text-slate-400 dark:text-slate-600">
+              <span className="font-mono">
+                {version ? `v${version}` : '...'}
+              </span>
+              <span className="size-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+              <span>GPLv3 License</span>
+              <span className="size-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+              <span>Free Forever</span>
+            </div>
+          </footer>
         </div>
       </div>
     </div>

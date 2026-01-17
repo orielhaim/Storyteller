@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
 import Welcome from './pages/Welcome';
-import Home from './pages/Home';
+import Home from './pages/Home.tsx';
 import SeriesManagement from './pages/SeriesManagement';
 import Book from './pages/Book';
 import Settings from './pages/Settings';

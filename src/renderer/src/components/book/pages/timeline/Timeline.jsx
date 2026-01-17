@@ -1,180 +1,205 @@
-import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import { useEffect, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { Timeline as VisTimeline, DataSet } from 'vis-timeline/standalone';
 import 'vis-timeline/styles/vis-timeline-graph2d.min.css';
+import './Timeline.module.css';
 
-const customStyles = `
-  .vis-timeline .vis-label.vis-nested-group .vis-inner {
-    padding-left: 0 !important;
-    text-align: left !important;
-  }
-  
-  .vis-timeline .vis-label.vis-nested-group {
-    background-color: transparent !important;
-    border-bottom: 1px solid #e5e7eb !important;
-  }
+const DEFAULT_OPTIONS = {
+  width: '100%',
+  height: '100%',
+  stack: false,
+  showCurrentTime: true,
+  zoomMin: 1000 * 60 * 60 * 24, // 1 day
+  zoomMax: 1000 * 60 * 60 * 24 * 365 * 100, // 100 years
+  margin: {
+    item: 20,
+    axis: 5,
+  },
+  groupHeightMode: 'auto',
+  orientation: { axis: 'top', item: 'top' },
+  verticalScroll: true,
+  xss: { disabled: true },
+};
 
-  .vis-role-group {
-    background-color: #f9fafb !important;
-  }
+const ZOOM_IN_FACTOR = 0.8;
+const ZOOM_OUT_FACTOR = 1.25;
 
-  .vis-role-group .vis-inner {
-    width: 100% !important;
-    display: block !important;
-  }
 
-  .role-group-header {
-    width: 100%;
-    display: flex;
-    align-items: center;
-  }
-  
-  .vis-character-group {
-    background-color: white !important;
-  }
-  
-  .vis-sitemap {
-     display: none !important;
-  }
-`;
+function updateDataSet(dataSet, newData) {
+  if (!dataSet) return;
 
-const Timeline = forwardRef(({ items = [], groups = [], options = {} }, ref) => {
+  const currentIds = new Set(dataSet.getIds());
+  const newIds = new Set(newData.map((item) => item.id));
+
+  const toRemove = [...currentIds].filter((id) => !newIds.has(id));
+
+  const toUpdate = newData.filter((item) => currentIds.has(item.id));
+  const toAdd = newData.filter((item) => !currentIds.has(item.id));
+
+  if (toRemove.length > 0) {
+    dataSet.remove(toRemove);
+  }
+  if (toUpdate.length > 0) {
+    dataSet.update(toUpdate);
+  }
+  if (toAdd.length > 0) {
+    dataSet.add(toAdd);
+  }
+}
+
+const Timeline = forwardRef(function Timeline(
+  { items = [], groups = [], options = {}, onSelect, onClick, onDoubleClick, onRangeChanged },
+  ref
+) {
   const containerRef = useRef(null);
   const timelineRef = useRef(null);
   const itemsDataSetRef = useRef(null);
   const groupsDataSetRef = useRef(null);
+  const isInitializedRef = useRef(false);
 
-  useImperativeHandle(ref, () => ({
-    fit: () => {
-      if (timelineRef.current) {
-        timelineRef.current.fit();
-      }
-    },
-    focus: (id) => {
-      if (timelineRef.current) {
-        timelineRef.current.focus(id);
-      }
-    },
-    setWindow: (start, end) => {
-      if (timelineRef.current) {
-        timelineRef.current.setWindow(start, end);
-      }
-    },
-    zoomIn: () => {
-      if (timelineRef.current) {
-        const range = timelineRef.current.getWindow();
-        const zoom = (range.end - range.start) * 0.8;
-        const center = (range.start.getTime() + range.end.getTime()) / 2;
-        timelineRef.current.setWindow(
-          new Date(center - zoom / 2),
-          new Date(center + zoom / 2)
-        );
-      }
-    },
-    zoomOut: () => {
-      if (timelineRef.current) {
-        const range = timelineRef.current.getWindow();
-        const zoom = (range.end - range.start) * 1.25;
-        const center = (range.start.getTime() + range.end.getTime()) / 2;
-        timelineRef.current.setWindow(
-          new Date(center - zoom / 2),
-          new Date(center + zoom / 2)
-        );
-      }
-    },
-  }));
+  const zoom = useCallback((factor) => {
+    const timeline = timelineRef.current;
+    if (!timeline) return;
 
-  useEffect(() => {
-    const styleId = 'vis-timeline-custom-styles';
-    const oldStyle = document.getElementById(styleId);
-    if (oldStyle) oldStyle.remove();
+    const { start, end } = timeline.getWindow();
+    const currentRange = end.getTime() - start.getTime();
+    const newRange = currentRange * factor;
+    const center = (start.getTime() + end.getTime()) / 2;
 
-    const style = document.createElement('style');
-    style.id = styleId;
-    style.innerHTML = customStyles;
-    document.head.appendChild(style);
-
-    return () => {
-      const s = document.getElementById(styleId);
-      if (s) s.remove();
-    };
+    timeline.setWindow(
+      new Date(center - newRange / 2),
+      new Date(center + newRange / 2),
+      { animation: { duration: 300, easingFunction: 'easeInOutQuad' } }
+    );
   }, []);
 
+  useImperativeHandle(
+    ref,
+    () => ({
+      fit(animationOptions = true) {
+        timelineRef.current?.fit({ animation: animationOptions });
+      },
+
+      focus(id, animationOptions = true) {
+        timelineRef.current?.focus(id, { animation: animationOptions });
+      },
+
+      setWindow(start, end, animationOptions) {
+        timelineRef.current?.setWindow(start, end, animationOptions);
+      },
+
+      getWindow() {
+        return timelineRef.current?.getWindow() ?? null;
+      },
+
+      zoomIn() {
+        zoom(ZOOM_IN_FACTOR);
+      },
+
+      zoomOut() {
+        zoom(ZOOM_OUT_FACTOR);
+      },
+
+      moveTo(time, animationOptions) {
+        timelineRef.current?.moveTo(time, animationOptions);
+      },
+
+      getSelection() {
+        return timelineRef.current?.getSelection() ?? [];
+      },
+
+      setSelection(ids, options) {
+        timelineRef.current?.setSelection(ids, options);
+      },
+
+      redraw() {
+        timelineRef.current?.redraw();
+      },
+
+      getVisibleItems() {
+        return timelineRef.current?.getVisibleItems() ?? [];
+      },
+
+      getInstance() {
+        return timelineRef.current;
+      },
+    }),
+    [zoom]
+  );
+
+
   useEffect(() => {
-    let timeline = timelineRef.current;
-    let resizeObserver = null;
+    const container = containerRef.current;
+    if (!container || isInitializedRef.current) return;
 
-    if (containerRef.current && !timeline) {
-      itemsDataSetRef.current = new DataSet(items);
-      groupsDataSetRef.current = new DataSet(groups);
+    itemsDataSetRef.current = new DataSet(items);
+    groupsDataSetRef.current = new DataSet(groups);
 
-      const defaultOptions = {
-        width: '100%',
-        height: '100%',
-        stack: false,
-        showCurrentTime: true,
-        zoomMin: 1000 * 60 * 60 * 24,
-        zoomMax: 1000 * 60 * 60 * 24 * 365 * 100,
-        margin: {
-          item: 20,
-          axis: 5
-        },
-        groupHeightMode: 'auto',
-        orientation: { axis: 'top', item: 'top' },
-        verticalScroll: true,
-        xss: { disabled: true },
-        ...options,
-      };
+    const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
 
-      timeline = new VisTimeline(
-        containerRef.current,
-        itemsDataSetRef.current,
-        groupsDataSetRef.current,
-        defaultOptions
-      );
-      timelineRef.current = timeline;
+    const timeline = new VisTimeline(
+      container,
+      itemsDataSetRef.current,
+      groupsDataSetRef.current,
+      mergedOptions
+    );
 
-      requestAnimationFrame(() => {
-        timeline.redraw();
-        if (items.length > 0) timeline.fit();
-      });
+    timelineRef.current = timeline;
+    isInitializedRef.current = true;
 
-      resizeObserver = new ResizeObserver(() => {
-        if (timeline) {
+    if (onSelect) timeline.on('select', onSelect);
+    if (onClick) timeline.on('click', onClick);
+    if (onDoubleClick) timeline.on('doubleClick', onDoubleClick);
+    if (onRangeChanged) timeline.on('rangechanged', onRangeChanged);
+
+    requestAnimationFrame(() => {
+      timeline.redraw();
+      if (items.length > 0) {
+        timeline.fit({ animation: false });
+      }
+    });
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      if (entries[0]) {
+        requestAnimationFrame(() => {
           timeline.redraw();
-        }
-      });
-      resizeObserver.observe(containerRef.current);
-    }
+        });
+      }
+    });
+    resizeObserver.observe(container);
 
     return () => {
-      if (resizeObserver) resizeObserver.disconnect();
-      if (timelineRef.current) {
-        timelineRef.current.destroy();
-        timelineRef.current = null;
-      }
+      resizeObserver.disconnect();
+
+      if (onSelect) timeline.off('select', onSelect);
+      if (onClick) timeline.off('click', onClick);
+      if (onDoubleClick) timeline.off('doubleClick', onDoubleClick);
+      if (onRangeChanged) timeline.off('rangechanged', onRangeChanged);
+
+      timeline.destroy();
+      timelineRef.current = null;
+      itemsDataSetRef.current = null;
+      groupsDataSetRef.current = null;
+      isInitializedRef.current = false;
     };
   }, []);
 
   useEffect(() => {
-    if (itemsDataSetRef.current && timelineRef.current) {
-      itemsDataSetRef.current.clear();
-      itemsDataSetRef.current.add(items);
-      timelineRef.current.redraw();
-    }
+    if (!isInitializedRef.current || !itemsDataSetRef.current) return;
+
+    updateDataSet(itemsDataSetRef.current, items);
   }, [items]);
 
   useEffect(() => {
-    if (groupsDataSetRef.current && timelineRef.current) {
-      groupsDataSetRef.current.clear();
-      groupsDataSetRef.current.add(groups);
-      timelineRef.current.redraw();
-    }
+    if (!isInitializedRef.current || !groupsDataSetRef.current) return;
+
+    updateDataSet(groupsDataSetRef.current, groups);
   }, [groups]);
 
   useEffect(() => {
-    if (timelineRef.current && options) {
-      timelineRef.current.setOptions(options);
-    }
+    if (!isInitializedRef.current || !timelineRef.current) return;
+
+    const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
+    timelineRef.current.setOptions(mergedOptions);
   }, [options]);
 
   return (
@@ -185,7 +210,5 @@ const Timeline = forwardRef(({ items = [], groups = [], options = {} }, ref) => 
     />
   );
 });
-
-Timeline.displayName = 'Timeline';
 
 export default Timeline;
