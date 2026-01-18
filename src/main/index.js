@@ -88,8 +88,7 @@ function createWindow() {
     y: mainWindowState.y,
     show: false,
     autoHideMenuBar: true,
-    icon: join(__dirname, '../../resources/icon.png'),
-    ...(process.platform === 'linux' ? { icon: join(__dirname, '../../resources/icon.png') } : {}),
+    icon: join(__dirname, '../../resources/icon.png'),   
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
