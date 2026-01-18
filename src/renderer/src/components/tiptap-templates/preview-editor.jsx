@@ -65,6 +65,7 @@ export function PreviewEditor({ content }) {
         contentMarginBottom: 10,
       }),
     ],
+    textDirection: "auto",
     content: content || { type: 'doc', content: [] },
   })
 
