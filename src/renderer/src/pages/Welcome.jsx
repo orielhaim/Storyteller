@@ -157,15 +157,21 @@ export default function Welcome() {
     fetchVersion();
   }, []);
 
-  const handleGetStarted = useCallback(() => {
-    startTransition(() => {
-      // Small delay for visual feedback
-      requestAnimationFrame(() => {
-        localStorage.setItem('hasSeenWelcome', 'true');
+  const handleGetStarted = useCallback(async () => {
+    startTransition(async () => {
+      try {
+        await window.storeAPI.set('welcome.hasSeen', true);
+        await window.storeAPI.set('welcome.version', version || '0.0.0');
+        
+        requestAnimationFrame(() => {
+          window.location.reload();
+        });
+      } catch (error) {
+        console.error('Failed to save welcome state:', error);
         window.location.reload();
-      });
+      }
     });
-  }, []);
+  }, [version]);
 
   const handleOpenGitHub = useCallback(() => {
     window.open('https://github.com/orielhaim/Storyteller', '_blank');
@@ -242,7 +248,7 @@ export default function Welcome() {
                 onClick={handleGetStarted}
                 disabled={isPending}
                 className={cn(
-                  "h-14 min-w-[200px] rounded-full px-8 text-lg font-semibold",
+                  "h-14 min-w-[200px] rounded-full px-8 text-lg font-semibold cursor-pointer",
                   "bg-linear-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700",
                   "shadow-xl shadow-blue-500/25 dark:shadow-blue-500/15",
                   "transition-all duration-300",

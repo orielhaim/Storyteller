@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo, memo } from 'react';
+import { useEffect, useState, useCallback, useMemo, memo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
@@ -43,6 +43,7 @@ import CreateBookDialog from '@/components/dialogs/CreateBookDialog';
 import CreateSeriesDialog from '@/components/dialogs/CreateSeriesDialog';
 import SeriesDialog from '@/components/dialogs/SeriesDialog';
 import { useBooksStore } from '@/stores/booksStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 import {
   Empty,
   EmptyMedia,
@@ -223,13 +224,6 @@ export default function Home() {
   const [seriesDialogOpen, setSeriesDialogOpen] = useState(false);
   const [selectedSeries, setSelectedSeries] = useState<Series | null>(null);
 
-  // Filter state - combined for better state management
-  const [filters, setFilters] = useState<FilterState>({
-    type: 'all',
-    showBooksInSeries: false,
-    showArchived: false,
-  });
-
   // Store
   const {
     books: booksMap,
@@ -240,6 +234,37 @@ export default function Home() {
     fetchSeries,
     fetchSeriesBooks,
   } = useBooksStore();
+
+  const {
+    settings,
+    isLoaded: settingsLoaded,
+    loadSettings,
+    updateSetting,
+  } = useSettingsStore();
+
+  const [filters, setFilters] = useState<FilterState>({
+    type: 'all',
+    showBooksInSeries: false,
+    showArchived: false,
+  });
+
+  const filtersInitialized = useRef(false);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
+  useEffect(() => {
+    if (settingsLoaded && !filtersInitialized.current && settings?.filters) {
+      const savedFilters = {
+        type: (settings.filters.type as FilterType) || 'all',
+        showBooksInSeries: settings.filters.showBooksInSeries ?? false,
+        showArchived: settings.filters.showArchived ?? false,
+      };
+      filtersInitialized.current = true;
+      setFilters(savedFilters);
+    }
+  }, [settingsLoaded, settings]);
 
   // Initial data fetch
   useEffect(() => {
@@ -302,20 +327,21 @@ export default function Home() {
     }
   }, [filters, booksList, seriesList, bookToSeriesMap]);
 
-  // Stats
-  const stats = useMemo(() => ({
-    totalBooks: booksList.filter((b) => !b.archived).length,
-    totalSeries: seriesList.filter((s) => !s.archived).length,
-    visibleItems: processedItems.length,
-  }), [booksList, seriesList, processedItems]);
-
   // Filter update handlers
   const updateFilter = useCallback(<K extends keyof FilterState>(
     key: K,
     value: FilterState[K]
   ) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  }, []);
+    setFilters((prev) => {
+      const newFilters = { ...prev, [key]: value };
+      if (settingsLoaded) {
+        updateSetting(`filters.${key}`, value).catch((error) => {
+          console.error(`Failed to save filter setting ${key}:`, error);
+        });
+      }
+      return newFilters;
+    });
+  }, [settingsLoaded, updateSetting]);
 
   // Event handlers
   const handleSeriesClick = useCallback((series: Series) => {

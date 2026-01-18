@@ -10,22 +10,34 @@ import Settings from './pages/Settings';
 import { useSettingsStore } from './stores/settingsStore';
 import AppUpdater from './components/AppUpdater';
 
-const getInitialWelcomeState = () => {
-  if (typeof window === 'undefined') return false;
-  try {
-    return localStorage.getItem('hasSeenWelcome') === 'true';
-  } catch {
-    return false;
-  }
-};
-
 function App() {
-  const [hasSeenWelcome] = useState(getInitialWelcomeState);
+  const [hasSeenWelcome, setHasSeenWelcome] = useState(false);
+  const [isCheckingWelcome, setIsCheckingWelcome] = useState(true);
   const { loadSettings } = useSettingsStore();
 
   useEffect(() => {
     loadSettings();
+
+    const checkWelcomeState = async () => {
+      try {
+        const hasSeen = await window.storeAPI.get('welcome.hasSeen', false);
+        const seenVersion = await window.storeAPI.get('welcome.version', null);
+        const currentVersion = await window.generalAPI.getVersion();
+
+        const shouldShowWelcome = !hasSeen || seenVersion !== currentVersion;
+        setHasSeenWelcome(!shouldShowWelcome);
+      } catch (error) {
+        console.error('Failed to check welcome state:', error);
+        setHasSeenWelcome(false);
+      } finally {
+        setIsCheckingWelcome(false);
+      }
+    };
+
+    checkWelcomeState();
   }, [loadSettings]);
+
+  if (isCheckingWelcome) return;
 
   return (
     <div className="App">

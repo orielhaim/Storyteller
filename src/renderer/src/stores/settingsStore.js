@@ -2,17 +2,7 @@ import { create } from 'zustand';
 import { produce } from 'immer';
 import get from 'lodash/get';
 import set from 'lodash/set';
-
-const DEFAULT_SETTINGS = {
-  editor: {
-    wordCountEnabled: false,
-    spellCheck: true
-  },
-  general: {
-    theme: 'system',
-    notifications: true,
-  }
-};
+import { DEFAULT_SETTINGS } from '@/config/settingsConfig';
 
 export const useSettingsStore = create((setState, getState) => ({
   settings: DEFAULT_SETTINGS,
