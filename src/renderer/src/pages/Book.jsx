@@ -6,6 +6,7 @@ import BookOverview from '@/book/pages/BookOverview';
 import BookWrite from '@/book/pages/BookWrite';
 import BookSettings from '@/book/pages/BookSettings';
 import BookTimeline from '@/book/pages/BookTimeline';
+import BookPreview from '@/book/pages/BookPreview';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
@@ -91,6 +92,8 @@ function Book() {
         return <BookWrite book={currentBook} />;
       case 'timeline':
         return <BookTimeline book={currentBook} />;
+      case 'preview':
+        return <BookPreview book={currentBook} />;
       case 'settings':
         return <BookSettings book={currentBook} />;
       default:
@@ -105,7 +108,7 @@ function Book() {
         currentPage={page}
         onPageChange={handlePageChange}
       />
-      <main className={page === 'write' ? 'flex-1 overflow-hidden' : 'p-4 w-full'}>
+      <main className={page === 'write' || page === 'preview' ? 'flex-1 overflow-hidden' : 'p-4 w-full'}>
         {renderPage()}
       </main>
     </div>

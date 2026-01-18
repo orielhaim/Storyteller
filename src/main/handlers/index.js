@@ -3,7 +3,7 @@ import { bookHandlers } from './books.js';
 import { seriesHandlers, bookSeriesHandlers } from './series.js';
 import { characterHandlers } from './characters.js';
 import { worldHandlers, locationHandlers, objectHandlers } from './world.js';
-import { chapterHandlers, sceneHandlers } from './writing.js';
+import { chapterHandlers, sceneHandlers, writingHandlers } from './writing.js';
 import { imageHandlers } from './imageHandler.js';
 import { storeHandlers } from './store.js';
 
@@ -86,6 +86,9 @@ export function registerIpcHandlers() {
   ipcMain.handle('scenes:delete', sceneHandlers.delete);
   ipcMain.handle('scenes:reorder', sceneHandlers.reorder);
   ipcMain.handle('scenes:moveToChapter', sceneHandlers.moveToChapter);
+
+  // Writing channels
+  ipcMain.handle('writing:getAllForPreview', writingHandlers.getAllForPreview);
 
   // Image channels
   ipcMain.handle('image:save', imageHandlers.saveImage);

@@ -100,5 +100,10 @@ contextBridge.exposeInMainWorld('bookAPI', {
     delete: (id) => ipcRenderer.invoke('scenes:delete', id),
     reorder: (chapterId, sceneIds) => ipcRenderer.invoke('scenes:reorder', chapterId, sceneIds),
     moveToChapter: (sceneId, chapterId) => ipcRenderer.invoke('scenes:moveToChapter', sceneId, chapterId),
+  },
+
+  // Writing API
+  writing: {
+    getAllForPreview: (bookId) => ipcRenderer.invoke('writing:getAllForPreview', bookId),
   }
 });

@@ -1,13 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { BookOpen, PenTool, Settings, ArrowLeft, Clock } from 'lucide-react';
+import { BookOpen, PenTool, Settings, ArrowLeft, Clock, Eye } from 'lucide-react';
 import useImageLoader from '@/hooks/useImageLoader';
 
 const navItems = [
   { id: 'overview', label: 'Overview', icon: BookOpen },
   { id: 'write', label: 'Workspace', icon: PenTool, isPrimary: true },
   { id: 'timeline', label: 'Timeline', icon: Clock },
+  { id: 'preview', label: 'Preview', icon: Eye },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 

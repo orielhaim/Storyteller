@@ -25,13 +25,13 @@ We are building this project in phases. Here is our detailed development plan:
 - [X] **Content Tree Sidebar**: Hierarchical tree view of Chapters and Scenes and all other related content
 - [X] **Chapter and Scene Management**: Create, rename, reorder, delete chapters and scenes
 - [X] **Drag-and-Drop Reorganization**: Move chapters and scenes between parts
-- [ ] **Chapter Metadata**: Word count, last edited, status (draft/editing/revised/completed/future)
+- [X] **Chapter Metadata**: Word count, last edited, status (draft/editing/revised/completed/future)
 - [X] **Multiple Tabs**: Window based workspace for working on multiple things at once
 
 ### Rich Text Editor
 - [X] **Core Editor Setup**: TipTap editor with real-time rendering
-- [] **Full Formatting**: Bold, italic, underline, strikethrough, headings, lists, links, code blocks, blockquotes, etc.
-- [ ] **Images**: Insert and edit images
+- [X] **Full Formatting**: Bold, italic, underline, strikethrough, headings, lists, links, code blocks, blockquotes, etc.
+- [X] **Images**: Insert and edit images
 - [ ] **Mentions**: Insert and edit mentions to characters, worlds, locations, objects
 - [ ] **Revision History**: Basic undo/redo with draft snapshots
 - [ ] **Vim Motions**: Vim-like motions for navigation and editing
@@ -45,7 +45,7 @@ We are building this project in phases. Here is our detailed development plan:
 - [X] **Updates**: Detailed update information and release notes
 - [ ] **Dark/Light Mode Toggle**: System preference detection
 - [ ] **Font and Text Customization**: Choose from web fonts and system fonts
-- [ ] **Global Settings**: Application-wide preferences
+- [X] **Global Settings**: Application-wide preferences
 - [ ] **Keyboard Shortcuts**: Customizable hotkeys
 - [ ] **Backup & Sync**: Automatic backups
 - [ ] **Import/Export Settings**: Transfer preferences between devices
@@ -60,6 +60,10 @@ We are building this project in phases. Here is our detailed development plan:
 
 ## Phase 5: Advanced Features
 
+### Book Preview
+- [X] **Page View**: Read-only paginated view
+- [X] **Demo View**: Interactive flip-book view
+
 ### Statistics & Analytics
 - [ ] **Writing Statistics**: Word count, page count, writing speed
 - [ ] **Session Tracking**: Daily/weekly/monthly writing sessions
@@ -68,12 +72,10 @@ We are building this project in phases. Here is our detailed development plan:
 - [ ] **Productivity Insights**: Writing patterns and peak productivity times
 
 ### Timeline & Plot Management
-- [ ] **Visual Timeline**: Interactive timeline of story events
-- [ ] **Multiple Timelines**: Parallel timelines, flashbacks, flash-forwards
+- [X] **Visual Timeline**: Interactive timeline of story events
 - [ ] **Event Management**: Create, edit, and organize plot events
-- [ ] **Character Arcs**: Track character development over time
+- [X] **Character Arcs**: Track character development over time
 - [ ] **Plot Threads**: Manage subplots and story threads
-- [ ] **Timeline Export**: Share timeline as images or documents
 
 ### Collaboration Features (Future)
 - [ ] **Multi-User Support**: Real-time collaboration

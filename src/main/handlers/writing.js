@@ -198,3 +198,35 @@ export const sceneHandlers = {
     };
   }),
 };
+
+// Writing handlers for preview
+export const writingHandlers = {
+  getAllForPreview: handleRequest(async (bookId) => {
+    // Fetch chapters ordered by position
+    const chaptersList = await db.select()
+      .from(chapters)
+      .where(eq(chapters.bookId, bookId))
+      .orderBy(chapters.position, chapters.createdAt);
+    
+    // Fetch all scenes for the book ordered by chapter position and scene position
+    const scenesList = await db.select()
+      .from(scenes)
+      .where(eq(scenes.bookId, bookId))
+      .orderBy(scenes.position, scenes.createdAt);
+    
+    // Group scenes by chapter
+    const scenesByChapter = {};
+    scenesList.forEach(scene => {
+      if (!scenesByChapter[scene.chapterId]) {
+        scenesByChapter[scene.chapterId] = [];
+      }
+      scenesByChapter[scene.chapterId].push(scene);
+    });
+    
+    // Combine chapters with their scenes
+    return chaptersList.map(chapter => ({
+      ...chapter,
+      scenes: scenesByChapter[chapter.id] || []
+    }));
+  }),
+};
