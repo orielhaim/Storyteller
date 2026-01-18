@@ -1,0 +1,11 @@
+{
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "create": "Create",
+  "close": "Close",
+  "loading": "Loading...",
+  "error": "Error",
+  "success": "Success"
+}

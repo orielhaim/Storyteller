@@ -1,0 +1,44 @@
+{
+  "badge": "Open Source Writing Studio",
+  "title": {
+    "welcome": "Welcome to ",
+    "app": "Storyteller"
+  },
+  "subtitle": "The modern desktop writing studio designed for the next generation of authors. Combine the simplicity of a distraction-free editor with powerful world-building tools.",
+  "stats": {
+    "characterProfiles": "Character Profiles",
+    "worldBuilding": "World Building",
+    "timelineView": "Timeline View"
+  },
+  "features": {
+    "projectManagement": {
+      "title": "Project Management",
+      "description": "Organize entire series and books with an intuitive drag-and-drop hierarchy. Structure your work with Chapters, and Scenes. all in one unified workspace.",
+      "highlights": ["Series & Books", "Drag & Drop", "Smart Organization"]
+    },
+    "distractionFreeEditor": {
+      "title": "Distraction-Free Editor",
+      "description": "Experience a smooth, Notion-like writing environment without the lag. Rich text editing meets minimalist design for pure creative focus.",
+      "highlights": ["Rich Text", "Focus Mode", "Auto-Save"]
+    },
+    "worldBuilding": {
+      "title": "World Building",
+      "description": "Build immersive universes with detailed character databases, location tracking, and visual timelines. Everything your story needs, interconnected.",
+      "highlights": ["Characters", "Locations", "Timelines"]
+    },
+    "flexibleWorkspace": {
+      "title": "Flexible Workspace",
+      "description": "Multi-tab support and split views let you work your way. Pin character notes next to your scene, or compare chapters side-by-side.",
+      "highlights": ["Split View", "Multi-Tab", "Customizable"]
+    }
+  },
+  "buttons": {
+    "settingUp": "Setting up...",
+    "getStarted": "Get Started",
+    "viewOnGitHub": "View on GitHub"
+  },
+  "footer": {
+    "license": "GPLv3 License",
+    "freeForever": "Free Forever"
+  }
+}

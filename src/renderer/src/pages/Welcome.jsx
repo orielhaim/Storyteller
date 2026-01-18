@@ -1,4 +1,5 @@
 import { useTransition, useEffect, useState, useCallback, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -17,46 +18,52 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const FEATURES = [
-  {
-    icon: FolderTree,
-    title: "Project Management",
-    description: "Organize entire series and books with an intuitive drag-and-drop hierarchy. Structure your work with Parts, Chapters, and Scenes — all in one unified workspace.",
-    highlights: ["Series & Books", "Drag & Drop", "Smart Organization"],
-    gradient: "from-blue-500 to-cyan-500",
-    bgGradient: "from-blue-500/10 to-cyan-500/10",
-  },
-  {
-    icon: PenTool,
-    title: "Distraction-Free Editor",
-    description: "Experience a smooth, Notion-like writing environment without the lag. Rich text editing meets minimalist design for pure creative focus.",
-    highlights: ["Rich Text", "Focus Mode", "Auto-Save"],
-    gradient: "from-emerald-500 to-teal-500",
-    bgGradient: "from-emerald-500/10 to-teal-500/10",
-  },
-  {
-    icon: BookOpen,
-    title: "World Building",
-    description: "Build immersive universes with detailed character databases, location tracking, and visual timelines. Everything your story needs, interconnected.",
-    highlights: ["Characters", "Locations", "Timelines"],
-    gradient: "from-violet-500 to-purple-500",
-    bgGradient: "from-violet-500/10 to-purple-500/10",
-  },
-  {
-    icon: Layout,
-    title: "Flexible Workspace",
-    description: "Multi-tab support and split views let you work your way. Pin character notes next to your scene, or compare chapters side-by-side.",
-    highlights: ["Split View", "Multi-Tab", "Customizable"],
-    gradient: "from-orange-500 to-amber-500",
-    bgGradient: "from-orange-500/10 to-amber-500/10",
-  },
-];
+export default function Welcome() {
+  const { t } = useTranslation('welcome');
+  const [isPending, startTransition] = useTransition();
+  const [version, setVersion] = useState('');
+  const [mounted, setMounted] = useState(false);
 
-const STATS = [
-  { icon: Users, label: "Character Profiles" },
-  { icon: MapPin, label: "World Building" },
-  { icon: Clock, label: "Timeline View" },
-];
+  const FEATURES = [
+    {
+      icon: FolderTree,
+      title: t('features.projectManagement.title'),
+      description: t('features.projectManagement.description'),
+      highlights: t('features.projectManagement.highlights', { returnObjects: true }),
+      gradient: "from-blue-500 to-cyan-500",
+      bgGradient: "from-blue-500/10 to-cyan-500/10",
+    },
+    {
+      icon: PenTool,
+      title: t('features.distractionFreeEditor.title'),
+      description: t('features.distractionFreeEditor.description'),
+      highlights: t('features.distractionFreeEditor.highlights', { returnObjects: true }),
+      gradient: "from-emerald-500 to-teal-500",
+      bgGradient: "from-emerald-500/10 to-teal-500/10",
+    },
+    {
+      icon: BookOpen,
+      title: t('features.worldBuilding.title'),
+      description: t('features.worldBuilding.description'),
+      highlights: t('features.worldBuilding.highlights', { returnObjects: true }),
+      gradient: "from-violet-500 to-purple-500",
+      bgGradient: "from-violet-500/10 to-purple-500/10",
+    },
+    {
+      icon: Layout,
+      title: t('features.flexibleWorkspace.title'),
+      description: t('features.flexibleWorkspace.description'),
+      highlights: t('features.flexibleWorkspace.highlights', { returnObjects: true }),
+      gradient: "from-orange-500 to-amber-500",
+      bgGradient: "from-orange-500/10 to-amber-500/10",
+    },
+  ];
+
+  const STATS = [
+    { icon: Users, label: t('stats.characterProfiles') },
+    { icon: MapPin, label: t('stats.worldBuilding') },
+    { icon: Clock, label: t('stats.timelineView') },
+  ];
 
 const FeatureCard = memo(function FeatureCard({
   feature,
@@ -136,11 +143,6 @@ const StatItem = memo(function StatItem({
   );
 });
 
-export default function Welcome() {
-  const [isPending, startTransition] = useTransition();
-  const [version, setVersion] = useState('');
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
     setMounted(true);
 
@@ -162,7 +164,7 @@ export default function Welcome() {
       try {
         await window.storeAPI.set('welcome.hasSeen', true);
         await window.storeAPI.set('welcome.version', version || '0.0.0');
-        
+
         requestAnimationFrame(() => {
           window.location.reload();
         });
@@ -178,7 +180,7 @@ export default function Welcome() {
   }, []);
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="relative min-h-screen w-full overflow-hidden bg-slate-50 dark:bg-slate-950" dir="auto">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.15),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.1),transparent)]" />
 
@@ -208,20 +210,19 @@ export default function Welcome() {
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm px-4 py-2">
               <Sparkles className="size-4 text-amber-500" />
               <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                Open Source Writing Studio
+                {t('badge')}
               </span>
             </div>
 
             <h1 className="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
-              <span className="text-slate-900 dark:text-slate-50">Welcome to </span>
+              <span className="text-slate-900 dark:text-slate-50">{t('title.welcome')}</span>
               <span className="bg-linear-to-r from-blue-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
-                Storyteller
+                {t('title.app')}
               </span>
             </h1>
 
             <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-slate-400 sm:text-xl">
-              The modern desktop writing studio designed for the next generation of authors.
-              Combine the simplicity of a distraction-free editor with powerful world-building tools.
+              {t('subtitle')}
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-6 pt-2">
@@ -254,15 +255,16 @@ export default function Welcome() {
                   "transition-all duration-300",
                   !isPending && "hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/30 active:scale-[0.98]"
                 )}
+                dir="ltr"
               >
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 size-5 animate-spin" />
-                    <span>Setting up...</span>
+                    <span>{t('buttons.settingUp')}</span>
                   </>
                 ) : (
                   <>
-                    <span>Get Started</span>
+                    <span>{t('buttons.getStarted')}</span>
                     <ArrowRight className="ml-2 size-5" />
                   </>
                 )}
@@ -275,7 +277,7 @@ export default function Welcome() {
                 className="h-14 rounded-full px-8 text-lg font-medium border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
               >
                 <Github className="mr-2 size-5" />
-                <span>View on GitHub</span>
+                <span>{t('buttons.viewOnGitHub')}</span>
                 <ExternalLink className="ml-2 size-4 opacity-50" />
               </Button>
             </div>
@@ -285,9 +287,9 @@ export default function Welcome() {
                 {version ? `v${version}` : '...'}
               </span>
               <span className="size-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-              <span>GPLv3 License</span>
+              <span>{t('footer.license')}</span>
               <span className="size-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-              <span>Free Forever</span>
+              <span>{t('footer.freeForever')}</span>
             </div>
           </footer>
         </div>

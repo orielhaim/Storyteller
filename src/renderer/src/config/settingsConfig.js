@@ -6,6 +6,10 @@ export const DEFAULT_SETTINGS = {
   general: {
     theme: 'system',
     notifications: true,
+    language: null,
+  },
+  developer: {
+    isDeveloperMode: false
   },
   filters: {
     type: 'all',

@@ -1,0 +1,54 @@
+{
+  "title": "Settings",
+  "categories": {
+    "editor": "Editor",
+    "general": "General"
+  },
+  "descriptions": {
+    "editor": "Customize your writing experience",
+    "general": "Application preferences"
+  },
+  "settings": {
+    "wordCount": {
+      "label": "Word Count",
+      "description": "Show word count in the editor footer"
+    },
+    "spellCheck": {
+      "label": "Spell Check",
+      "description": "Enable native spell checking"
+    },
+    "language": {
+      "label": "Language",
+      "description": "Select your preferred language"
+    },
+    "notifications": {
+      "label": "Notifications",
+      "description": "Enable system notifications for updates"
+    }
+  },
+  "options": {
+    "autoSystem": "Auto (System)",
+    "english": "English",
+    "hebrew": "עברית",
+    "selectLanguage": "Select Language"
+  },
+  "updates": {
+    "title": "Updates",
+    "checking": "Checking for updates...",
+    "available": "Update Available",
+    "availableDescription": "A new version of Storyteller is available.",
+    "whatsNew": "What's new:",
+    "installRestart": "Install & Restart",
+    "downloading": "Downloading...",
+    "downloadUpdate": "Download Update",
+    "upToDate": "Software is Up to Date",
+    "upToDateDescription": "You're running the latest version of Storyteller",
+    "checkAgain": "Check for Updates Again",
+    "failed": "Update Check Failed",
+    "tryAgain": "Try Again"
+  },
+  "footer": {
+    "openSource": "Storyteller is open source software under GPLv3 license",
+    "viewOnGitHub": "View on GitHub"
+  }
+}
