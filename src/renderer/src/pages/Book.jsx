@@ -4,8 +4,6 @@ import { useBookStore } from '@/stores/bookStore';
 import BookNavbar from '@/book/shared/BookNavbar';
 import BookOverview from '@/book/pages/BookOverview';
 import BookWrite from '@/book/pages/BookWrite';
-import BookCharacters from '@/book/pages/BookCharacters';
-import BookWorld from '@/book/pages/BookWorld';
 import BookSettings from '@/book/pages/BookSettings';
 import BookTimeline from '@/book/pages/BookTimeline';
 import { Card, CardContent } from '@/components/ui/card';
@@ -91,10 +89,6 @@ function Book() {
         return <BookOverview book={currentBook} />;
       case 'write':
         return <BookWrite book={currentBook} />;
-      case 'characters':
-        return <BookCharacters book={currentBook} />;
-      case 'world':
-        return <BookWorld book={currentBook} />;
       case 'timeline':
         return <BookTimeline book={currentBook} />;
       case 'settings':

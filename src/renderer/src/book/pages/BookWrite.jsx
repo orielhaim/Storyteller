@@ -183,9 +183,8 @@ function BookWrite({ book }) {
     ),
     characters: (props) => (
       <BookCharacters
-        book={{ id: props.params.bookId }}
+        book={book}
         onOpenCharacter={handleOpenCharacter}
-        dockviewMode={true}
       />
     ),
     world: (props) => (

@@ -11,7 +11,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Users, Plus, Search, Filter, ExternalLink, Trash2 } from 'lucide-react';
 import { useCharacterStore } from '@/stores/characterStore';
 import useImageLoader from '@/hooks/useImageLoader';
-import CharacterProfile from './CharacterProfile';
 import CreateCharacterDialog from './dialogs/CreateCharacterDialog';
 
 function CharacterCard({ character, size = 'medium', onClick, onDelete }) {
@@ -96,11 +95,10 @@ function CharacterSection({ title, characters, cardSize = 'medium', onCharacterC
   );
 }
 
-function BookCharacters({ book, onOpenCharacter, dockviewMode = false }) {
+function BookCharacters({ book, onOpenCharacter }) {
   const { characters, loading, fetchCharacters, createCharacter, deleteCharacter } = useCharacterStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
-  const [selectedCharacterId, setSelectedCharacterId] = useState(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [characterToDelete, setCharacterToDelete] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -135,16 +133,9 @@ function BookCharacters({ book, onOpenCharacter, dockviewMode = false }) {
   };
 
   const handleCharacterClick = (character) => {
-    if (dockviewMode && onOpenCharacter) {
-      onOpenCharacter(character);
-    } else {
-      setSelectedCharacterId(character.id);
-    }
+    onOpenCharacter(character);
   };
 
-  const handleBackToCast = () => {
-    setSelectedCharacterId(null);
-  };
 
   const handleDeleteCharacter = (character) => {
     setCharacterToDelete(character);
@@ -159,15 +150,6 @@ function BookCharacters({ book, onOpenCharacter, dockviewMode = false }) {
     }
   };
 
-  // Show character profile if one is selected
-  if (selectedCharacterId) {
-    return (
-      <CharacterProfile
-        characterId={selectedCharacterId}
-        onBack={handleBackToCast}
-      />
-    );
-  }
 
   return (
     <div className="space-y-8 p-4 h-full overflow-y-auto">

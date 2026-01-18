@@ -586,7 +586,8 @@ function NodeRenderer({ node, style, dragHandle, tree, onAddCharacter, onAddWorl
           : "text-sidebar-foreground hover:bg-sidebar-accent/50",
         isDraggable && "cursor-grab active:cursor-grabbing",
         isDragging && "opacity-50 bg-sidebar-accent/30",
-        (isOver || isOverParent) && ['chapter', 'scene', 'main', 'character-role', 'worlds', 'locations', 'world-objects'].includes(type) && "bg-blue-500/20 border-l-2 border-blue-500"
+        (isOver || isOverParent) && ['chapter', 'scene', 'main', 'character-role', 'worlds', 'locations', 'world-objects'].includes(type) && "bg-blue-500/20 border-l-2 border-blue-500",
+        ['main', 'characters', 'world-category'].includes(type) && "cursor-pointer"
       )}
     >
       <div

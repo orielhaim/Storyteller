@@ -1,14 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { BookOpen, PenTool, Users, Globe, Settings, ArrowLeft, Clock } from 'lucide-react';
+import { BookOpen, PenTool, Settings, ArrowLeft, Clock } from 'lucide-react';
 import useImageLoader from '@/hooks/useImageLoader';
 
 const navItems = [
   { id: 'overview', label: 'Overview', icon: BookOpen },
-  { id: 'write', label: 'Write', icon: PenTool, isPrimary: true },
-  { id: 'characters', label: 'Characters', icon: Users },
-  { id: 'world', label: 'World', icon: Globe },
+  { id: 'write', label: 'Workspace', icon: PenTool, isPrimary: true },
   { id: 'timeline', label: 'Timeline', icon: Clock },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
@@ -62,10 +60,10 @@ function BookNavbar({ book, currentPage, onPageChange }) {
                   variant={isActive ? 'secondary' : 'ghost'}
                   size="sm"
                   onClick={() => onPageChange(item.id)}
-                  className={`flex items-center gap-2 px-4 py-2 h-9 ${item.isPrimary && !isActive
-                    ? 'bg-yellow-500 text-primary-foreground hover:bg-yellow-600'
+                  className={`flex items-center gap-2 px-4 py-2 h-9 cursor-pointer ${item.isPrimary && !isActive
+                    ? 'hover:bg-yellow-600 hover:text-white'
                     : item.isPrimary && isActive
-                      ? 'bg-yellow-500 text-primary-foreground hover:bg-yellow-500'
+                      ? 'bg-yellow-500 text-primary-foreground hover:bg-yellow-500 hover:text-white'
                       : ''
                     }`}
                 >
