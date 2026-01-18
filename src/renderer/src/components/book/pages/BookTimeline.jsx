@@ -744,51 +744,54 @@ function TimelineControls({
   onFit,
   hasItems,
   isPending,
+  hasScenes,
 }) {
   return (
     <div className="flex items-center justify-between flex-wrap gap-4">
       <div className="flex items-center gap-4">
         <h2 className="font-bold text-xl text-foreground tracking-tight">Timeline</h2>
 
-        <div className="relative">
-          <ToggleGroup
-            type="single"
-            value={displayMode}
-            onValueChange={(value) => value && onDisplayModeChange(value)}
-            className="bg-muted/50 p-1 rounded-lg border border-border/50"
-          >
-            <ToggleGroupItem
-              value="separate"
-              aria-label="Display chapters separately"
-              className={cn(
-                "px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200",
-                "data-[state=on]:bg-background data-[state=on]:text-blue-600 data-[state=on]:shadow-sm",
-                "data-[state=off]:text-muted-foreground data-[state=off]:hover:text-foreground"
-              )}
+        {hasScenes && (
+          <div className="relative">
+            <ToggleGroup
+              type="single"
+              value={displayMode}
+              onValueChange={(value) => value && onDisplayModeChange(value)}
+              className="bg-muted/50 p-1 rounded-lg border border-border/50"
             >
-              <Layers className="w-4 h-4 mr-1.5" />
-              Separate
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="connected"
-              aria-label="Display all scenes connected"
-              className={cn(
-                "px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200",
-                "data-[state=on]:bg-background data-[state=on]:text-emerald-600 data-[state=on]:shadow-sm",
-                "data-[state=off]:text-muted-foreground data-[state=off]:hover:text-foreground"
-              )}
-            >
-              <Link2 className="w-4 h-4 mr-1.5" />
-              Connected
-            </ToggleGroupItem>
-          </ToggleGroup>
+              <ToggleGroupItem
+                value="separate"
+                aria-label="Display chapters separately"
+                className={cn(
+                  "px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200",
+                  "data-[state=on]:bg-background data-[state=on]:text-blue-600 data-[state=on]:shadow-sm",
+                  "data-[state=off]:text-muted-foreground data-[state=off]:hover:text-foreground"
+                )}
+              >
+                <Layers className="w-4 h-4 mr-1.5" />
+                Separate
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="connected"
+                aria-label="Display all scenes connected"
+                className={cn(
+                  "px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200",
+                  "data-[state=on]:bg-background data-[state=on]:text-emerald-600 data-[state=on]:shadow-sm",
+                  "data-[state=off]:text-muted-foreground data-[state=off]:hover:text-foreground"
+                )}
+              >
+                <Link2 className="w-4 h-4 mr-1.5" />
+                Connected
+              </ToggleGroupItem>
+            </ToggleGroup>
 
-          {isPending && (
-            <div className="absolute -right-2 -top-2">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-            </div>
-          )}
-        </div>
+            {isPending && (
+              <div className="absolute -right-2 -top-2">
+                <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {hasItems && (
@@ -881,6 +884,9 @@ export default function BookTimeline({ book }) {
     return () => { isMounted = false; };
   }, [book.id, fetchScenesByBook]);
 
+  const scenesWithDates = scenes.filter(s => s.startDate || s.endDate);
+  const hasScenes = scenesWithDates.length > 0;
+
   const { items: timelineItems, groups: timelineGroups } = buildTimelineData(
     chapters,
     scenes,
@@ -916,6 +922,7 @@ export default function BookTimeline({ book }) {
         onFit={handleFit}
         hasItems={timelineItems.length > 0}
         isPending={isPending}
+        hasScenes={hasScenes}
       />
 
       {timelineItems.length === 0 ? (
