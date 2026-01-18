@@ -415,7 +415,7 @@ export default function Home() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={handleNavigateSettings} className={undefined}                    >
+                      onClick={handleNavigateSettings} className={undefined}>
                       <Settings className="size-5" />
                     </Button>
                   </TooltipTrigger>
@@ -429,7 +429,7 @@ export default function Home() {
               {/* Filter Tabs */}
               <Tabs
                 value={filters.type}
-                onValueChange={(value) => updateFilter('type', value as FilterType)} className={undefined}              >
+                onValueChange={(value) => updateFilter('type', value as FilterType)} className={undefined}>
                 <TabsList className="h-10 p-1">
                   {FILTER_TABS.map(({ value, label, icon: Icon }) => (
                     <TabsTrigger

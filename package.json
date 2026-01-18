@@ -108,7 +108,7 @@
     "dompurify": "^3.3.1",
     "dotenv-cli": "^11.0.0",
     "drizzle-kit": "^0.31.8",
-    "electron": "^39.2.7",
+    "electron": "^40.0.0",
     "electron-builder": "^26.4.0",
     "electron-vite": "^5.0.0",
     "emblor": "^1.4.8",

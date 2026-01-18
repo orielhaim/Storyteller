@@ -18,16 +18,16 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import QuickStatsTab, { FIELDS as QUICK_STATS_FIELDS } from '@/components/book/pages/CharacterProfile/QuickStatsTab';
-import AppearanceTab, { FIELDS as APPEARANCE_FIELDS } from '@/components/book/pages/CharacterProfile/AppearanceTab';
-import PsychologyTab, { FIELDS as PSYCHOLOGY_FIELDS } from '@/components/book/pages/CharacterProfile/PsychologyTab';
-import StoryTab, { FIELDS as STORY_FIELDS } from '@/components/book/pages/CharacterProfile/StoryTab';
-import BackgroundTab, { FIELDS as BACKGROUND_FIELDS } from '@/components/book/pages/CharacterProfile/BackgroundTab';
-import NotesTab, { FIELDS as NOTES_FIELDS } from '@/components/book/pages/CharacterProfile/NotesTab';
-import RelationshipTab from '@/components/book/pages/CharacterProfile/RelationshipTab';
-import CustomTab from '@/components/book/pages/CharacterProfile/CustomTab';
+import QuickStatsTab, { FIELDS as QUICK_STATS_FIELDS } from '@/book/pages/CharacterProfile/QuickStatsTab';
+import AppearanceTab, { FIELDS as APPEARANCE_FIELDS } from '@/book/pages/CharacterProfile/AppearanceTab';
+import PsychologyTab, { FIELDS as PSYCHOLOGY_FIELDS } from '@/book/pages/CharacterProfile/PsychologyTab';
+import StoryTab, { FIELDS as STORY_FIELDS } from '@/book/pages/CharacterProfile/StoryTab';
+import BackgroundTab, { FIELDS as BACKGROUND_FIELDS } from '@/book/pages/CharacterProfile/BackgroundTab';
+import NotesTab, { FIELDS as NOTES_FIELDS } from '@/book/pages/CharacterProfile/NotesTab';
+import RelationshipTab from '@/book/pages/CharacterProfile/RelationshipTab';
+import CustomTab from '@/book/pages/CharacterProfile/CustomTab';
 
-import CharacterProfileView from '@/components/book/pages/CharacterProfile/CharacterProfileView';
+import CharacterProfileView from '@/book/pages/CharacterProfile/CharacterProfileView';
 
 export const SECTIONS = {
   quickStats: {
