@@ -5,6 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 import { FIELDS as QUICK_STATS_FIELDS } from './QuickStatsTab';
 import { FIELDS as APPEARANCE_FIELDS } from './AppearanceTab';
@@ -73,14 +78,21 @@ const CustomTab = ({ attributes, onChange }) => {
                 className="flex-1 min-h-10 py-2"
                 rows={1}
               />
-              <Button
-                onClick={() => removeField(key)}
-                variant="ghost"
-                size="icon"
-                className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => removeField(key)}
+                    variant="ghost"
+                    size="icon"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Remove attribute
+                </TooltipContent>
+              </Tooltip>
             </div>
           ))}
           {customEntries.length === 0 && (

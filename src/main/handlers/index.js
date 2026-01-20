@@ -11,6 +11,7 @@ export function registerIpcHandlers() {
   // Books channels
   ipcMain.handle('books:getAll', bookHandlers.getAll);
   ipcMain.handle('books:getById', bookHandlers.getById);
+  ipcMain.handle('books:getOverview', bookHandlers.getOverview);
   ipcMain.handle('books:create', bookHandlers.create);
   ipcMain.handle('books:update', bookHandlers.update);
   ipcMain.handle('books:delete', bookHandlers.delete);

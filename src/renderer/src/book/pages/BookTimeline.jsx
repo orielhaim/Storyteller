@@ -25,9 +25,10 @@ import { cn } from '@/lib/utils';
 
 const ROLE_CONFIG = {
   protagonist: { label: 'Protagonists', order: 1, color: 'amber' },
-  supporting: { label: 'Supporting Characters', order: 2, color: 'sky' },
+  supporting: { label: 'Supporting', order: 2, color: 'sky' },
   antagonist: { label: 'Antagonists', order: 3, color: 'rose' },
-  marginal: { label: 'Marginal Characters', order: 4, color: 'slate' },
+  marginal: { label: 'Marginal', order: 4, color: 'slate' },
+  unsorted: { label: 'Unsorted', order: 5, color: 'gray' },
 };
 
 const TIMELINE_OPTIONS = {

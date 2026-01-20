@@ -10,6 +10,11 @@ import {
   User, Plus, Trash2, FileText,
   Users
 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const RELATIONSHIP_TYPES = {
   'parent': 'Parent',
@@ -121,22 +126,36 @@ const RelationshipTab = ({ characterId, bookId, relationships, onAdd, onRemove, 
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setEditingRelId(editingRelId === rel.id ? null : rel.id)}
-                    className={editingRelId === rel.id ? "text-primary bg-primary/10" : "opacity-0 group-hover:opacity-100"}
-                  >
-                    <FileText className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onRemove(rel.id)}
-                    className="opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEditingRelId(editingRelId === rel.id ? null : rel.id)}
+                        className={editingRelId === rel.id ? "text-primary bg-primary/10" : "opacity-0 group-hover:opacity-100"}
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Edit relationship details
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onRemove(rel.id)}
+                        className="opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Remove relationship
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
 

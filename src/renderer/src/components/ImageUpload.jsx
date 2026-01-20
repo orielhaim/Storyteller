@@ -2,6 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { Upload, Image as ImageIcon, Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
@@ -157,15 +162,22 @@ function ImageUpload({
               <Upload className="h-4 w-4 mr-2" />
               Change
             </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              className="h-8 w-8"
-              onClick={handleRemove}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleRemove}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Delete image
+              </TooltipContent>
+            </Tooltip>
           </div>
 
           {isLoading && (

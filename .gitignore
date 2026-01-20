@@ -10,3 +10,6 @@ pnpm-lock.yaml
 drizzle
 testServer.js
 .env
+
+.cursor
+.trae

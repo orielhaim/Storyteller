@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function ObjectDetail({ objectId, onBack, showBackButton = true }) {
+export default function ObjectDetail({ objectId, onBack }) {
   const { currentObject, fetchObject, updateObject, deleteObject } = useWorldStore();
 
   // Local state
@@ -119,11 +119,6 @@ export default function ObjectDetail({ objectId, onBack, showBackButton = true }
       {/* Header */}
       <header className="flex items-center justify-between py-2 border-b shrink-0">
         <div className="flex items-center gap-4">
-          {showBackButton && (
-            <Button variant="ghost" size="icon" onClick={onBack}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          )}
           <div>
             <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
               {formData.name || 'Unnamed Object'}

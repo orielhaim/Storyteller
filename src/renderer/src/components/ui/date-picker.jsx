@@ -8,6 +8,11 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -124,16 +129,23 @@ export function DatePicker({
       />
       
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:bg-transparent"
-            tabIndex={-1} // כדי שהטאב לא יעצור על הכפתור אלא רק על האינפוט
-          >
-            <CalendarIcon className="size-4" />
-          </Button>
-        </PopoverTrigger>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:bg-transparent"
+                tabIndex={-1}
+              >
+                <CalendarIcon className="size-4" />
+              </Button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent>
+            Open calendar
+          </TooltipContent>
+        </Tooltip>
         <PopoverContent className="w-auto p-0" align="end">
           <Calendar
             mode="single"

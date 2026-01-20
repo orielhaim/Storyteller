@@ -3,6 +3,11 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, X, Book as BookIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 import useImageLoader from '@/hooks/useImageLoader';
 
@@ -93,15 +98,22 @@ function BookItem({ book, onRemove, isOverlay = false }) {
       </div>
 
       {!isOverlay && onRemove && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
-          onClick={() => onRemove(book.id)}
-        >
-          <X className="h-4 w-4" />
-          <span className="sr-only">Remove book</span>
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
+              onClick={() => onRemove(book.id)}
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Remove book</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            Remove from series
+          </TooltipContent>
+        </Tooltip>
       )}
     </div>
   );

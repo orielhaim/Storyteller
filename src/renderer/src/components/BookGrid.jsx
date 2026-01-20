@@ -26,7 +26,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import {
   BookOpen,
   Library,
@@ -308,10 +307,6 @@ function BookGrid({ items, onSeriesClick, enableDragDrop = true, onSeriesUpdate 
             </ItemGrid>
           </SortableContext>
         </section>
-      )}
-
-      {books.length > 0 && series.length > 0 && (
-        <Separator className="my-8" />
       )}
 
       {series.length > 0 && (

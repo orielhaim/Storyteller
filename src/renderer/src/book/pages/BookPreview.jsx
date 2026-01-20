@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Loader2, FileText, Eye, ArrowLeft } from 'lucide-react';
 import { PreviewEditor } from '@/components/tiptap-templates/preview-editor';
 import { BookFlipView } from '@/components/book-flip/BookFlipView';
@@ -196,14 +197,14 @@ function BookPreview({ book }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setMode(MODE_PAGE_VIEW)}>
-            <CardContent className="pt-6">
+            <CardContent className="my-auto">
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-blue-100 rounded-lg">
                     <FileText className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Page View</h3>
+                    <h3 className="font-semibold text-lg">Page View <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">BETA</Badge></h3>
                     <p className="text-sm text-muted-foreground">Read-only paginated view</p>
                   </div>
                 </div>
@@ -215,14 +216,14 @@ function BookPreview({ book }) {
           </Card>
 
           <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setMode(MODE_DEMO_VIEW)}>
-            <CardContent className="pt-6">
+            <CardContent className="my-auto">
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-purple-100 rounded-lg">
                     <Eye className="h-6 w-6 text-purple-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Demo View</h3>
+                    <h3 className="font-semibold text-lg">Demo View <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">ALPHA</Badge></h3>
                     <p className="text-sm text-muted-foreground">Interactive flip-book view</p>
                   </div>
                 </div>
@@ -251,6 +252,9 @@ function BookPreview({ book }) {
               <ArrowLeft className="h-4 w-4" />
               Back to Preview Options
             </Button>
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+              BETA
+            </Badge>
           </div>
         </div>
         <div className="flex-1 overflow-hidden">
@@ -274,6 +278,9 @@ function BookPreview({ book }) {
               <ArrowLeft className="h-4 w-4" />
               Back to Preview Options
             </Button>
+            <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
+              ALPHA
+            </Badge>
           </div>
         </div>
         <div className="flex-1 overflow-hidden relative">

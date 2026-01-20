@@ -6,14 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Globe, Save, ArrowLeft, Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function WorldDetail({ worldId, onBack, showBackButton = true }) {
+export default function WorldDetail({ worldId, onBack }) {
   const { currentWorld, fetchWorld, updateWorld, deleteWorld } = useWorldStore();
 
   // Local state
@@ -96,11 +95,6 @@ export default function WorldDetail({ worldId, onBack, showBackButton = true }) 
       {/* Header */}
       <header className="flex items-center justify-between py-2 border-b shrink-0">
         <div className="flex items-center gap-4">
-          {showBackButton && (
-            <Button variant="ghost" size="icon" onClick={onBack}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          )}
           <div>
             <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
               {formData.name || 'Unnamed World'}

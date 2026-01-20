@@ -8,6 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { useWorldStore } from '@/stores/worldStore';
 import ImageUpload from '@/components/ImageUpload';
 import { X, Plus } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 function CreateObjectDialog({ bookId, isOpen, onCreate, onClose }) {
   const [formData, setFormData] = useState({
@@ -121,14 +126,21 @@ function CreateObjectDialog({ bookId, isOpen, onCreate, onClose }) {
               {formData.groups.map((group, index) => (
                 <Badge key={index} variant="secondary" className="pr-1">
                   {group}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-4 w-4 ml-1 p-0 hover:bg-destructive/10 hover:text-destructive"
-                    onClick={() => handleRemoveGroup(group)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-4 w-4 ml-1 p-0 hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => handleRemoveGroup(group)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Remove group
+                    </TooltipContent>
+                  </Tooltip>
                 </Badge>
               ))}
             </div>

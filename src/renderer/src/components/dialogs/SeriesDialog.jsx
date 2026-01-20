@@ -1,9 +1,9 @@
 import { useEffect, useCallback, useMemo, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Settings, 
-  X, 
-  BookOpen, 
+import {
+  Settings,
+  X,
+  BookOpen,
   Library,
   Sparkles,
   Clock,
@@ -29,7 +29,6 @@ import { Separator } from '@/components/ui/separator';
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
@@ -66,7 +65,7 @@ const SeriesBookCard = memo(function SeriesBookCard({ book, index, onSeriesUpdat
 
   return (
     <BookContextMenu book={book} onSeriesUpdate={onSeriesUpdate}>
-      <div 
+      <div
         className="group relative cursor-pointer w-50"
         onClick={handleClick}
       >
@@ -105,8 +104,8 @@ const SeriesBookCard = memo(function SeriesBookCard({ book, index, onSeriesUpdat
             </div>
 
             <div className="absolute top-3 right-3 flex flex-col items-end gap-2 z-10">
-              <Badge 
-                variant={status.variant} 
+              <Badge
+                variant={status.variant}
                 className={cn(
                   "text-[10px] h-6 px-2 shadow-md backdrop-blur-sm gap-1",
                   status.className
@@ -185,11 +184,11 @@ const EmptySeriesState = memo(function EmptySeriesState({ onManageClick }) {
 
 function SeriesDialog({ open, onOpenChange, series, onSeriesUpdate }) {
   const navigate = useNavigate();
-  
-  const { 
-    books: booksMap, 
-    seriesLayout, 
-    fetchSeriesBooks 
+
+  const {
+    books: booksMap,
+    seriesLayout,
+    fetchSeriesBooks
   } = useBooksStore();
 
   useEffect(() => {
@@ -254,27 +253,25 @@ function SeriesDialog({ open, onOpenChange, series, onSeriesUpdate }) {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
-              <TooltipProvider delayDuration={300}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="default"
-                      className="gap-2"
-                      onClick={handleSettingsClick}
-                    >
-                      <Settings className="size-4" />
-                      Manage Series
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Edit series details and organize books
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="default"
+                    className="gap-2"
+                    onClick={handleSettingsClick}
+                  >
+                    <Settings className="size-4" />
+                    Manage Series
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Edit series details and organize books
+                </TooltipContent>
+              </Tooltip>
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -295,9 +292,9 @@ function SeriesDialog({ open, onOpenChange, series, onSeriesUpdate }) {
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold">Books in this Series</h3>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="gap-2 text-muted-foreground"
                     onClick={handleSettingsClick}
                   >
@@ -305,7 +302,7 @@ function SeriesDialog({ open, onOpenChange, series, onSeriesUpdate }) {
                     Add More
                   </Button>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-6">
                   {seriesBooks.map((book, index) => (
                     <SeriesBookCard
