@@ -78,9 +78,8 @@ export function PreviewEditor({ content }) {
   if (!editor) {
     return null
   }
-
   return (
-    <div className="preview-editor-wrapper w-full h-full overflow-auto bg-gray-100 p-8">
+    <div className="preview-editor-wrapper w-full h-full overflow-auto bg-gray-100 flex justify-center items-start p-8">
       <EditorContent editor={editor} className="preview-editor-content" />
     </div>
   )

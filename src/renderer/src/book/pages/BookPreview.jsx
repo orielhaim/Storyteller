@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, FileText, Eye, ArrowLeft } from 'lucide-react';
 import { PreviewEditor } from '@/components/tiptap-templates/preview-editor';
 import { BookFlipView } from '@/components/book-flip/BookFlipView';
+import { Combobox } from '@/components/ui/combobox';
 
 const MODE_NORMAL = 'normal';
 const MODE_PAGE_VIEW = 'pageView';
@@ -100,6 +101,7 @@ function BookPreview({ book }) {
   const [chaptersWithScenes, setChaptersWithScenes] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedChapterId, setSelectedChapterId] = useState('all');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -125,6 +127,10 @@ function BookPreview({ book }) {
     fetchData();
   }, [book?.id]);
 
+  useEffect(() => {
+    setSelectedChapterId('all');
+  }, [book?.id]);
+
   const hasContent = useMemo(() => {
     if (!chaptersWithScenes || chaptersWithScenes.length === 0) {
       return false;
@@ -135,12 +141,47 @@ function BookPreview({ book }) {
     );
   }, [chaptersWithScenes]);
 
+  const chapterOptions = useMemo(() => {
+    if (!chaptersWithScenes || chaptersWithScenes.length === 0) {
+      return [
+        { value: 'all', label: 'All chapters' }
+      ];
+    }
+
+    const options = chaptersWithScenes.map((chapter, index) => ({
+      value: String(chapter.id ?? index),
+      label: chapter.name || `Chapter ${index + 1}`
+    }));
+
+    return [
+      { value: 'all', label: 'All chapters' },
+      ...options
+    ];
+  }, [chaptersWithScenes]);
+
+  const filteredChapters = useMemo(() => {
+    if (!chaptersWithScenes || chaptersWithScenes.length === 0) {
+      return [];
+    }
+
+    if (!selectedChapterId || selectedChapterId === 'all') {
+      return chaptersWithScenes;
+    }
+
+    const chapter = chaptersWithScenes.find((item, index) => {
+      const id = String(item.id ?? index);
+      return id === selectedChapterId;
+    });
+
+    return chapter ? [chapter] : chaptersWithScenes;
+  }, [chaptersWithScenes, selectedChapterId]);
+
   const combinedContent = useMemo(() => {
-    if (!chaptersWithScenes || !hasContent) {
+    if (!filteredChapters || filteredChapters.length === 0 || !hasContent) {
       return null;
     }
-    return combineContent(chaptersWithScenes);
-  }, [chaptersWithScenes, hasContent]);
+    return combineContent(filteredChapters);
+  }, [filteredChapters, hasContent]);
 
   if (loading) {
     return (
@@ -255,6 +296,18 @@ function BookPreview({ book }) {
             <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
               BETA
             </Badge>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">Chapter</span>
+            <Combobox
+              className="w-56"
+              options={chapterOptions}
+              value={selectedChapterId}
+              onValueChange={(value) => setSelectedChapterId(value || 'all')}
+              placeholder="All chapters"
+              searchPlaceholder="Search chapters..."
+              emptyMessage="No chapters found."
+            />
           </div>
         </div>
         <div className="flex-1 overflow-hidden">
