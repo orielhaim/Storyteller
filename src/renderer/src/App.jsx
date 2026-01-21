@@ -1,14 +1,14 @@
 import { Routes, Route } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-
-import Welcome from './pages/Welcome';
-import Home from './pages/Home.tsx';
-import SeriesManagement from './pages/SeriesManagement';
-import Book from './pages/Book';
-import Settings from './pages/Settings';
+import { Suspense, lazy, useEffect, useState } from 'react';
 
 import { useSettingsStore } from './stores/settingsStore';
 import AppUpdater from './components/AppUpdater';
+
+const Welcome = lazy(() => import('./pages/Welcome'));
+const Home = lazy(() => import('./pages/Home.tsx'));
+const SeriesManagement = lazy(() => import('./pages/SeriesManagement'));
+const Book = lazy(() => import('./pages/Book'));
+const Settings = lazy(() => import('./pages/Settings'));
 
 function App() {
   const [hasSeenWelcome, setHasSeenWelcome] = useState(false);
@@ -37,30 +37,38 @@ function App() {
     checkWelcomeState();
   }, [loadSettings]);
 
-  if (isCheckingWelcome) return;
+  if (isCheckingWelcome) {
+    return (
+      <div className="App">
+        <AppUpdater />
+      </div>
+    );
+  }
 
   return (
     <div className="App">
       <AppUpdater />
 
-      <Routes>
-        <Route
-          path="/"
-          element={hasSeenWelcome ? <Home /> : <Welcome />}
-        />
-        <Route
-          path="/series"
-          element={<SeriesManagement />}
-        />
-        <Route
-          path="/book"
-          element={<Book />}
-        />
-        <Route
-          path="/settings"
-          element={<Settings />}
-        />
-      </Routes>
+      <Suspense fallback={null}>
+        <Routes>
+          <Route
+            path="/"
+            element={hasSeenWelcome ? <Home /> : <Welcome />}
+          />
+          <Route
+            path="/series"
+            element={<SeriesManagement />}
+          />
+          <Route
+            path="/book"
+            element={<Book />}
+          />
+          <Route
+            path="/settings"
+            element={<Settings />}
+          />
+        </Routes>
+      </Suspense>
     </div>
   );
 }
