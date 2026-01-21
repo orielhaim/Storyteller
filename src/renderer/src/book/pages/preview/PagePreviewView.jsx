@@ -80,7 +80,12 @@ export function PagePreviewView({
           result = await exportToMd();
           break;
         case 'txt':
-          result = await exportToTxt();
+          result = await exportToTxt({
+            editor,
+            bookTitle,
+            bookLanguage,
+            selectedChapterId,
+          });
           break;
         default:
           throw new Error(`Unsupported export format: ${formatId}`);

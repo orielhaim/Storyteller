@@ -117,4 +117,22 @@ export const exportHandlers = {
       throw error;
     }
   }),
+
+  exportToTxt: handleRequest(async (filePath, textContent) => {
+    if (!filePath) {
+      throw new Error('File path is required');
+    }
+
+    try {
+      // Convert text content to Buffer with UTF-8 encoding
+      const buffer = Buffer.from(textContent, 'utf-8');
+      
+      await saveFile(filePath, buffer);
+      
+      return { success: true, filePath };
+    } catch (error) {
+      console.error('Error saving TXT file:', error);
+      throw error;
+    }
+  }),
 };

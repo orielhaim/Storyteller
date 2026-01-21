@@ -36,8 +36,7 @@ export const EXPORT_FORMATS = {
     name: 'Plain Text',
     extension: '.txt',
     icon: File,
-    enabled: false,
-    comingSoon: true,
+    enabled: true,
   },
 };
 

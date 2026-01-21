@@ -24,4 +24,12 @@ contextBridge.exposeInMainWorld('exportAPI', {
       }
       throw new Error(result.error || 'Failed to generate and save DOCX');
     }),
+
+  exportToTxt: (filePath, textContent) =>
+    ipcRenderer.invoke('export:exportToTxt', filePath, textContent).then(result => {
+      if (result.success) {
+        return result.data;
+      }
+      throw new Error(result.error || 'Failed to save TXT file');
+    }),
 })
