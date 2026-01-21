@@ -1,0 +1,47 @@
+{
+	"title": "הספרייה שלי",
+	"subtitle": "ניהול וארגון פרויקטי הכתיבה שלך",
+	"actions": {
+		"create": "צור",
+		"newBook": "ספר חדש",
+		"newSeries": "סדרה חדשה",
+		"createBook": "צור ספר",
+		"createSeries": "צור סדרה",
+		"settingsTooltip": "הגדרות"
+	},
+	"filters": {
+		"tabs": {
+			"all": "הכל",
+			"books": "ספרים",
+			"series": "סדרות"
+		},
+		"options": {
+			"button": "אפשרויות",
+			"displayOptionsTitle": "אפשרויות תצוגה",
+			"displayOptionsDescription": "התאמה אישית של תצוגת הספרייה",
+			"showBooksInSeries": "הצג ספרים בתוך סדרות",
+			"showArchivedItems": "הצג פריטים בארכיון"
+		}
+	},
+	"dropdown": {
+		"createNew": "צור חדש"
+	},
+	"loading": {
+		"title": "טוען את הספרייה...",
+		"description": "מושך נתוני ספרים וסדרות..."
+	},
+	"emptyStates": {
+		"books": {
+			"title": "אין ספרים עדיין",
+			"description": "זה הזמן להתחיל את מסע הכתיבה וליצור את ספרך הראשון."
+		},
+		"series": {
+			"title": "לא נוצרו סדרות",
+			"description": "ארגן את הספרים שלך בתוך סדרות למבנה מסודר יותר."
+		},
+		"all": {
+			"title": "הספרייה שלך ממתינה",
+			"description": "צור ספרים וסדרות כדי לבנות את היקום הספרותי שלך."
+		}
+	}
+}

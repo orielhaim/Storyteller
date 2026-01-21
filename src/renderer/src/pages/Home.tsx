@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, memo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
@@ -89,30 +90,30 @@ interface ProcessedSeries extends Series {
 type ProcessedItem = ProcessedBook | ProcessedSeries;
 
 const FILTER_TABS = [
-  { value: 'all', label: 'All', icon: Library },
-  { value: 'books', label: 'Books', icon: BookOpen },
-  { value: 'series', label: 'Series', icon: FolderTree },
+  { value: 'all', labelKey: 'filters.tabs.all', icon: Library },
+  { value: 'books', labelKey: 'filters.tabs.books', icon: BookOpen },
+  { value: 'series', labelKey: 'filters.tabs.series', icon: FolderTree },
 ] as const;
 
 const EMPTY_STATES: Record<FilterType, {
   icon: typeof Plus;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
 }> = {
   books: {
     icon: BookOpen,
-    title: 'No books yet',
-    description: 'Start your writing journey by creating your first book.',
+    titleKey: 'emptyStates.books.title',
+    descriptionKey: 'emptyStates.books.description',
   },
   series: {
     icon: FolderTree,
-    title: 'No series created',
-    description: 'Organize your books into series for better structure.',
+    titleKey: 'emptyStates.series.title',
+    descriptionKey: 'emptyStates.series.description',
   },
   all: {
     icon: Sparkles,
-    title: 'Your library awaits',
-    description: 'Create books and series to build your literary universe.',
+    titleKey: 'emptyStates.all.title',
+    descriptionKey: 'emptyStates.all.description',
   },
 };
 
@@ -153,6 +154,7 @@ const FilterOption = memo(function FilterOption({
 
 // Loading skeleton component
 const LoadingSkeleton = memo(function LoadingSkeleton() {
+  const { t } = useTranslation('home');
   return (
     <div className="flex flex-col items-center justify-center py-24 gap-4">
       <div className="relative">
@@ -160,8 +162,8 @@ const LoadingSkeleton = memo(function LoadingSkeleton() {
         <Loader2 className="absolute inset-0 size-12 text-primary animate-spin" />
       </div>
       <div className="text-center space-y-1">
-        <p className="text-sm font-medium text-foreground">Loading your library</p>
-        <p className="text-xs text-muted-foreground">Fetching books and series...</p>
+        <p className="text-sm font-medium text-foreground">{t('loading.title')}</p>
+        <p className="text-xs text-muted-foreground">{t('loading.description')}</p>
       </div>
     </div>
   );
@@ -177,6 +179,7 @@ const EmptyState = memo(function EmptyState({
   onCreateBook: () => void;
   onCreateSeries: () => void;
 }) {
+  const { t } = useTranslation('home');
   const config = EMPTY_STATES[filterType];
   const Icon = config.icon;
 
@@ -191,22 +194,22 @@ const EmptyState = memo(function EmptyState({
         </div>
       </EmptyMedia>
       <EmptyTitle className="text-xl font-semibold">
-        {config.title}
+        {t(config.titleKey)}
       </EmptyTitle>
       <EmptyDescription className="max-w-sm">
-        {config.description}
+        {t(config.descriptionKey)}
       </EmptyDescription>
       <EmptyContent className="flex flex-wrap gap-3 justify-center pt-2">
         {filterType !== 'series' && (
           <Button onClick={onCreateBook} className="gap-2">
             <Plus className="size-4" />
-            Create Book
+            {t('actions.createBook')}
           </Button>
         )}
         {filterType !== 'books' && (
           <Button onClick={onCreateSeries} variant="outline" className="gap-2">
             <FolderTree className="size-4" />
-            Create Series
+            {t('actions.createSeries')}
           </Button>
         )}
       </EmptyContent>
@@ -217,6 +220,7 @@ const EmptyState = memo(function EmptyState({
 // Main component
 export default function Home() {
   const navigate = useNavigate();
+  const { t } = useTranslation('home');
 
   // Dialog states
   const [createBookOpen, setCreateBookOpen] = useState(false);
@@ -381,10 +385,10 @@ export default function Home() {
             <header className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
               <div className="space-y-1">
                 <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                  My Library
+                  {t('title')}
                 </h1>
                 <p className="text-muted-foreground">
-                  Manage and organize your writing projects
+                  {t('subtitle')}
                 </p>
               </div>
 
@@ -393,19 +397,19 @@ export default function Home() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="gap-2">
                       <Plus className="size-4" />
-                      <span>Create</span>
+                      <span>{t('actions.create')}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuLabel className={undefined} inset={undefined}>Create New</DropdownMenuLabel>
+                    <DropdownMenuLabel className={undefined} inset={undefined}>{t('dropdown.createNew')}</DropdownMenuLabel>
                     <DropdownMenuSeparator className={undefined} />
                     <DropdownMenuItem onClick={openCreateBook} className="gap-2 cursor-pointer" inset={undefined}>
                       <BookOpen className="size-4" />
-                      <span>New Book</span>
+                      <span>{t('actions.newBook')}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={openCreateSeries} className="gap-2 cursor-pointer" inset={undefined}>
                       <FolderTree className="size-4" />
-                      <span>New Series</span>
+                      <span>{t('actions.newSeries')}</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -419,38 +423,35 @@ export default function Home() {
                       <Settings className="size-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className={undefined}>Settings</TooltipContent>
+                  <TooltipContent className={undefined}>{t('actions.settingsTooltip')}</TooltipContent>
                 </Tooltip>
               </div>
             </header>
 
-            {/* Filter Bar */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              {/* Filter Tabs */}
               <Tabs
                 value={filters.type}
                 onValueChange={(value) => updateFilter('type', value as FilterType)} className={undefined}>
                 <TabsList className="h-10 p-1">
-                  {FILTER_TABS.map(({ value, label, icon: Icon }) => (
+                  {FILTER_TABS.map(({ value, labelKey, icon: Icon }) => (
                     <TabsTrigger
                       key={value}
                       value={value}
                       className="gap-2 px-4 data-[state=active]:shadow-sm"
                     >
                       <Icon className="size-4" />
-                      <span>{label}</span>
+                      <span>{t(labelKey)}</span>
                     </TabsTrigger>
                   ))}
                 </TabsList>
               </Tabs>
 
-              {/* Filter Options */}
               <div className="flex items-center gap-2">
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2">
                       <SlidersHorizontal className="size-4" />
-                      <span>Options</span>
+                      <span>{t('filters.options.button')}</span>
                       {activeFiltersCount > 0 && (
                         <Badge
                           variant="secondary"
@@ -463,9 +464,9 @@ export default function Home() {
                   </PopoverTrigger>
                   <PopoverContent align="end" className="w-64">
                     <div className="space-y-1">
-                      <h4 className="text-sm font-semibold">Display Options</h4>
+                      <h4 className="text-sm font-semibold">{t('filters.options.displayOptionsTitle')}</h4>
                       <p className="text-xs text-muted-foreground">
-                        Customize what you see in your library
+                        {t('filters.options.displayOptionsDescription')}
                       </p>
                     </div>
                     <Separator className="my-3" />
@@ -473,7 +474,7 @@ export default function Home() {
                       {filters.type === 'all' && (
                         <FilterOption
                           id="show-series-books"
-                          label="Show books in series"
+                          label={t('filters.options.showBooksInSeries')}
                           checked={filters.showBooksInSeries}
                           onCheckedChange={(checked) => updateFilter('showBooksInSeries', checked)}
                           icon={filters.showBooksInSeries ? Eye : EyeOff}
@@ -481,7 +482,7 @@ export default function Home() {
                       )}
                       <FilterOption
                         id="show-archived"
-                        label="Show archived items"
+                        label={t('filters.options.showArchivedItems')}
                         checked={filters.showArchived}
                         onCheckedChange={(checked) => updateFilter('showArchived', checked)}
                         icon={Archive}
@@ -492,7 +493,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Main Content */}
             <main className="min-h-[50vh]">
               {loading && processedItems.length === 0 ? (
                 <LoadingSkeleton />
@@ -514,7 +514,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Dialogs */}
         <CreateBookDialog
           open={createBookOpen}
           onOpenChange={setCreateBookOpen}

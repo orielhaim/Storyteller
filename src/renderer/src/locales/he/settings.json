@@ -1,5 +1,54 @@
 {
   "title": "הגדרות",
-  "language": "שפה",
-  "selectLanguage": "בחר שפה"
+  "categories": {
+    "editor": "עורך",
+    "general": "כללי"
+  },
+  "descriptions": {
+    "editor": "התאמה אישית של חוויית הכתיבה",
+    "general": "העדפות יישום"
+  },
+  "settings": {
+    "wordCount": {
+      "label": "ספירת מילים",
+      "description": "הצג ספירת מילים בתחתית העורך"
+    },
+    "spellCheck": {
+      "label": "בדיקת איות",
+      "description": "הפעלת בדיקת איות מובנית"
+    },
+    "language": {
+      "label": "שפה",
+      "description": "בחר את השפה המועדפת עליך"
+    },
+    "notifications": {
+      "label": "התראות",
+      "description": "אפשר התראות מערכת לגבי עדכונים"
+    }
+  },
+  "options": {
+    "autoSystem": "אוטומטי (מערכת)",
+    "english": "אנגלית",
+    "hebrew": "עברית",
+    "selectLanguage": "בחר שפה"
+  },
+  "updates": {
+    "title": "עדכונים",
+    "checking": "בודק עדכונים...",
+    "available": "עדכון זמין",
+    "availableDescription": "גרסה חדשה של Storyteller זמינה.",
+    "whatsNew": "מה חדש:",
+    "installRestart": "התקן והפעל מחדש",
+    "downloading": "מוריד...",
+    "downloadUpdate": "הורד עדכון",
+    "upToDate": "התוכנה מעודכנת",
+    "upToDateDescription": "הגרסה העדכנית ביותר של Storyteller מותקנת אצלך",
+    "checkAgain": "בדוק שוב אם קיימים עדכונים",
+    "failed": "בדיקת העדכונים נכשלה",
+    "tryAgain": "נסה שוב"
+  },
+  "footer": {
+    "openSource": "Storyteller היא תוכנת קוד פתוח תחת רישיון GPLv3",
+    "viewOnGitHub": "צפה ב-GitHub"
+  }
 }

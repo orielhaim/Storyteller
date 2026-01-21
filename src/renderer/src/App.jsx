@@ -46,7 +46,7 @@ function App() {
   }
 
   return (
-    <div className="App">
+    <div className="App" dir="auto">
       <AppUpdater />
 
       <Suspense fallback={null}>

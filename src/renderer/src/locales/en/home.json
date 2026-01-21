@@ -1,0 +1,47 @@
+{
+  "title": "My Library",
+  "subtitle": "Manage and organize your writing projects",
+  "actions": {
+    "create": "Create",
+    "newBook": "New Book",
+    "newSeries": "New Series",
+    "createBook": "Create Book",
+    "createSeries": "Create Series",
+    "settingsTooltip": "Settings"
+  },
+  "filters": {
+    "tabs": {
+      "all": "All",
+      "books": "Books",
+      "series": "Series"
+    },
+    "options": {
+      "button": "Options",
+      "displayOptionsTitle": "Display Options",
+      "displayOptionsDescription": "Customize what you see in your library",
+      "showBooksInSeries": "Show books in series",
+      "showArchivedItems": "Show archived items"
+    }
+  },
+  "dropdown": {
+    "createNew": "Create New"
+  },
+  "loading": {
+    "title": "Loading your library",
+    "description": "Fetching books and series..."
+  },
+  "emptyStates": {
+    "books": {
+      "title": "No books yet",
+      "description": "Start your writing journey by creating your first book."
+    },
+    "series": {
+      "title": "No series created",
+      "description": "Organize your books into series for better structure."
+    },
+    "all": {
+      "title": "Your library awaits",
+      "description": "Create books and series to build your literary universe."
+    }
+  }
+}
