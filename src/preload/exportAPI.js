@@ -32,4 +32,12 @@ contextBridge.exposeInMainWorld('exportAPI', {
       }
       throw new Error(result.error || 'Failed to save TXT file');
     }),
+
+  exportToEpub: (filePath, htmlContent, epubOptions) =>
+    ipcRenderer.invoke('export:exportToEpub', filePath, htmlContent, epubOptions).then(result => {
+      if (result.success) {
+        return result.data;
+      }
+      throw new Error(result.error || 'Failed to generate and save EPUB');
+    }),
 })

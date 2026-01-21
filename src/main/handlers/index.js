@@ -110,4 +110,5 @@ export function registerIpcHandlers() {
   ipcMain.handle('export:exportToPdf', exportHandlers.exportToPdf);
   ipcMain.handle('export:exportToDocx', exportHandlers.exportToDocx);
   ipcMain.handle('export:exportToTxt', exportHandlers.exportToTxt);
+  ipcMain.handle('export:exportToEpub', exportHandlers.exportToEpub);
 }

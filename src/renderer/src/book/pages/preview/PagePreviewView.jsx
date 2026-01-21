@@ -74,7 +74,12 @@ export function PagePreviewView({
           });
           break;
         case 'epub':
-          result = await exportToEpub();
+          result = await exportToEpub({
+            editor,
+            bookTitle,
+            bookLanguage,
+            selectedChapterId,
+          });
           break;
         case 'md':
           result = await exportToMd();

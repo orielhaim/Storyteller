@@ -2,6 +2,7 @@ import { dialog, BrowserWindow } from 'electron';
 import fs from 'fs/promises';
 import path from 'path';
 import HtmlToDocx from '@turbodocx/html-to-docx';
+import { EPub } from '@lesjoursfr/html-to-epub';
 import handleRequest from '../utils/handleRequest.js';
 
 async function saveFile(filePath, buffer) {
@@ -132,6 +133,61 @@ export const exportHandlers = {
       return { success: true, filePath };
     } catch (error) {
       console.error('Error saving TXT file:', error);
+      throw error;
+    }
+  }),
+
+  exportToEpub: handleRequest(async (filePath, htmlContent, epubOptions) => {
+    if (!filePath) {
+      throw new Error('File path is required');
+    }
+
+    try {
+      // Use content from epubOptions if provided, otherwise create a single chapter from htmlContent
+      const content = epubOptions?.content || [
+        {
+          title: epubOptions?.title || 'Content',
+          data: htmlContent,
+        },
+      ];
+
+      const options = {
+        title: epubOptions?.title || 'Book',
+        author: epubOptions?.author || ['Storyteller'],
+        publisher: epubOptions?.publisher || 'Storyteller',
+        lang: epubOptions?.lang || 'en',
+        version: epubOptions?.version || 3,
+        tocTitle: epubOptions?.tocTitle || 'Table of Contents',
+        appendChapterTitles: epubOptions?.appendChapterTitles !== false,
+        hideToC: epubOptions?.hideToC || false,
+        css: epubOptions?.css || `
+          body {
+            font-family: Georgia, serif;
+            line-height: 1.6;
+            margin: 1em;
+            padding: 0;
+          }
+          h1, h2, h3, h4, h5, h6 {
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+          }
+          p {
+            margin-bottom: 1em;
+            text-align: justify;
+          }
+        `,
+        content,
+      };
+
+      // Create EPUB instance
+      const epub = new EPub(options, filePath);
+
+      // Generate EPUB
+      await epub.render();
+      
+      return { success: true, filePath };
+    } catch (error) {
+      console.error('Error generating and saving EPUB:', error);
       throw error;
     }
   }),

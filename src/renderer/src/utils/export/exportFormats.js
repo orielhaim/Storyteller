@@ -20,8 +20,7 @@ export const EXPORT_FORMATS = {
     name: 'EPUB',
     extension: '.epub',
     icon: BookOpen,
-    enabled: false,
-    comingSoon: true,
+    enabled: true,
   },
   MD: {
     id: 'md',
