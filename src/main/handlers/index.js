@@ -6,6 +6,7 @@ import { worldHandlers, locationHandlers, objectHandlers } from './world.js';
 import { chapterHandlers, sceneHandlers, writingHandlers } from './writing.js';
 import { imageHandlers } from './imageHandler.js';
 import { storeHandlers } from './store.js';
+import { exportHandlers } from './exportHandler.js';
 
 export function registerIpcHandlers() {
   // Books channels
@@ -103,4 +104,8 @@ export function registerIpcHandlers() {
   ipcMain.handle('store:clear', storeHandlers.clear);
   ipcMain.handle('store:has', storeHandlers.has);
   ipcMain.handle('store:getAll', storeHandlers.getAll);
+
+  // Export channels
+  ipcMain.handle('export:showSaveDialog', exportHandlers.showSaveDialog);
+  ipcMain.handle('export:exportToPdf', exportHandlers.exportToPdf);
 }

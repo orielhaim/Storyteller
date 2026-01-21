@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, forwardRef, useImperativeHandle } from "react"
 import { EditorContent, useEditor } from "@tiptap/react"
 import { StarterKit } from "@tiptap/starter-kit"
 import { Image } from "@tiptap/extension-image"
@@ -19,7 +19,7 @@ import "@/components/tiptap-node/image-node/image-node.scss"
 import "@/components/tiptap-node/heading-node/heading-node.scss"
 import "@/components/tiptap-node/paragraph-node/paragraph-node.scss"
 
-export function PreviewEditor({ content }) {
+export const PreviewEditor = forwardRef(function PreviewEditor({ content }, ref) {
   const editor = useEditor({
     editable: false,
     immediatelyRender: false,
@@ -69,6 +69,10 @@ export function PreviewEditor({ content }) {
     content: content || { type: 'doc', content: [] },
   })
 
+  useImperativeHandle(ref, () => ({
+    getEditor: () => editor,
+  }), [editor])
+
   useEffect(() => {
     if (editor && content) {
       editor.commands.setContent(content)
@@ -83,4 +87,4 @@ export function PreviewEditor({ content }) {
       <EditorContent editor={editor} className="preview-editor-content" />
     </div>
   )
-}
+})

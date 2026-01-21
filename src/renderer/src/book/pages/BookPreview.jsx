@@ -4,9 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, FileText, Eye, ArrowLeft } from 'lucide-react';
-import { PreviewEditor } from '@/components/tiptap-templates/preview-editor';
-import { BookFlipView } from '@/components/book-flip/BookFlipView';
-import { Combobox } from '@/components/ui/combobox';
+import { BookFlipView } from '@/book/pages/preview/BookFlipView';
+import { PagePreviewView } from '@/book/pages/preview/PagePreviewView';
 
 const MODE_NORMAL = 'normal';
 const MODE_PAGE_VIEW = 'pageView';
@@ -102,6 +101,7 @@ function BookPreview({ book }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedChapterId, setSelectedChapterId] = useState('all');
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -183,6 +183,7 @@ function BookPreview({ book }) {
     return combineContent(filteredChapters);
   }, [filteredChapters, hasContent]);
 
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full min-h-[400px]">
@@ -245,12 +246,12 @@ function BookPreview({ book }) {
                     <FileText className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Page View <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">BETA</Badge></h3>
-                    <p className="text-sm text-muted-foreground">Read-only paginated view</p>
+                    <h3 className="font-semibold text-lg">Page Preview & Export <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">BETA</Badge></h3>
+                    <p className="text-sm text-muted-foreground">Paginated preview and export</p>
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  View all your chapters and scenes in a paginated, book-like format. Perfect for reading through your entire manuscript.
+                  View all your chapters and scenes in a paginated, book-like format. Perfect for reading through your entire manuscript and exporting to various formats.
                 </p>
               </div>
             </CardContent>
@@ -281,39 +282,17 @@ function BookPreview({ book }) {
 
   if (mode === MODE_PAGE_VIEW) {
     return (
-      <div className="flex flex-col h-[calc(100vh-4.5rem)]">
-        <div className="flex items-center justify-between p-4 border-b bg-background">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setMode(MODE_NORMAL)}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Preview Options
-            </Button>
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
-              BETA
-            </Badge>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">Chapter</span>
-            <Combobox
-              className="w-56"
-              options={chapterOptions}
-              value={selectedChapterId}
-              onValueChange={(value) => setSelectedChapterId(value || 'all')}
-              placeholder="All chapters"
-              searchPlaceholder="Search chapters..."
-              emptyMessage="No chapters found."
-            />
-          </div>
-        </div>
-        <div className="flex-1 overflow-hidden">
-          <PreviewEditor content={combinedContent} />
-        </div>
-      </div>
+      <PagePreviewView
+        book={book}
+        combinedContent={combinedContent}
+        chapterOptions={chapterOptions}
+        selectedChapterId={selectedChapterId}
+        onChapterChange={setSelectedChapterId}
+        onBack={() => setMode(MODE_NORMAL)}
+        hasContent={hasContent}
+        exporting={exporting}
+        setExporting={setExporting}
+      />
     );
   }
 

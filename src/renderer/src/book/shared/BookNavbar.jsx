@@ -8,7 +8,7 @@ const navItems = [
   { id: 'overview', label: 'Overview', icon: BookOpen },
   { id: 'write', label: 'Workspace', icon: PenTool, isPrimary: true },
   { id: 'timeline', label: 'Timeline', icon: Clock },
-  { id: 'preview', label: 'Preview', icon: Eye },
+  { id: 'preview', label: 'Preview & Export', icon: Eye },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
