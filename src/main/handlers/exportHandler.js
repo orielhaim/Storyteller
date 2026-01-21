@@ -87,8 +87,6 @@ export const exportHandlers = {
     }
 
     try {
-      // Extract content from the HTML wrapper
-      // The HTML might contain wrapper divs, we want the actual content
       const headerHtml = docxOptions?.headerHtml || '';
       const options = {
         orientation: docxOptions?.orientation || 'portrait',
@@ -104,10 +102,8 @@ export const exportHandlers = {
         pageNumber: docxOptions?.pageNumber !== false,
       };
 
-      // Convert HTML to DOCX
       const docxArrayBuffer = await HtmlToDocx(htmlContent, headerHtml, options);
       
-      // Convert ArrayBuffer to Buffer for Node.js
       const buffer = Buffer.from(docxArrayBuffer);
       
       await saveFile(filePath, buffer);
@@ -125,7 +121,6 @@ export const exportHandlers = {
     }
 
     try {
-      // Convert text content to Buffer with UTF-8 encoding
       const buffer = Buffer.from(textContent, 'utf-8');
       
       await saveFile(filePath, buffer);
@@ -143,7 +138,6 @@ export const exportHandlers = {
     }
 
     try {
-      // Use content from epubOptions if provided, otherwise create a single chapter from htmlContent
       const content = epubOptions?.content || [
         {
           title: epubOptions?.title || 'Content',
@@ -179,15 +173,30 @@ export const exportHandlers = {
         content,
       };
 
-      // Create EPUB instance
       const epub = new EPub(options, filePath);
 
-      // Generate EPUB
       await epub.render();
       
       return { success: true, filePath };
     } catch (error) {
       console.error('Error generating and saving EPUB:', error);
+      throw error;
+    }
+  }),
+
+  exportToMd: handleRequest(async (filePath, markdownContent) => {
+    if (!filePath) {
+      throw new Error('File path is required');
+    }
+
+    try {
+      const buffer = Buffer.from(markdownContent, 'utf-8');
+      
+      await saveFile(filePath, buffer);
+      
+      return { success: true, filePath };
+    } catch (error) {
+      console.error('Error saving Markdown file:', error);
       throw error;
     }
   }),

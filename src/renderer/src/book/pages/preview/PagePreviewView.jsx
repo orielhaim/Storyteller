@@ -82,7 +82,12 @@ export function PagePreviewView({
           });
           break;
         case 'md':
-          result = await exportToMd();
+          result = await exportToMd({
+            editor,
+            bookTitle,
+            bookLanguage,
+            selectedChapterId,
+          });
           break;
         case 'txt':
           result = await exportToTxt({

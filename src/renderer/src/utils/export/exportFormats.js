@@ -27,8 +27,7 @@ export const EXPORT_FORMATS = {
     name: 'Markdown',
     extension: '.md',
     icon: FileCode,
-    enabled: false,
-    comingSoon: true,
+    enabled: true,
   },
   TXT: {
     id: 'txt',

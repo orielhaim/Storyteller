@@ -40,4 +40,12 @@ contextBridge.exposeInMainWorld('exportAPI', {
       }
       throw new Error(result.error || 'Failed to generate and save EPUB');
     }),
+
+  exportToMd: (filePath, markdownContent) =>
+    ipcRenderer.invoke('export:exportToMd', filePath, markdownContent).then(result => {
+      if (result.success) {
+        return result.data;
+      }
+      throw new Error(result.error || 'Failed to save Markdown file');
+    }),
 })
