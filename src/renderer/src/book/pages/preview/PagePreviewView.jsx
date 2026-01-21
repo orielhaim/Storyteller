@@ -66,7 +66,12 @@ export function PagePreviewView({
           });
           break;
         case 'docx':
-          result = await exportToDocx();
+          result = await exportToDocx({
+            editor,
+            bookTitle,
+            bookLanguage,
+            selectedChapterId,
+          });
           break;
         case 'epub':
           result = await exportToEpub();

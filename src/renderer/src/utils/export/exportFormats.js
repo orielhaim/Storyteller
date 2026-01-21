@@ -13,8 +13,7 @@ export const EXPORT_FORMATS = {
     name: 'DOCX',
     extension: '.docx',
     icon: FileType,
-    enabled: false,
-    comingSoon: true,
+    enabled: true,
   },
   EPUB: {
     id: 'epub',

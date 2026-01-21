@@ -108,4 +108,5 @@ export function registerIpcHandlers() {
   // Export channels
   ipcMain.handle('export:showSaveDialog', exportHandlers.showSaveDialog);
   ipcMain.handle('export:exportToPdf', exportHandlers.exportToPdf);
+  ipcMain.handle('export:exportToDocx', exportHandlers.exportToDocx);
 }

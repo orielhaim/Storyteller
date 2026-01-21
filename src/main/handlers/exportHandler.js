@@ -1,6 +1,7 @@
 import { dialog, BrowserWindow } from 'electron';
 import fs from 'fs/promises';
 import path from 'path';
+import HtmlToDocx from '@turbodocx/html-to-docx';
 import handleRequest from '../utils/handleRequest.js';
 
 async function saveFile(filePath, buffer) {
@@ -76,6 +77,44 @@ export const exportHandlers = {
       if (tempWindow && !tempWindow.isDestroyed()) {
         tempWindow.close();
       }
+    }
+  }),
+
+  exportToDocx: handleRequest(async (filePath, htmlContent, docxOptions) => {
+    if (!filePath) {
+      throw new Error('File path is required');
+    }
+
+    try {
+      // Extract content from the HTML wrapper
+      // The HTML might contain wrapper divs, we want the actual content
+      const headerHtml = docxOptions?.headerHtml || '';
+      const options = {
+        orientation: docxOptions?.orientation || 'portrait',
+        pageSize: docxOptions?.pageSize || { width: 12240, height: 15840 }, // Letter size in twips (1/20th of a point)
+        margins: docxOptions?.margins || {
+          top: 1440,    // 1 inch = 1440 twips
+          right: 1440,
+          bottom: 1440,
+          left: 1440,
+        },
+        title: docxOptions?.title || 'Document',
+        creator: docxOptions?.creator || 'Storyteller',
+        pageNumber: docxOptions?.pageNumber !== false,
+      };
+
+      // Convert HTML to DOCX
+      const docxArrayBuffer = await HtmlToDocx(htmlContent, headerHtml, options);
+      
+      // Convert ArrayBuffer to Buffer for Node.js
+      const buffer = Buffer.from(docxArrayBuffer);
+      
+      await saveFile(filePath, buffer);
+      
+      return { success: true, filePath };
+    } catch (error) {
+      console.error('Error generating and saving DOCX:', error);
+      throw error;
     }
   }),
 };

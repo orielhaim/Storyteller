@@ -16,4 +16,12 @@ contextBridge.exposeInMainWorld('exportAPI', {
       }
       throw new Error(result.error || 'Failed to generate and save PDF');
     }),
+
+  exportToDocx: (filePath, htmlContent, docxOptions) =>
+    ipcRenderer.invoke('export:exportToDocx', filePath, htmlContent, docxOptions).then(result => {
+      if (result.success) {
+        return result.data;
+      }
+      throw new Error(result.error || 'Failed to generate and save DOCX');
+    }),
 })

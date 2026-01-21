@@ -67,6 +67,7 @@
     "@tiptap/pm": "^3.16.0",
     "@tiptap/react": "^3.16.0",
     "@tiptap/starter-kit": "^3.16.0",
+    "@turbodocx/html-to-docx": "^1.18.1",
     "better-sqlite3": "^12.6.2",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
