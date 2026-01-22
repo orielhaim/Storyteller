@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { format, isValid } from 'date-fns';
 import useImageLoader from '@/hooks/useImageLoader';
+import { useCharacterStore } from '@/stores/characterStore';
 import { SECTIONS } from '../CharacterProfile';
 import { FIELDS as QUICK_STATS_FIELDS } from './QuickStatsTab';
 import { FIELDS as APPEARANCE_FIELDS } from './AppearanceTab';
@@ -67,6 +68,7 @@ const getRelationshipLabel = (type, gender) => {
 };
 
 export default function CharacterProfileView({ formData, relationships }) {
+  const characters = useCharacterStore(state => state.characters);
   const attributes = formData.attributes || {};
   const customEntries = Object.entries(attributes).filter(([key]) => !KNOWN_KEYS.has(key));
   const imageUrl = useImageLoader(formData.avatar);
@@ -159,26 +161,30 @@ export default function CharacterProfileView({ formData, relationships }) {
             Relationships
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {relationships.map(rel => (
-              <div key={rel.id} className="flex items-center gap-4 p-4 rounded-xl border bg-card shadow-sm">
-                <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center overflow-hidden shrink-0">
-                  {rel.relatedCharacter?.avatar ? (
-                    <img src={`atom:///${rel.relatedCharacter.avatar}`} className="h-full w-full object-cover" />
-                  ) : (
-                    <User className="h-6 w-6 opacity-20" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold truncate">
-                    {rel.relatedCharacter?.firstName} {rel.relatedCharacter?.lastName}
+            {relationships.map(rel => {
+              const relatedChar = characters.find(c => c.id === rel.relatedCharacterId) || rel.relatedCharacter;
+              
+              return (
+                <div key={rel.id} className="flex items-center gap-4 p-4 rounded-xl border bg-card shadow-sm">
+                  <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center overflow-hidden shrink-0">
+                    {relatedChar?.avatar ? (
+                      <img src={`atom:///${relatedChar.avatar}`} className="h-full w-full object-cover" />
+                    ) : (
+                      <User className="h-6 w-6 opacity-20" />
+                    )}
                   </div>
-                  <div className="text-xs text-muted-foreground capitalize">
-                    {getRelationshipLabel(rel.relationshipType, rel.relatedCharacter?.gender)}
-                    {rel.metadata?.status && ` • ${rel.metadata.status}`}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold truncate">
+                      {relatedChar?.firstName} {relatedChar?.lastName}
+                    </div>
+                    <div className="text-xs text-muted-foreground capitalize">
+                      {getRelationshipLabel(rel.relationshipType, relatedChar?.gender)}
+                      {rel.metadata?.status && ` • ${rel.metadata.status}`}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}

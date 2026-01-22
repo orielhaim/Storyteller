@@ -6,6 +6,7 @@ export const useCharacterStore = create(immer((set, get) => ({
   characters: [],
   currentCharacter: null,
   relationships: [],
+  relationshipsByCharacter: {},
   loading: false,
   error: null,
 
@@ -57,8 +58,17 @@ export const useCharacterStore = create(immer((set, get) => ({
       const relRes = await bookAPI.characters.getRelationships(id);
       
       set(state => {
+        // Update in characters list if exists
+        const index = state.characters.findIndex(c => c.id === id);
+        if (index !== -1) {
+          state.characters[index] = res.data;
+        } else {
+          state.characters.push(res.data);
+        }
+
         state.currentCharacter = res.data;
         state.relationships = relRes.success ? relRes.data : [];
+        state.relationshipsByCharacter[id] = relRes.success ? relRes.data : [];
         state.loading = false;
       });
 
@@ -80,6 +90,7 @@ export const useCharacterStore = create(immer((set, get) => ({
 
       set(state => {
         state.relationships = res.data;
+        state.relationshipsByCharacter[characterId] = res.data;
       });
 
       return res.data;
@@ -89,12 +100,17 @@ export const useCharacterStore = create(immer((set, get) => ({
     }
   },
 
+  refreshRelatedCharacters: async (ids) => {
+    const uniqueIds = [...new Set(ids.filter(id => id !== undefined && id !== null))];
+    await Promise.all(uniqueIds.map(id => get().fetchRelationships(id)));
+  },
+
   addRelationship: async (data) => {
     try {
       const res = await bookAPI.characters.addRelationship(data);
       if (!res.success) throw new Error(res.error);
 
-      await get().fetchRelationships(data.characterId);
+      await get().refreshRelatedCharacters([data.characterId, data.relatedCharacterId]);
       
       return res.data;
     } catch (e) {
@@ -108,7 +124,12 @@ export const useCharacterStore = create(immer((set, get) => ({
       const res = await bookAPI.characters.updateRelationship(id, data);
       if (!res.success) throw new Error(res.error);
 
-      await get().fetchRelationships(characterId);
+      const rels = get().relationshipsByCharacter[characterId] || [];
+      const rel = rels.find(r => r.id === id);
+      
+      const otherId = rel?.characterId === characterId ? rel?.relatedCharacterId : rel?.characterId;
+      
+      await get().refreshRelatedCharacters([characterId, otherId]);
       
       return res.data;
     } catch (e) {
@@ -119,10 +140,15 @@ export const useCharacterStore = create(immer((set, get) => ({
 
   removeRelationship: async (id, characterId) => {
     try {
+      const rels = get().relationshipsByCharacter[characterId] || [];
+      const rel = rels.find(r => r.id === id);
+      
+      const otherId = rel?.characterId === characterId ? rel?.relatedCharacterId : rel?.characterId;
+
       const res = await bookAPI.characters.removeRelationship(id);
       if (!res.success) throw new Error(res.error);
 
-      await get().fetchRelationships(characterId);
+      await get().refreshRelatedCharacters([characterId, otherId]);
       
       return res;
     } catch (e) {
@@ -170,6 +196,8 @@ export const useCharacterStore = create(immer((set, get) => ({
         const index = state.characters.findIndex(char => char.id === id);
         if (index !== -1) {
           state.characters[index] = updatedCharacter;
+        } else {
+          state.characters.push(updatedCharacter);
         }
 
         if (state.currentCharacter?.id === id) {
@@ -208,6 +236,7 @@ export const useCharacterStore = create(immer((set, get) => ({
           state.currentCharacter = null;
         }
 
+        delete state.relationshipsByCharacter[id];
         state.characterCache = {};
 
         state.loading = false;

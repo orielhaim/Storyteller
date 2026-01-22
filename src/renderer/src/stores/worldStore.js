@@ -135,6 +135,12 @@ export const useWorldStore = create(immer((set, get) => ({
       if (!res.success) throw new Error(res.error);
 
       set(state => {
+        const index = state.worlds.findIndex(w => w.id === id);
+        if (index !== -1) {
+          state.worlds[index] = res.data;
+        } else {
+          state.worlds.push(res.data);
+        }
         state.currentWorld = res.data;
         state.loading = false;
       });
@@ -162,6 +168,12 @@ export const useWorldStore = create(immer((set, get) => ({
       if (!res.success) throw new Error(res.error);
 
       set(state => {
+        const index = state.locations.findIndex(l => l.id === id);
+        if (index !== -1) {
+          state.locations[index] = res.data;
+        } else {
+          state.locations.push(res.data);
+        }
         state.currentLocation = res.data;
         state.loading = false;
       });
@@ -189,6 +201,12 @@ export const useWorldStore = create(immer((set, get) => ({
       if (!res.success) throw new Error(res.error);
 
       set(state => {
+        const index = state.objects.findIndex(o => o.id === id);
+        if (index !== -1) {
+          state.objects[index] = res.data;
+        } else {
+          state.objects.push(res.data);
+        }
         state.currentObject = res.data;
         state.loading = false;
       });
@@ -243,18 +261,17 @@ export const useWorldStore = create(immer((set, get) => ({
       const updatedWorld = res.data;
 
       set(state => {
-        // Update in worlds array
         const index = state.worlds.findIndex(world => world.id === id);
         if (index !== -1) {
           state.worlds[index] = updatedWorld;
+        } else {
+          state.worlds.push(updatedWorld);
         }
 
-        // Update current world if it's the one being updated
         if (state.currentWorld?.id === id) {
           state.currentWorld = updatedWorld;
         }
 
-        // Invalidate cache for this world's book
         if (updatedWorld.bookId) {
           delete state.worldCache[updatedWorld.bookId];
         }
@@ -346,18 +363,17 @@ export const useWorldStore = create(immer((set, get) => ({
       const updatedLocation = res.data;
 
       set(state => {
-        // Update in locations array
         const index = state.locations.findIndex(location => location.id === id);
         if (index !== -1) {
           state.locations[index] = updatedLocation;
+        } else {
+          state.locations.push(updatedLocation);
         }
 
-        // Update current location if it's the one being updated
         if (state.currentLocation?.id === id) {
           state.currentLocation = updatedLocation;
         }
 
-        // Invalidate cache for this location's book
         if (updatedLocation.bookId) {
           delete state.locationCache[updatedLocation.bookId];
         }
@@ -376,7 +392,6 @@ export const useWorldStore = create(immer((set, get) => ({
     }
   },
 
-  // Delete a location
   deleteLocation: async (id) => {
     set(state => { state.loading = true; state.error = null; });
 
@@ -385,15 +400,12 @@ export const useWorldStore = create(immer((set, get) => ({
       if (!res.success) throw new Error(res.error);
 
       set(state => {
-        // Remove from locations array
         state.locations = state.locations.filter(location => location.id !== id);
 
-        // Clear current location if it's the one being deleted
         if (state.currentLocation?.id === id) {
           state.currentLocation = null;
         }
 
-        // Invalidate cache for all books (since we don't know which book this location belonged to)
         state.locationCache = {};
 
         state.loading = false;
@@ -410,7 +422,6 @@ export const useWorldStore = create(immer((set, get) => ({
     }
   },
 
-  // Create a new object
   createObject: async (data) => {
     set(state => { state.loading = true; state.error = null; });
 
@@ -422,7 +433,6 @@ export const useWorldStore = create(immer((set, get) => ({
 
       set(state => {
         state.objects.push(newObject);
-        // Invalidate cache for this book
         delete state.objectCache[data.bookId];
         state.loading = false;
       });
@@ -449,10 +459,12 @@ export const useWorldStore = create(immer((set, get) => ({
       const updatedObject = res.data;
 
       set(state => {
-        // Update in objects array
+        // Update in objects array (Trigger reactivity for all observers)
         const index = state.objects.findIndex(object => object.id === id);
         if (index !== -1) {
           state.objects[index] = updatedObject;
+        } else {
+          state.objects.push(updatedObject);
         }
 
         // Update current object if it's the one being updated

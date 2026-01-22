@@ -1,4 +1,4 @@
-import { useState, useEffect, useTransition, useRef } from 'react';
+import { useState, useEffect, useTransition, useRef, useMemo } from 'react';
 import { useCharacterStore } from '@/stores/characterStore';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import ImageUpload from '@/components/ImageUpload';
@@ -62,8 +62,26 @@ export const SECTIONS = {
   }
 };
 
+const EMPTY_ARRAY = [];
+
 export default function CharacterProfile({ characterId, onBack, showBackButton = true }) {
-  const { currentCharacter, relationships, fetchCharacter, updateCharacter, addRelationship, updateRelationship, removeRelationship } = useCharacterStore();
+  const fetchCharacter = useCharacterStore(state => state.fetchCharacter);
+  const fetchCharacters = useCharacterStore(state => state.fetchCharacters);
+  const updateCharacter = useCharacterStore(state => state.updateCharacter);
+  const addRelationship = useCharacterStore(state => state.addRelationship);
+  const updateRelationship = useCharacterStore(state => state.updateRelationship);
+  const removeRelationship = useCharacterStore(state => state.removeRelationship);
+  
+  const characterFromStore = useCharacterStore(state => 
+    state.characters.find(c => c.id === characterId)
+  );
+  
+  const bookId = characterFromStore?.bookId;
+
+  const relationshipsFromStore = useCharacterStore(state => 
+    state.relationshipsByCharacter[characterId]
+  );
+  const relationships = relationshipsFromStore || EMPTY_ARRAY;
 
   const [isPending, startTransition] = useTransition();
 
@@ -79,18 +97,26 @@ export default function CharacterProfile({ characterId, onBack, showBackButton =
   }, [characterId, fetchCharacter]);
 
   useEffect(() => {
-    if (currentCharacter && (!formData || currentCharacter.id !== formData.id)) {
-      const data = JSON.parse(JSON.stringify(currentCharacter));
+    if (bookId) fetchCharacters(bookId);
+  }, [bookId, fetchCharacters]);
+
+  useEffect(() => {
+    if (!characterFromStore) return;
+
+    const isNewCharacter = !formData || characterFromStore.id !== formData.id;
+    
+
+    if (isNewCharacter || (!isDirty && JSON.stringify(characterFromStore) !== initialDataRef.current)) {
+      const data = JSON.parse(JSON.stringify(characterFromStore));
       if (!data.attributes) data.attributes = {};
 
       setFormData(data);
       initialDataRef.current = JSON.stringify(data);
       setIsDirty(false);
     }
-  }, [currentCharacter]);
+  }, [characterFromStore, isDirty, formData?.id]);
 
   const handleCoreChange = (field, value) => {
-    // Calculate new state immediately
     const prev = formData;
     const next = { ...prev, [field]: value };
 
@@ -127,11 +153,9 @@ export default function CharacterProfile({ characterId, onBack, showBackButton =
     updateAndDebounce(next);
   };
 
-  // Improved debounce: receives data as parameter instead of relying on external state
   const debouncedSave = useDebouncedCallback(async (dataToSave) => {
     if (!dataToSave) return;
 
-    // Prepare data for saving (snake case, etc.)
     const formattedData = {
       ...dataToSave,
       first_name: dataToSave.firstName,
@@ -150,13 +174,9 @@ export default function CharacterProfile({ characterId, onBack, showBackButton =
     }
   }, 2000);
 
-  // Helper function for update and debounced save
-  // This replaces the heavy useEffect
   const updateAndDebounce = (newData) => {
     setFormData(newData);
     setIsDirty(true);
-    // Send the new data directly to debounce
-    // This prevents the need for an effect that runs on every change
     debouncedSave(newData);
   };
 

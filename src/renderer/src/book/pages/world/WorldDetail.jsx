@@ -12,8 +12,16 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+const EMPTY_ARRAY = [];
+
 export default function WorldDetail({ worldId, onBack }) {
-  const { currentWorld, fetchWorld, updateWorld, deleteWorld } = useWorldStore();
+  const fetchWorld = useWorldStore(state => state.fetchWorld);
+  const updateWorld = useWorldStore(state => state.updateWorld);
+  const deleteWorld = useWorldStore(state => state.deleteWorld);
+
+  const worldFromStore = useWorldStore(state => 
+    state.worlds.find(w => w.id === worldId)
+  );
 
   // Local state
   const [formData, setFormData] = useState(null);
@@ -26,17 +34,21 @@ export default function WorldDetail({ worldId, onBack }) {
 
   // 2. Sync State when store loads
   useEffect(() => {
-    if (currentWorld && (!formData || currentWorld.id !== formData.id)) {
-      setFormData({ ...currentWorld });
+    if (!worldFromStore) return;
+
+    const isNewItem = !formData || worldFromStore.id !== formData.id;
+
+    if (isNewItem || (!isDirty && JSON.stringify(worldFromStore) !== JSON.stringify(formData))) {
+      setFormData({ ...worldFromStore });
       setIsDirty(false);
     }
-  }, [currentWorld]);
+  }, [worldFromStore, isDirty, formData?.id]);
 
   // 3. Handlers
   const handleCoreChange = (field, value) => {
     setFormData(prev => {
       const next = { ...prev, [field]: value };
-      setIsDirty(JSON.stringify(next) !== JSON.stringify(currentWorld));
+      setIsDirty(JSON.stringify(next) !== JSON.stringify(worldFromStore));
       return next;
     });
   };

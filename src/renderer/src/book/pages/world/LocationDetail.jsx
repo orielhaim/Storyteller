@@ -15,8 +15,18 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+const EMPTY_ARRAY = [];
+
 export default function LocationDetail({ locationId, onBack }) {
-  const { currentLocation, fetchLocation, updateLocation, deleteLocation, worlds, fetchWorlds } = useWorldStore();
+  const fetchLocation = useWorldStore(state => state.fetchLocation);
+  const updateLocation = useWorldStore(state => state.updateLocation);
+  const deleteLocation = useWorldStore(state => state.deleteLocation);
+  const worlds = useWorldStore(state => state.worlds);
+  const fetchWorlds = useWorldStore(state => state.fetchWorlds);
+  
+  const locationFromStore = useWorldStore(state => 
+    state.locations.find(l => l.id === locationId)
+  );
 
   // Local state
   const [formData, setFormData] = useState(null);
@@ -31,24 +41,28 @@ export default function LocationDetail({ locationId, onBack }) {
 
   // Fetch worlds when location is loaded (to get bookId)
   useEffect(() => {
-    if (currentLocation?.bookId && worlds.length === 0) {
-      fetchWorlds(currentLocation.bookId);
+    if (locationFromStore?.bookId && worlds.length === 0) {
+      fetchWorlds(locationFromStore.bookId);
     }
-  }, [currentLocation?.bookId, worlds.length, fetchWorlds]);
+  }, [locationFromStore?.bookId, worlds.length, fetchWorlds]);
 
   // 2. Sync State when store loads
   useEffect(() => {
-    if (currentLocation && (!formData || currentLocation.id !== formData.id)) {
-      setFormData({ ...currentLocation });
+    if (!locationFromStore) return;
+
+    const isNewItem = !formData || locationFromStore.id !== formData.id;
+
+    if (isNewItem || (!isDirty && JSON.stringify(locationFromStore) !== JSON.stringify(formData))) {
+      setFormData({ ...locationFromStore });
       setIsDirty(false);
     }
-  }, [currentLocation]);
+  }, [locationFromStore, isDirty, formData?.id]);
 
   // 3. Handlers
   const handleCoreChange = (field, value) => {
     setFormData(prev => {
       const next = { ...prev, [field]: value };
-      setIsDirty(JSON.stringify(next) !== JSON.stringify(currentLocation));
+      setIsDirty(JSON.stringify(next) !== JSON.stringify(locationFromStore));
       return next;
     });
   };

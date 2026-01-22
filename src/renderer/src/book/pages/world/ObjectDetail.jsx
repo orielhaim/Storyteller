@@ -14,8 +14,16 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+const EMPTY_ARRAY = [];
+
 export default function ObjectDetail({ objectId, onBack }) {
-  const { currentObject, fetchObject, updateObject, deleteObject } = useWorldStore();
+  const fetchObject = useWorldStore(state => state.fetchObject);
+  const updateObject = useWorldStore(state => state.updateObject);
+  const deleteObject = useWorldStore(state => state.deleteObject);
+
+  const objectFromStore = useWorldStore(state => 
+    state.objects.find(o => o.id === objectId)
+  );
 
   // Local state
   const [formData, setFormData] = useState(null);
@@ -29,17 +37,21 @@ export default function ObjectDetail({ objectId, onBack }) {
 
   // 2. Sync State when store loads
   useEffect(() => {
-    if (currentObject && (!formData || currentObject.id !== formData.id)) {
-      setFormData({ ...currentObject });
+    if (!objectFromStore) return;
+
+    const isNewItem = !formData || objectFromStore.id !== formData.id;
+
+    if (isNewItem || (!isDirty && JSON.stringify(objectFromStore) !== JSON.stringify(formData))) {
+      setFormData({ ...objectFromStore });
       setIsDirty(false);
     }
-  }, [currentObject]);
+  }, [objectFromStore, isDirty, formData?.id]);
 
   // 3. Handlers
   const handleCoreChange = (field, value) => {
     setFormData(prev => {
       const next = { ...prev, [field]: value };
-      setIsDirty(JSON.stringify(next) !== JSON.stringify(currentObject));
+      setIsDirty(JSON.stringify(next) !== JSON.stringify(objectFromStore));
       return next;
     });
   };
