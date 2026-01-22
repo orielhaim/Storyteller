@@ -2,8 +2,6 @@
 
 ![License](https://img.shields.io/badge/license-GPLv3-blue.svg)
 ![Status](https://img.shields.io/badge/status-In%20Development-orange)
-![Electron](https://img.shields.io/badge/Electron-v39+-informational)
-![React](https://img.shields.io/badge/React-v19+-blue)
 
 **The modern, open-source writing studio for authors.**
 
@@ -13,27 +11,34 @@ Built for the modern web era, it prioritizes user experience (UI/UX), speed, and
 
 ## ✨ Key Features
 
-### 📚 Project Management
-- **Series & Books:** Organize your work not just by chapters, but by entire series. Keep multiple books linked within the same context.
-- **Hierarchy:** Drag-and-drop structure for Parts, Chapters, and Scenes.
+### 📚 Project & Series Management
+- **Organize Your Way:** Group your books into Series or keep them standalone.
+- **Visual Dashboard:** See all your projects at a glance with status icons and progress tracking.
+- **Drag & Drop Structure:** Easily rearrange Parts, Chapters, and Scenes to fix pacing or restructuring your plot.
 
-### ✍️ The Editor
-- **Rich Text Experience:** Offering a smooth, Notion-like writing experience without the lag.
-- **Distraction-Free Mode:** Focus solely on your words when you need to.
-
-### 🧩 Flexible Interface
-- **Split View & Multi-Tab:** Open multiple scenes, character sheets, or notes side-by-side.
-- **Customizable Layout:** Rearrange the workspace to fit your workflow. Keep your character list pinned to the right while writing on the left.
+### ✍️ Writing & Reading
+- **Distraction-Free Editor:** A clean, fast rich-text editor that autosaves to your local machine.
+- **Book Preview:** Switch to a **Flip-Book view** to read your draft like a real book, or view single chapters as a reader would see them.
+- **Scene Metadata:** Track word counts and status (Draft, Revised, Done) for every scene.
 
 ### 🌍 World Building
-- **Character Database:** Detailed profiles for your cast. Track appearance, backstory, and relationships.
-- **Locations & Items:** Manage the settings and important objects of your story.
-- **Timeline:** Visual timeline to track events across your story's chronology.
+- **Connected Database:** Create profiles for Characters, Locations, and Items.
+- **Live Sync:** Edit a character's details in one tab, and see the changes instantly update across all open windows.
+- **Interactive Timeline:** Visualize your story's chronology. Set specific start/end dates for scenes and see exactly when events happen.
+
+### 📤 Export & Sharing
+- **Universal Formats:** Export your manuscript to **PDF, EPUB, DOCX, Markdown, or TXT**.
+- **Ready for Publishing:** Whether you need a raw text backup or a formatted book file, it's just one click away.
+
+### 🧩 Flexible Interface
+- **Multi-Tab Workspace:** Open anything in tabs. chapters, character sheets, or world notes and view them side-by-side.
+- **Multi-Language:** Fully translated interface with native support for RTL (Right-to-Left) languages.
+- **Customizable Layout:** The interface remembers your window positions and layout, so you can pick up exactly where you left off.
 
 ---
 
 ### Dashboard
-![Dashboard](docs/screenshots/Dashbord.png)
+![Dashboard](docs/screenshots/dashboard.png)
 *Main dashboard showing Books and Series with easy organization.*
 
 ### Book Page

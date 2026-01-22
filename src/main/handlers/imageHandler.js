@@ -27,13 +27,13 @@ export const imageHandlers = {
     const imagesDir = await ensureImagesDir();
 
     // Generate UUID for filename
-    const uuid = uuidv4();
+    const generatedUuid = uuidv4();
 
     // Extract file extension from original filename
     const ext = path.extname(originalFilename) || '.jpg';
 
     // Create new filename
-    const filename = `${uuid}${ext}`;
+    const filename = `${generatedUuid}${ext}`;
     const filepath = path.join(imagesDir, filename);
 
     // Remove base64 prefix if present (data:image/jpeg;base64,)
@@ -43,17 +43,17 @@ export const imageHandlers = {
     const imageBuffer = Buffer.from(base64Image, 'base64');
     await fs.writeFile(filepath, imageBuffer);
 
-    return { uuid, filename, filepath };
+    return { uuid: generatedUuid, filename, filepath };
   }),
 
-  getImageData: handleRequest(async (uuid) => {
-    if (!uuid) return null;
+  getImageData: handleRequest(async (imageUuid) => {
+    if (!imageUuid) return null;
 
     const imagesDir = await ensureImagesDir();
 
     // Find file with matching UUID
     const files = await fs.readdir(imagesDir);
-    const imageFile = files.find(file => file.startsWith(uuid + '.'));
+    const imageFile = files.find(file => file.startsWith(imageUuid + '.'));
 
     if (!imageFile) return null;
 
@@ -71,14 +71,14 @@ export const imageHandlers = {
     return `data:${mimeType};base64,${base64}`;
   }),
 
-  deleteImage: handleRequest(async (uuid) => {
-    if (!uuid) return { deleted: false };
+  deleteImage: handleRequest(async (imageUuid) => {
+    if (!imageUuid) return { deleted: false };
 
     const imagesDir = await ensureImagesDir();
 
     // Find and delete file with matching UUID
     const files = await fs.readdir(imagesDir);
-    const imageFile = files.find(file => file.startsWith(uuid + '.'));
+    const imageFile = files.find(file => file.startsWith(imageUuid + '.'));
 
     if (!imageFile) return { deleted: false };
 

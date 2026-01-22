@@ -65,8 +65,7 @@ We are building this project in phases. Here is our detailed development plan:
 - [X] **Demo View**: Interactive flip-book view
 
 ### Statistics & Analytics
-- [ ] **Writing Statistics**: Word count, page count, writing speed
-- [ ] **Session Tracking**: Daily/weekly/monthly writing sessions
+- [X] **Writing Statistics**: Word count, page count etc
 - [ ] **Progress Visualization**: Charts and graphs of writing progress
 - [ ] **Goal Setting**: Daily/weekly writing targets with notifications
 - [ ] **Productivity Insights**: Writing patterns and peak productivity times
@@ -83,7 +82,7 @@ We are building this project in phases. Here is our detailed development plan:
 - [ ] **Comments & Feedback**: Inline comments and suggestions
 
 ### Export & Publishing
-- [ ] **Multiple Formats**: Export to PDF, EPUB, DOCX, HTML
+- [X] **Multiple Formats**: Export to PDF, EPUB, DOCX, HTML, MD, TXT
 - [ ] **Custom Styling**: Apply themes and stylesheets to exports
 - [ ] **Print Optimization**: Print-ready formatting
-- [ ] **Batch Export**: Export entire books or selected chapters
+- [X] **Batch Export**: Export entire books or selected chapters
