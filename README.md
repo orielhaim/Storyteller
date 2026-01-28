@@ -74,7 +74,12 @@ Just download the latest release from the [Releases Page](https://github.com/ori
     pnpm install
     ```
 
-3.  **Run the development server:**
+3.  **Generate database migrations:**
+    ```bash
+    pnpm db:generate
+    ```
+
+4.  **Run the development server:**
     ```bash
     pnpm dev
     ```

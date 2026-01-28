@@ -13,8 +13,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useTranslation } from 'react-i18next';
 
 function CreateObjectDialog({ bookId, isOpen, onCreate, onClose }) {
+  const { t } = useTranslation(['world', 'common']);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -81,12 +83,12 @@ function CreateObjectDialog({ bookId, isOpen, onCreate, onClose }) {
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Object</DialogTitle>
+          <DialogTitle>{t('world:dialogs.createObject.title')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex flex-row gap-2">
             <div className="space-y-2">
-              <Label>Reference Image</Label>
+              <Label>{t('world:dialogs.common.referenceImage')}</Label>
               <ImageUpload
                 value={formData.referenceImage}
                 onChange={(uuid) => setFormData(prev => ({ ...prev, referenceImage: uuid }))}
@@ -96,24 +98,24 @@ function CreateObjectDialog({ bookId, isOpen, onCreate, onClose }) {
 
             <div className="flex-1 space-y-2">
               <div className="space-y-2">
-                <Label htmlFor="objectName">Name *</Label>
+                <Label htmlFor="objectName">{t('world:dialogs.createObject.nameLabel')}</Label>
                 <Input
                   id="objectName"
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter object name"
+                  placeholder={t('world:dialogs.createObject.namePlaceholder')}
                   required
                 />
               </div>
 
 
               <div className="space-y-2">
-                <Label htmlFor="objectDescription">Description</Label>
+                <Label htmlFor="objectDescription">{t('world:dialogs.createObject.descriptionLabel')}</Label>
                 <Textarea
                   id="objectDescription"
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Brief description of the object..."
+                  placeholder={t('world:dialogs.createObject.descriptionPlaceholder')}
                   rows={5}
                 />
               </div>
@@ -121,7 +123,7 @@ function CreateObjectDialog({ bookId, isOpen, onCreate, onClose }) {
           </div>
 
           <div className="space-y-2">
-            <Label>Groups</Label>
+            <Label>{t('world:dialogs.createObject.groupsLabel')}</Label>
             <div className="flex flex-wrap gap-2 mb-2">
               {formData.groups.map((group, index) => (
                 <Badge key={index} variant="secondary" className="pr-1">
@@ -138,7 +140,7 @@ function CreateObjectDialog({ bookId, isOpen, onCreate, onClose }) {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      Remove group
+                      {t('world:actions.removeGroup')}
                     </TooltipContent>
                   </Tooltip>
                 </Badge>
@@ -149,7 +151,7 @@ function CreateObjectDialog({ bookId, isOpen, onCreate, onClose }) {
                 value={newGroup}
                 onChange={(e) => setNewGroup(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Add group..."
+                placeholder={t('world:actions.addGroup')}
                 className="flex-1"
               />
               <Button
@@ -165,10 +167,10 @@ function CreateObjectDialog({ bookId, isOpen, onCreate, onClose }) {
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={handleClose}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button type="submit">
-              Create Object
+              {t('world:actions.createObject')}
             </Button>
           </div>
         </form>

@@ -1,0 +1,69 @@
+{
+    "title": "The Cast",
+    "createNew": "Create New Character",
+    "createFirst": "Create Your First Character",
+    "searchPlaceholder": "Search characters...",
+    "filterRole": "Role",
+    "roles": {
+        "all": "All Roles",
+        "protagonist": "Protagonists",
+        "supporting": "Supporting",
+        "antagonist": "Antagonists",
+        "marginal": "Marginal",
+        "unsorted": "Unsorted"
+    },
+    "sections": {
+        "protagonist": "Protagonists",
+        "supporting": "Supporting Characters",
+        "antagonist": "Antagonists",
+        "marginal": "Marginal Characters",
+        "unsorted": "Unsorted"
+    },
+    "empty": {
+        "title": "No Characters Yet",
+        "description": "Start building your cast for \"{{bookName}}\""
+    },
+    "deleteDialog": {
+        "title": "Delete Character",
+        "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+    },
+    "relationships": {
+        "title": "Relationships",
+        "description": "Define how this character interacts with others.",
+        "targetCharacter": "Target Character",
+        "relationship": "Relationship",
+        "add": "Add",
+        "editDetails": "Edit relationship details",
+        "remove": "Remove relationship",
+        "notesStatus": "Notes / Status",
+        "placeholderStatus": "e.g. Complicated, Secret...",
+        "engagementDate": "Engagement Date",
+        "marriageDate": "Marriage Date",
+        "plotNotes": "Detailed Plot Notes",
+        "placeholderPlotNotes": "Describe how this relationship affects the story...",
+        "empty": "No relationships defined yet.",
+        "types": {
+            "parent": "Parent",
+            "child": "Child",
+            "sibling": "Sibling",
+            "spouse": "Spouse",
+            "engaged": "Engaged",
+            "friend": "Friend",
+            "enemy": "Enemy",
+            "mentor": "Mentor",
+            "apprentice": "Apprentice"
+        },
+        "labels": {
+            "father": "Father",
+            "mother": "Mother",
+            "son": "Son",
+            "daughter": "Daughter",
+            "brother": "Brother",
+            "sister": "Sister",
+            "husband": "Husband",
+            "wife": "Wife",
+            "fiance": "Fiancé",
+            "fiancee": "Fiancée"
+        }
+    }
+}

@@ -7,5 +7,6 @@
   "close": "Close",
   "loading": "Loading...",
   "error": "Error",
-  "success": "Success"
+  "success": "Success",
+  "open": "Open"
 }

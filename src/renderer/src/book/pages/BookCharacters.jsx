@@ -12,8 +12,10 @@ import { Users, Plus, Search, Filter, ExternalLink, Trash2 } from 'lucide-react'
 import { useCharacterStore } from '@/stores/characterStore';
 import useImageLoader from '@/hooks/useImageLoader';
 import CreateCharacterDialog from './dialogs/CreateCharacterDialog';
+import { useTranslation } from 'react-i18next';
 
 function CharacterCard({ character, size = 'medium', onClick, onDelete }) {
+  const { t } = useTranslation('common');
   const imageData = useImageLoader(character.avatar);
 
   const sizeClasses = {
@@ -62,11 +64,11 @@ function CharacterCard({ character, size = 'medium', onClick, onDelete }) {
       <ContextMenuContent>
         <ContextMenuItem onClick={() => onClick(character)}>
           <ExternalLink className="h-4 w-4 mr-2" />
-          Open
+          {t('open')}
         </ContextMenuItem>
         <ContextMenuItem variant="destructive" onClick={() => onDelete(character)}>
           <Trash2 className="h-4 w-4 mr-2" />
-          Delete
+          {t('delete')}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
@@ -96,6 +98,7 @@ function CharacterSection({ title, characters, cardSize = 'medium', onCharacterC
 }
 
 function BookCharacters({ book, onOpenCharacter }) {
+  const { t } = useTranslation(['characters', 'common']);
   const { characters, loading, fetchCharacters, createCharacter, deleteCharacter } = useCharacterStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -160,11 +163,11 @@ function BookCharacters({ book, onOpenCharacter }) {
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                The Cast
+                {t('characters:title')}
               </div>
               <Button onClick={() => setIsCreateDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Create New Character
+                {t('characters:createNew')}
               </Button>
             </CardTitle>
           </CardHeader>
@@ -174,7 +177,7 @@ function BookCharacters({ book, onOpenCharacter }) {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search characters..."
+                  placeholder={t('characters:searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -186,15 +189,15 @@ function BookCharacters({ book, onOpenCharacter }) {
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
                   <SelectTrigger className="w-40">
                     <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Role" />
+                    <SelectValue placeholder={t('characters:filterRole')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Roles</SelectItem>
-                    <SelectItem value="protagonist">Protagonists</SelectItem>
-                    <SelectItem value="supporting">Supporting</SelectItem>
-                    <SelectItem value="antagonist">Antagonists</SelectItem>
-                    <SelectItem value="marginal">Marginal</SelectItem>
-                    <SelectItem value="unsorted">Unsorted</SelectItem>
+                    <SelectItem value="all">{t('characters:roles.all')}</SelectItem>
+                    <SelectItem value="protagonist">{t('characters:roles.protagonist')}</SelectItem>
+                    <SelectItem value="supporting">{t('characters:roles.supporting')}</SelectItem>
+                    <SelectItem value="antagonist">{t('characters:roles.antagonist')}</SelectItem>
+                    <SelectItem value="marginal">{t('characters:roles.marginal')}</SelectItem>
+                    <SelectItem value="unsorted">{t('characters:roles.unsorted')}</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -207,52 +210,52 @@ function BookCharacters({ book, onOpenCharacter }) {
         <div className="space-y-8">
           {loading ? (
             <div className="text-center py-20">
-              <p>Loading characters...</p>
+              <p>{t('loading')}</p>
             </div>
           ) : characters.length === 0 ? (
             <Card>
               <CardContent className="text-center py-20 text-muted-foreground">
                 <Users className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                <h3 className="text-xl font-medium mb-2">No Characters Yet</h3>
-                <p className="mb-4">Start building your cast for "{book.name}"</p>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Your First Character
-              </Button>
+                <h3 className="text-xl font-medium mb-2">{t('characters:empty.title')}</h3>
+                <p className="mb-4">{t('characters:empty.description', { bookName: book.name })}</p>
+                <Button onClick={() => setIsCreateDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('characters:createFirst')}
+                </Button>
               </CardContent>
             </Card>
           ) : (
             <>
               <CharacterSection
-                title="Protagonists"
+                title={t('characters:sections.protagonist')}
                 characters={groupedCharacters.protagonist || []}
                 cardSize="large"
                 onCharacterClick={handleCharacterClick}
                 onCharacterDelete={handleDeleteCharacter}
               />
               <CharacterSection
-                title="Supporting Characters"
+                title={t('characters:sections.supporting')}
                 characters={groupedCharacters.supporting || []}
                 cardSize="medium"
                 onCharacterClick={handleCharacterClick}
                 onCharacterDelete={handleDeleteCharacter}
               />
               <CharacterSection
-                title="Antagonists"
+                title={t('characters:sections.antagonist')}
                 characters={groupedCharacters.antagonist || []}
                 cardSize="medium"
                 onCharacterClick={handleCharacterClick}
                 onCharacterDelete={handleDeleteCharacter}
               />
               <CharacterSection
-                title="Marginal Characters"
+                title={t('characters:sections.marginal')}
                 characters={groupedCharacters.marginal || []}
                 cardSize="small"
                 onCharacterClick={handleCharacterClick}
                 onCharacterDelete={handleDeleteCharacter}
               />
               <CharacterSection
-                title="Unsorted"
+                title={t('characters:sections.unsorted')}
                 characters={groupedCharacters.unsorted || []}
                 cardSize="small"
                 onCharacterClick={handleCharacterClick}
@@ -263,30 +266,30 @@ function BookCharacters({ book, onOpenCharacter }) {
           )}
         </div>
 
-      <CreateCharacterDialog
-        bookId={book.id}
-        isOpen={isCreateDialogOpen}
-        onCreate={(data) => { handleCreateCharacter(data); setIsCreateDialogOpen(false); }}
-        onClose={() => setIsCreateDialogOpen(false)}
-      />
+        <CreateCharacterDialog
+          bookId={book.id}
+          isOpen={isCreateDialogOpen}
+          onCreate={(data) => { handleCreateCharacter(data); setIsCreateDialogOpen(false); }}
+          onClose={() => setIsCreateDialogOpen(false)}
+        />
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Character</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{characterToDelete?.firstName} {characterToDelete?.lastName}"? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteCharacter} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('characters:deleteDialog.title')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('characters:deleteDialog.description', { name: `${characterToDelete?.firstName} ${characterToDelete?.lastName}` })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDeleteCharacter} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                {t('delete')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </Dialog>
     </div>
   );

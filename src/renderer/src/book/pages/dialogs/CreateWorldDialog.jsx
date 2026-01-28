@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useWorldStore } from '@/stores/worldStore';
 import ImageUpload from '@/components/ImageUpload';
+import { useTranslation } from 'react-i18next';
 
 function CreateWorldDialog({ bookId, isOpen, onCreate, onClose }) {
+  const { t } = useTranslation(['world', 'common']);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -36,12 +38,12 @@ function CreateWorldDialog({ bookId, isOpen, onCreate, onClose }) {
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New World</DialogTitle>
+          <DialogTitle>{t('world:dialogs.createWorld.title')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex flex-row gap-2">
             <div className="space-y-2">
-              <Label>Reference Image</Label>
+              <Label>{t('world:dialogs.common.referenceImage')}</Label>
               <ImageUpload
                 value={formData.referenceImage}
                 onChange={(uuid) => setFormData(prev => ({ ...prev, referenceImage: uuid }))}
@@ -50,23 +52,23 @@ function CreateWorldDialog({ bookId, isOpen, onCreate, onClose }) {
             </div>
             <div className="flex-1 space-y-2">
               <div className="space-y-2">
-                <Label htmlFor="worldName">Name *</Label>
+                <Label htmlFor="worldName">{t('world:dialogs.createWorld.nameLabel')}</Label>
                 <Input
                   id="worldName"
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter world name"
+                  placeholder={t('world:dialogs.createWorld.namePlaceholder')}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="worldDescription">Description</Label>
+                <Label htmlFor="worldDescription">{t('world:dialogs.createWorld.descriptionLabel')}</Label>
                 <Textarea
                   id="worldDescription"
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Brief description of the world..."
+                  placeholder={t('world:dialogs.createWorld.descriptionPlaceholder')}
                   rows={5}
                 />
               </div>
@@ -75,10 +77,10 @@ function CreateWorldDialog({ bookId, isOpen, onCreate, onClose }) {
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={handleClose}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button type="submit">
-              Create World
+              {t('world:actions.createWorld')}
             </Button>
           </div>
         </form>
