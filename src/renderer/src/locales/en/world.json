@@ -1,0 +1,89 @@
+{
+    "title": "World Building",
+    "tabs": {
+        "worlds": "Worlds",
+        "locations": "Locations",
+        "objects": "Objects"
+    },
+    "actions": {
+        "createWorld": "Create World",
+        "createLocation": "Create Location",
+        "createObject": "Create Object",
+        "createFirstWorld": "Create Your First World",
+        "createFirstLocation": "Create Your First Location",
+        "createFirstObject": "Create Your First Object",
+        "deleteWorld": "Delete World",
+        "deleteLocation": "Delete Location",
+        "deleteObject": "Delete Object",
+        "addGroup": "Add group...",
+        "removeGroup": "Remove group"
+    },
+    "loading": {
+        "worlds": "Loading worlds...",
+        "locations": "Loading locations...",
+        "objects": "Loading objects..."
+    },
+    "empty": {
+        "worlds": {
+            "title": "No Worlds Yet",
+            "description": "Start building the worlds for \"{{bookName}}\""
+        },
+        "locations": {
+            "title": "No Locations Yet",
+            "description": "Start building locations for \"{{bookName}}\""
+        },
+        "objects": {
+            "title": "No Objects Yet",
+            "description": "Start building objects for \"{{bookName}}\""
+        }
+    },
+    "badges": {
+        "world": "World",
+        "location": "Location",
+        "object": "Object"
+    },
+    "dialogs": {
+        "createWorld": {
+            "title": "Create New World",
+            "nameLabel": "Name *",
+            "namePlaceholder": "Enter world name",
+            "descriptionLabel": "Description",
+            "descriptionPlaceholder": "Brief description of the world..."
+        },
+        "createLocation": {
+            "title": "Create New Location",
+            "nameLabel": "Name *",
+            "namePlaceholder": "Enter location name",
+            "descriptionLabel": "Description",
+            "descriptionPlaceholder": "Brief description of the location...",
+            "worldLabel": "World (Optional)",
+            "noWorlds": "No worlds available",
+            "selectWorld": "Select a world",
+            "noWorldOption": "No world",
+            "cityPlaceholder": "City",
+            "statePlaceholder": "State",
+            "nationPlaceholder": "Nation",
+            "cityLabel": "City",
+            "stateLabel": "State",
+            "nationLabel": "Nation"
+        },
+        "createObject": {
+            "title": "Create New Object",
+            "nameLabel": "Name *",
+            "namePlaceholder": "Enter object name",
+            "descriptionLabel": "Description",
+            "descriptionPlaceholder": "Brief description of the object...",
+            "groupsLabel": "Groups"
+        },
+        "deleteConfirm": {
+            "world": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+            "location": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+            "object": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+        },
+        "common": {
+            "referenceImage": "Reference Image",
+            "cancel": "Cancel",
+            "create": "Create"
+        }
+    }
+}
