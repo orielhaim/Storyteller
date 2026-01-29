@@ -15,6 +15,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useTranslation } from 'react-i18next';
 
 const RELATIONSHIP_TYPES = {
   'parent': 'Parent',
@@ -28,6 +29,7 @@ const RELATIONSHIP_TYPES = {
   'apprentice': 'Apprentice',
 };
 
+// Assign labels based on gender
 const getRelationshipLabel = (type, gender) => {
   const labels = {
     'parent': { male: 'Father', female: 'Mother', default: 'Parent' },
@@ -45,7 +47,33 @@ const getRelationshipLabel = (type, gender) => {
   return config[gender] || config.default;
 };
 
+const getLocalizedLabel = (label) => {
+  const map = {
+    'Father': 'characters:relationships.labels.father',
+    'Mother': 'characters:relationships.labels.mother',
+    'Parent': 'characters:relationships.types.parent',
+    'Son': 'characters:relationships.labels.son',
+    'Daughter': 'characters:relationships.labels.daughter',
+    'Child': 'characters:relationships.types.child',
+    'Brother': 'characters:relationships.labels.brother',
+    'Sister': 'characters:relationships.labels.sister',
+    'Sibling': 'characters:relationships.types.sibling',
+    'Husband': 'characters:relationships.labels.husband',
+    'Wife': 'characters:relationships.labels.wife',
+    'Spouse': 'characters:relationships.types.spouse',
+    'Fiancé': 'characters:relationships.labels.fiance',
+    'Fiancée': 'characters:relationships.labels.fiancee',
+    'Engaged': 'characters:relationships.types.engaged',
+    'Friend': 'characters:relationships.types.friend',
+    'Enemy': 'characters:relationships.types.enemy',
+    'Mentor': 'characters:relationships.types.mentor',
+    'Apprentice': 'characters:relationships.types.apprentice'
+  };
+  return map[label] || label;
+};
+
 const RelationshipTab = ({ characterId, bookId, relationships, onAdd, onRemove, onUpdate }) => {
+  const { t } = useTranslation(['characters', 'common']);
   const characters = useCharacterStore(state => state.characters);
   const fetchCharacters = useCharacterStore(state => state.fetchCharacters);
   const [targetId, setTargetId] = useState('');
@@ -86,29 +114,29 @@ const RelationshipTab = ({ characterId, bookId, relationships, onAdd, onRemove, 
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
-          Relationships
+          {t('characters:relationships.title')}
         </CardTitle>
-        <CardDescription>Define how this character interacts with others.</CardDescription>
+        <CardDescription>{t('characters:relationships.description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-wrap gap-4 items-end bg-muted/30 p-4 rounded-lg border border-dashed">
           <div className="space-y-1 flex-1 min-w-[200px]">
-            <Label className="text-xs uppercase">Target Character</Label>
+            <Label className="text-xs uppercase">{t('characters:relationships.targetCharacter')}</Label>
             <Combobox value={targetId} onValueChange={setTargetId} options={availableCharacters.map(c => ({ label: `${c.firstName} ${c.lastName}`, value: c.id.toString() }))} />
           </div>
           <div className="space-y-1 w-40">
-            <Label className="text-xs uppercase">Relationship</Label>
-            <Combobox value={relType} onValueChange={setRelType} options={Object.entries(RELATIONSHIP_TYPES).map(([key, value]) => ({ label: value, value: key }))} />
+            <Label className="text-xs uppercase">{t('characters:relationships.relationship')}</Label>
+            <Combobox value={relType} onValueChange={setRelType} options={Object.entries(RELATIONSHIP_TYPES).map(([key, _]) => ({ label: t(`characters:relationships.types.${key}`), value: key }))} />
           </div>
           <Button onClick={handleAdd} disabled={!targetId}>
-            <Plus className="h-4 w-4 mr-2" /> Add
+            <Plus className="h-4 w-4 mr-2" /> {t('characters:relationships.add')}
           </Button>
         </div>
 
         <div className="space-y-3">
           {relationships.map(rel => {
             const relatedChar = characters.find(c => c.id === rel.relatedCharacterId) || rel.relatedCharacter;
-            
+
             return (
               <div key={rel.id} className="flex flex-col p-3 rounded-md border bg-card/50 hover:bg-card transition-colors group">
                 <div className="flex items-center justify-between">
@@ -125,7 +153,7 @@ const RelationshipTab = ({ characterId, bookId, relationships, onAdd, onRemove, 
                         {relatedChar?.firstName} {relatedChar?.lastName}
                       </div>
                       <div className="text-xs text-muted-foreground capitalize">
-                        {getRelationshipLabel(rel.relationshipType, relatedChar?.gender)}
+                        {t(getLocalizedLabel(getRelationshipLabel(rel.relationshipType, relatedChar?.gender)))}
                       </div>
                     </div>
                   </div>
@@ -142,7 +170,7 @@ const RelationshipTab = ({ characterId, bookId, relationships, onAdd, onRemove, 
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        Edit relationship details
+                        {t('characters:relationships.editDetails')}
                       </TooltipContent>
                     </Tooltip>
                     <Tooltip>
@@ -157,7 +185,7 @@ const RelationshipTab = ({ characterId, bookId, relationships, onAdd, onRemove, 
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        Remove relationship
+                        {t('characters:relationships.remove')}
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -166,9 +194,9 @@ const RelationshipTab = ({ characterId, bookId, relationships, onAdd, onRemove, 
                 {editingRelId === rel.id && (
                   <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200">
                     <div className="space-y-1">
-                      <Label className="text-[10px] uppercase text-muted-foreground">Notes / Status</Label>
+                      <Label className="text-[10px] uppercase text-muted-foreground">{t('characters:relationships.notesStatus')}</Label>
                       <Input
-                        placeholder="e.g. Complicated, Secret..."
+                        placeholder={t('characters:relationships.placeholderStatus')}
                         value={rel.metadata?.status || ''}
                         onChange={e => handleMetadataChange(rel.id, 'status', e.target.value)}
                         className="h-8 text-xs"
@@ -177,7 +205,7 @@ const RelationshipTab = ({ characterId, bookId, relationships, onAdd, onRemove, 
                     {isSharedRelationship(rel.relationshipType) && (
                       <>
                         <div className="space-y-1">
-                          <Label className="text-[10px] uppercase text-muted-foreground">Engagement Date</Label>
+                          <Label className="text-[10px] uppercase text-muted-foreground">{t('characters:relationships.engagementDate')}</Label>
                           <Input
                             type="date"
                             value={rel.metadata?.engagementDate || ''}
@@ -186,7 +214,7 @@ const RelationshipTab = ({ characterId, bookId, relationships, onAdd, onRemove, 
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[10px] uppercase text-muted-foreground">Marriage Date</Label>
+                          <Label className="text-[10px] uppercase text-muted-foreground">{t('characters:relationships.marriageDate')}</Label>
                           <Input
                             type="date"
                             value={rel.metadata?.marriageDate || ''}
@@ -197,9 +225,9 @@ const RelationshipTab = ({ characterId, bookId, relationships, onAdd, onRemove, 
                       </>
                     )}
                     <div className="space-y-1 col-span-2">
-                      <Label className="text-[10px] uppercase text-muted-foreground">Detailed Plot Notes</Label>
+                      <Label className="text-[10px] uppercase text-muted-foreground">{t('characters:relationships.plotNotes')}</Label>
                       <Textarea
-                        placeholder="Describe how this relationship affects the story..."
+                        placeholder={t('characters:relationships.placeholderPlotNotes')}
                         value={rel.metadata?.plotNotes || ''}
                         onChange={e => handleMetadataChange(rel.id, 'plotNotes', e.target.value)}
                         className="text-xs min-h-[60px]"
@@ -212,7 +240,7 @@ const RelationshipTab = ({ characterId, bookId, relationships, onAdd, onRemove, 
           })}
           {relationships.length === 0 && (
             <div className="text-center py-8 text-muted-foreground italic border rounded-lg border-dashed">
-              No relationships defined yet.
+              {t('characters:relationships.empty')}
             </div>
           )}
         </div>

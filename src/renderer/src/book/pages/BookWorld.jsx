@@ -15,8 +15,10 @@ import CreateObjectDialog from './dialogs/CreateObjectDialog';
 import WorldDetail from './world/WorldDetail';
 import LocationDetail from './world/LocationDetail';
 import ObjectDetail from './world/ObjectDetail';
+import { useTranslation } from 'react-i18next';
 
 function BookWorld({ book, onOpenWorld, onOpenLocation, onOpenObject, dockviewMode = false }) {
+  const { t } = useTranslation(['world', 'common']);
   const {
     worlds,
     locations,
@@ -184,7 +186,7 @@ function BookWorld({ book, onOpenWorld, onOpenLocation, onOpenObject, dockviewMo
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Globe className="h-5 w-5" />
-            World Building
+            {t('world:title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -192,40 +194,40 @@ function BookWorld({ book, onOpenWorld, onOpenLocation, onOpenObject, dockviewMo
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="worlds" className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
-                Worlds
+                {t('world:tabs.worlds')}
               </TabsTrigger>
               <TabsTrigger value="locations" className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                Locations
+                {t('world:tabs.locations')}
               </TabsTrigger>
               <TabsTrigger value="objects" className="flex items-center gap-2">
                 <Package className="h-4 w-4" />
-                Objects
+                {t('world:tabs.objects')}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="worlds" className="space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Worlds</h3>
+                <h3 className="text-lg font-semibold">{t('world:tabs.worlds')}</h3>
                 <Button onClick={() => setIsCreateWorldDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Create World
+                  {t('world:actions.createWorld')}
                 </Button>
               </div>
 
               {loading ? (
                 <div className="text-center py-20">
-                  <p>Loading worlds...</p>
+                  <p>{t('world:loading.worlds')}</p>
                 </div>
               ) : worlds.length === 0 ? (
                 <Card>
                   <CardContent className="text-center py-20 text-muted-foreground">
                     <Globe className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-xl font-medium mb-2">No Worlds Yet</h3>
-                    <p className="mb-4">Start building the worlds for "{book.name}"</p>
+                    <h3 className="text-xl font-medium mb-2">{t('world:empty.worlds.title')}</h3>
+                    <p className="mb-4">{t('world:empty.worlds.description', { bookName: book.name })}</p>
                     <Button onClick={() => setIsCreateWorldDialogOpen(true)}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Create Your First World
+                      {t('world:actions.createFirstWorld')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -240,26 +242,26 @@ function BookWorld({ book, onOpenWorld, onOpenLocation, onOpenObject, dockviewMo
 
             <TabsContent value="locations" className="space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Locations</h3>
+                <h3 className="text-lg font-semibold">{t('world:tabs.locations')}</h3>
                 <Button onClick={() => setIsCreateLocationDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Location
+                  {t('world:actions.createLocation')}
                 </Button>
               </div>
 
               {loading ? (
                 <div className="text-center py-20">
-                  <p>Loading locations...</p>
+                  <p>{t('world:loading.locations')}</p>
                 </div>
               ) : locations.length === 0 ? (
                 <Card>
                   <CardContent className="text-center py-20 text-muted-foreground">
                     <MapPin className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-xl font-medium mb-2">No Locations Yet</h3>
-                    <p className="mb-4">Start building locations for "{book.name}"</p>
+                    <h3 className="text-xl font-medium mb-2">{t('world:empty.locations.title')}</h3>
+                    <p className="mb-4">{t('world:empty.locations.description', { bookName: book.name })}</p>
                     <Button onClick={() => setIsCreateLocationDialogOpen(true)}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Create Your First Location
+                      {t('world:actions.createFirstLocation')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -274,26 +276,26 @@ function BookWorld({ book, onOpenWorld, onOpenLocation, onOpenObject, dockviewMo
 
             <TabsContent value="objects" className="space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Objects</h3>
+                <h3 className="text-lg font-semibold">{t('world:tabs.objects')}</h3>
                 <Button onClick={() => setIsCreateObjectDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Object
+                  {t('world:actions.createObject')}
                 </Button>
               </div>
 
               {loading ? (
                 <div className="text-center py-20">
-                  <p>Loading objects...</p>
+                  <p>{t('world:loading.objects')}</p>
                 </div>
               ) : objects.length === 0 ? (
                 <Card>
                   <CardContent className="text-center py-20 text-muted-foreground">
                     <Package className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-xl font-medium mb-2">No Objects Yet</h3>
-                    <p className="mb-4">Start building objects for "{book.name}"</p>
+                    <h3 className="text-xl font-medium mb-2">{t('world:empty.objects.title')}</h3>
+                    <p className="mb-4">{t('world:empty.objects.description', { bookName: book.name })}</p>
                     <Button onClick={() => setIsCreateObjectDialogOpen(true)}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Create Your First Object
+                      {t('world:actions.createFirstObject')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -338,15 +340,15 @@ function BookWorld({ book, onOpenWorld, onOpenLocation, onOpenObject, dockviewMo
       <AlertDialog open={isDeleteWorldDialogOpen} onOpenChange={setIsDeleteWorldDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete World</AlertDialogTitle>
+            <AlertDialogTitle>{t('world:actions.deleteWorld')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{worldToDelete?.name}"? This action cannot be undone.
+              {t('world:dialogs.deleteConfirm.world', { name: worldToDelete?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteWorld} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+              {t('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -355,15 +357,15 @@ function BookWorld({ book, onOpenWorld, onOpenLocation, onOpenObject, dockviewMo
       <AlertDialog open={isDeleteLocationDialogOpen} onOpenChange={setIsDeleteLocationDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Location</AlertDialogTitle>
+            <AlertDialogTitle>{t('world:actions.deleteLocation')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{locationToDelete?.name}"? This action cannot be undone.
+              {t('world:dialogs.deleteConfirm.location', { name: locationToDelete?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteLocation} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+              {t('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -372,15 +374,15 @@ function BookWorld({ book, onOpenWorld, onOpenLocation, onOpenObject, dockviewMo
       <AlertDialog open={isDeleteObjectDialogOpen} onOpenChange={setIsDeleteObjectDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Object</AlertDialogTitle>
+            <AlertDialogTitle>{t('world:actions.deleteObject')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{objectToDelete?.name}"? This action cannot be undone.
+              {t('world:dialogs.deleteConfirm.object', { name: objectToDelete?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteObject} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+              {t('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

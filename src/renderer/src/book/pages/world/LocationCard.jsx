@@ -4,8 +4,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import useImageLoader from '@/hooks/useImageLoader';
 import { MapPin, ExternalLink, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 function LocationCard({ location, worlds, onClick, onDelete }) {
+  const { t } = useTranslation(['world', 'common']);
   const imageData = useImageLoader(location.referenceImage);
   const world = worlds.find(w => w.id === location.worldId);
 
@@ -41,7 +43,7 @@ function LocationCard({ location, worlds, onClick, onDelete }) {
 
             <div className="mt-auto flex flex-wrap gap-1">
               <Badge variant="outline" className="text-xs">
-                Location
+                {t('world:badges.location')}
               </Badge>
               {world && (
                 <Badge variant="secondary" className="text-xs">
@@ -55,11 +57,11 @@ function LocationCard({ location, worlds, onClick, onDelete }) {
       <ContextMenuContent>
         <ContextMenuItem onClick={() => onClick && onClick(location)}>
           <ExternalLink className="h-4 w-4 mr-2" />
-          Open
+          {t('open')}
         </ContextMenuItem>
         <ContextMenuItem variant="destructive" onClick={() => onDelete && onDelete(location)}>
           <Trash2 className="h-4 w-4 mr-2" />
-          Delete
+          {t('delete')}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

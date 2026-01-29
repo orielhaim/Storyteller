@@ -4,8 +4,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import useImageLoader from '@/hooks/useImageLoader';
 import { Globe, ExternalLink, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 function WorldCard({ world, onClick, onDelete }) {
+  const { t } = useTranslation(['world', 'common']);
   const imageData = useImageLoader(world.referenceImage);
 
   return (
@@ -35,7 +37,7 @@ function WorldCard({ world, onClick, onDelete }) {
 
             <div className="mt-auto">
               <Badge variant="outline" className="text-xs">
-                World
+                {t('world:badges.world')}
               </Badge>
             </div>
           </CardContent>
@@ -44,11 +46,11 @@ function WorldCard({ world, onClick, onDelete }) {
       <ContextMenuContent>
         <ContextMenuItem onClick={() => onClick && onClick(world)}>
           <ExternalLink className="h-4 w-4 mr-2" />
-          Open
+          {t('open')}
         </ContextMenuItem>
         <ContextMenuItem variant="destructive" onClick={() => onDelete && onDelete(world)}>
           <Trash2 className="h-4 w-4 mr-2" />
-          Delete
+          {t('delete')}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

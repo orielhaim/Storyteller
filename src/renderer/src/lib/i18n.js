@@ -31,7 +31,7 @@ i18n
     resources,
     fallbackLng: 'en',
     supportedLngs: ['en', 'he'],
-    ns: ['common', 'welcome', 'settings'],
+    ns: ['common', 'welcome', 'settings', 'characters', 'world'],
     defaultNS: 'common',
 
     detection: {
