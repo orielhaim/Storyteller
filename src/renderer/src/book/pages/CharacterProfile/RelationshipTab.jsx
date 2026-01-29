@@ -47,27 +47,27 @@ const getRelationshipLabel = (type, gender) => {
   return config[gender] || config.default;
 };
 
-const getLocalizedLabel = (t, label) => {
+const getLocalizedLabel = (label) => {
   const map = {
-    'Father': t('characters:relationships.labels.father'),
-    'Mother': t('characters:relationships.labels.mother'),
-    'Parent': t('characters:relationships.types.parent'),
-    'Son': t('characters:relationships.labels.son'),
-    'Daughter': t('characters:relationships.labels.daughter'),
-    'Child': t('characters:relationships.types.child'),
-    'Brother': t('characters:relationships.labels.brother'),
-    'Sister': t('characters:relationships.labels.sister'),
-    'Sibling': t('characters:relationships.types.sibling'),
-    'Husband': t('characters:relationships.labels.husband'),
-    'Wife': t('characters:relationships.labels.wife'),
-    'Spouse': t('characters:relationships.types.spouse'),
-    'Fiancé': t('characters:relationships.labels.fiance'),
-    'Fiancée': t('characters:relationships.labels.fiancee'),
-    'Engaged': t('characters:relationships.types.engaged'),
-    'Friend': t('characters:relationships.types.friend'),
-    'Enemy': t('characters:relationships.types.enemy'),
-    'Mentor': t('characters:relationships.types.mentor'),
-    'Apprentice': t('characters:relationships.types.apprentice')
+    'Father': 'characters:relationships.labels.father',
+    'Mother': 'characters:relationships.labels.mother',
+    'Parent': 'characters:relationships.types.parent',
+    'Son': 'characters:relationships.labels.son',
+    'Daughter': 'characters:relationships.labels.daughter',
+    'Child': 'characters:relationships.types.child',
+    'Brother': 'characters:relationships.labels.brother',
+    'Sister': 'characters:relationships.labels.sister',
+    'Sibling': 'characters:relationships.types.sibling',
+    'Husband': 'characters:relationships.labels.husband',
+    'Wife': 'characters:relationships.labels.wife',
+    'Spouse': 'characters:relationships.types.spouse',
+    'Fiancé': 'characters:relationships.labels.fiance',
+    'Fiancée': 'characters:relationships.labels.fiancee',
+    'Engaged': 'characters:relationships.types.engaged',
+    'Friend': 'characters:relationships.types.friend',
+    'Enemy': 'characters:relationships.types.enemy',
+    'Mentor': 'characters:relationships.types.mentor',
+    'Apprentice': 'characters:relationships.types.apprentice'
   };
   return map[label] || label;
 };
@@ -153,7 +153,7 @@ const RelationshipTab = ({ characterId, bookId, relationships, onAdd, onRemove, 
                         {relatedChar?.firstName} {relatedChar?.lastName}
                       </div>
                       <div className="text-xs text-muted-foreground capitalize">
-                        {getLocalizedLabel(t, getRelationshipLabel(rel.relationshipType, relatedChar?.gender))}
+                        {t(getLocalizedLabel(getRelationshipLabel(rel.relationshipType, relatedChar?.gender)))}
                       </div>
                     </div>
                   </div>
