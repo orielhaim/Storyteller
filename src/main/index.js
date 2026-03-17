@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, nativeImage, Tray } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import windowStateKeeper from 'electron-window-state';
@@ -73,7 +73,10 @@ autoUpdater.on('error', (err) => {
   });
 });
 
-let win;
+const trayIcon = nativeImage.createFromPath(join(__dirname, '../../resources/icon.png'))
+const appIcon = nativeImage.createFromPath(join(__dirname, '../../resources/icon.png'))
+
+
 
 function createWindow() {
   let mainWindowState = windowStateKeeper({
@@ -81,24 +84,27 @@ function createWindow() {
     defaultHeight: 700
   });
 
-  win = new BrowserWindow({
+  const win = new BrowserWindow({
     width: mainWindowState.width,
     height: mainWindowState.height,
     x: mainWindowState.x,
     y: mainWindowState.y,
     show: false,
     autoHideMenuBar: true,
-    icon: join(__dirname, '../../resources/icon.png'),   
+    icon: appIcon,   
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     }
   })
 
+  const tray = new Tray(trayIcon)
+
   mainWindowState.manage(win);
 
   win.on('ready-to-show', () => {
     win.show()
+    win.setIcon(appIcon)
   })
 
   win.webContents.setWindowOpenHandler((details) => {
