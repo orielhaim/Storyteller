@@ -4,7 +4,6 @@ directories:
   buildResources: build
 files:
   - "out/**/*"
-  - "drizzle/**/*"
   - '!**/.vscode/*'
   - '!src/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
@@ -13,7 +12,6 @@ files:
 asarUnpack:
   - resources/**
   - node_modules/better-sqlite3/**
-  - drizzle/**
 win:
   executableName: Storyteller
 nsis:

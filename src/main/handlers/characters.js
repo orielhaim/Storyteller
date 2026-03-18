@@ -1,8 +1,44 @@
-import { eq, desc, and, or, asc, sql } from 'drizzle-orm';
 import db from '../db.js';
-import { characters, characterRelationships } from '../../db/schema.js';
 import { imageHandlers } from './imageHandler.js';
 import handleRequest from '../utils/handleRequest.js';
+import parseJson from '../../utils/parseJson';
+
+function mapCharacter(row) {
+  if (!row) return null;
+  return {
+    ...row,
+    attributes: parseJson(row.attributes, {}),
+    groups: parseJson(row.groups, []),
+    tags: parseJson(row.tags, []),
+  };
+}
+
+function getCharacterById(id) {
+  return mapCharacter(
+    db
+      .prepare(
+        `SELECT
+          id,
+          book_id AS bookId,
+          first_name AS firstName,
+          last_name AS lastName,
+          gender,
+          role,
+          avatar,
+          description,
+          attributes,
+          groups,
+          tags,
+          position,
+          created_at AS createdAt,
+          updated_at AS updatedAt
+        FROM characters
+        WHERE id = ?
+        LIMIT 1`
+      )
+      .get(id)
+  );
+}
 
 const RELATIONSHIP_RECIPROCALS = {
   'parent': 'child',
@@ -36,12 +72,33 @@ const TYPE_TO_NEUTRAL = {
 
 export const characterHandlers = {
   getAllByBook: handleRequest(async (bookId) => {
-    return await db.select().from(characters).where(eq(characters.bookId, bookId)).orderBy(asc(characters.position), desc(characters.createdAt));
+    const rows = db
+      .prepare(
+        `SELECT
+          id,
+          book_id AS bookId,
+          first_name AS firstName,
+          last_name AS lastName,
+          gender,
+          role,
+          avatar,
+          description,
+          attributes,
+          groups,
+          tags,
+          position,
+          created_at AS createdAt,
+          updated_at AS updatedAt
+        FROM characters
+        WHERE book_id = ?
+        ORDER BY position ASC, created_at DESC`
+      )
+      .all(bookId);
+    return rows.map(mapCharacter);
   }),
 
   getById: handleRequest(async (id) => {
-    const result = await db.select().from(characters).where(eq(characters.id, id)).limit(1);
-    return result[0] || null;
+    return getCharacterById(id);
   }),
 
   create: handleRequest(async ({ bookId, first_name, last_name, gender, role, avatar, description, attributes, groups, tags, position }) => {
@@ -50,186 +107,294 @@ export const characterHandlers = {
     // If position not provided, get max position and add 1
     let finalPosition = position;
     if (finalPosition === null || finalPosition === undefined) {
-      const maxResult = await db
-        .select({ max: sql`MAX(${characters.position})` })
-        .from(characters)
-        .where(eq(characters.bookId, bookId));
-      finalPosition = (maxResult[0]?.max ?? -1) + 1;
+      const max = db
+        .prepare('SELECT MAX(position) AS max FROM characters WHERE book_id = ?')
+        .get(bookId)?.max;
+      finalPosition = (max ?? -1) + 1;
     }
 
-    const result = await db.insert(characters).values({
-      bookId,
-      firstName: first_name,
-      lastName: last_name || '',
-      gender: gender === undefined ? null : gender,
-      role: role || "supporting",
-      avatar: avatar || null,
-      description: description || null,
-      attributes: attributes || {},
-      groups: groups || [],
-      tags: tags || [],
-      position: finalPosition,
-      createdAt: now,
-      updatedAt: now,
-    }).returning();
-    return result[0];
+    const info = db
+      .prepare(
+        `INSERT INTO characters (
+          book_id, first_name, last_name, gender, role, avatar, description, attributes, groups, tags, position, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .run(
+        bookId,
+        first_name,
+        last_name || '',
+        gender === undefined ? null : gender,
+        role || 'supporting',
+        avatar || null,
+        description || null,
+        JSON.stringify(attributes || {}),
+        JSON.stringify(groups || []),
+        JSON.stringify(tags || []),
+        finalPosition,
+        now,
+        now
+      );
+    return getCharacterById(Number(info.lastInsertRowid));
   }),
 
   update: handleRequest(async (id, { first_name, last_name, gender, role, avatar, description, attributes, groups, tags, position }) => {
-    const updateData = {
-      updatedAt: Date.now(),
-    };
+    const sets = [];
+    const params = [];
+    if (first_name !== undefined) {
+      sets.push('first_name = ?');
+      params.push(first_name);
+    }
+    if (last_name !== undefined) {
+      sets.push('last_name = ?');
+      params.push(last_name);
+    }
+    if (gender !== undefined) {
+      sets.push('gender = ?');
+      params.push(gender);
+    }
+    if (role !== undefined) {
+      sets.push('role = ?');
+      params.push(role);
+    }
+    if (avatar !== undefined) {
+      sets.push('avatar = ?');
+      params.push(avatar);
+    }
+    if (description !== undefined) {
+      sets.push('description = ?');
+      params.push(description);
+    }
+    if (attributes !== undefined) {
+      sets.push('attributes = ?');
+      params.push(JSON.stringify(attributes || {}));
+    }
+    if (groups !== undefined) {
+      sets.push('groups = ?');
+      params.push(JSON.stringify(groups || []));
+    }
+    if (tags !== undefined) {
+      sets.push('tags = ?');
+      params.push(JSON.stringify(tags || []));
+    }
+    if (position !== undefined) {
+      sets.push('position = ?');
+      params.push(position);
+    }
 
-    if (first_name !== undefined) updateData.firstName = first_name;
-    if (last_name !== undefined) updateData.lastName = last_name;
-    if (gender !== undefined) updateData.gender = gender;
-    if (role !== undefined) updateData.role = role;
-    if (avatar !== undefined) updateData.avatar = avatar;
-    if (description !== undefined) updateData.description = description;
-    if (attributes !== undefined) updateData.attributes = attributes;
-    if (groups !== undefined) updateData.groups = groups;
-    if (tags !== undefined) updateData.tags = tags;
-    if (position !== undefined) updateData.position = position;
+    sets.push('updated_at = ?');
+    params.push(Date.now());
 
-    const result = await db.update(characters)
-      .set(updateData)
-      .where(eq(characters.id, id))
-      .returning();
-
-    return result[0] || null;
+    db.prepare(`UPDATE characters SET ${sets.join(', ')} WHERE id = ?`).run(...params, id);
+    return getCharacterById(id);
   }),
 
   delete: handleRequest(async (id) => {
-    const character = await db.select({ avatar: characters.avatar }).from(characters).where(eq(characters.id, id)).limit(1);
-    if (character[0]?.avatar) {
-      await imageHandlers.deleteImage(null, character[0].avatar);
+    const row = db.prepare('SELECT avatar FROM characters WHERE id = ? LIMIT 1').get(id);
+    if (row?.avatar) {
+      await imageHandlers.deleteImage(null, row.avatar);
     }
 
-    await db.delete(characters).where(eq(characters.id, id));
+    db.prepare('DELETE FROM characters WHERE id = ?').run(id);
     return { deleted: true };
   }),
 
   getRelationships: handleRequest(async (characterId) => {
-    return await db.select({
-      id: characterRelationships.id,
-      characterId: characterRelationships.characterId,
-      relatedCharacterId: characterRelationships.relatedCharacterId,
-      relationshipType: characterRelationships.relationshipType,
-      metadata: characterRelationships.metadata,
+    const rows = db
+      .prepare(
+        `SELECT
+          cr.id,
+          cr.character_id AS characterId,
+          cr.related_character_id AS relatedCharacterId,
+          cr.relationship_type AS relationshipType,
+          cr.metadata,
+          c.id AS related_id,
+          c.first_name AS related_firstName,
+          c.last_name AS related_lastName,
+          c.avatar AS related_avatar,
+          c.gender AS related_gender
+        FROM character_relationships cr
+        INNER JOIN characters c ON c.id = cr.related_character_id
+        WHERE cr.character_id = ?`
+      )
+      .all(characterId);
+
+    return rows.map((row) => ({
+      id: row.id,
+      characterId: row.characterId,
+      relatedCharacterId: row.relatedCharacterId,
+      relationshipType: row.relationshipType,
+      metadata: parseJson(row.metadata, {}),
       relatedCharacter: {
-        id: characters.id,
-        firstName: characters.firstName,
-        lastName: characters.lastName,
-        avatar: characters.avatar,
-        gender: characters.gender
-      }
-    })
-    .from(characterRelationships)
-    .innerJoin(characters, eq(characterRelationships.relatedCharacterId, characters.id))
-    .where(eq(characterRelationships.characterId, characterId));
+        id: row.related_id,
+        firstName: row.related_firstName,
+        lastName: row.related_lastName,
+        avatar: row.related_avatar,
+        gender: row.related_gender,
+      },
+    }));
   }),
 
   addRelationship: handleRequest(async ({ characterId, relatedCharacterId, relationshipType, metadata }) => {
     const now = Date.now();
     const neutralType = TYPE_TO_NEUTRAL[relationshipType] || relationshipType;
     
-    const result = await db.insert(characterRelationships).values({
-      characterId,
-      relatedCharacterId,
-      relationshipType: neutralType,
-      metadata: metadata || {},
-      createdAt: now,
-      updatedAt: now,
-    }).returning();
+    const info = db
+      .prepare(
+        `INSERT INTO character_relationships (
+          character_id, related_character_id, relationship_type, metadata, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?)`
+      )
+      .run(characterId, relatedCharacterId, neutralType, JSON.stringify(metadata || {}), now, now);
+
+    const resultRow = db
+      .prepare(
+        `SELECT
+          id,
+          character_id AS characterId,
+          related_character_id AS relatedCharacterId,
+          relationship_type AS relationshipType,
+          metadata,
+          created_at AS createdAt,
+          updated_at AS updatedAt
+        FROM character_relationships
+        WHERE id = ?
+        LIMIT 1`
+      )
+      .get(Number(info.lastInsertRowid));
 
     const reciprocalType = RELATIONSHIP_RECIPROCALS[neutralType] || neutralType;
     
-    const existingReciprocal = await db.select().from(characterRelationships)
-      .where(and(
-        eq(characterRelationships.characterId, relatedCharacterId),
-        eq(characterRelationships.relatedCharacterId, characterId)
-      )).limit(1);
-    
-    if (!existingReciprocal[0]) {
-      await db.insert(characterRelationships).values({
-        characterId: relatedCharacterId,
-        relatedCharacterId: characterId,
-        relationshipType: reciprocalType,
-        metadata: metadata || {}, 
-        createdAt: now,
-        updatedAt: now,
-      });
+    const existingReciprocal = db
+      .prepare(
+        `SELECT id FROM character_relationships
+         WHERE character_id = ? AND related_character_id = ?
+         LIMIT 1`
+      )
+      .get(relatedCharacterId, characterId);
+
+    if (!existingReciprocal?.id) {
+      db.prepare(
+        `INSERT INTO character_relationships (
+          character_id, related_character_id, relationship_type, metadata, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?)`
+      ).run(
+        relatedCharacterId,
+        characterId,
+        reciprocalType,
+        JSON.stringify(metadata || {}),
+        now,
+        now
+      );
     }
 
-    return result[0];
+    return {
+      ...resultRow,
+      metadata: parseJson(resultRow?.metadata, {}),
+    };
   }),
 
   updateRelationship: handleRequest(async (id, { relationshipType, metadata }) => {
-    const updateData = { updatedAt: Date.now() };
+    const sets = [];
+    const params = [];
     let neutralType;
     if (relationshipType !== undefined) {
       neutralType = TYPE_TO_NEUTRAL[relationshipType] || relationshipType;
-      updateData.relationshipType = neutralType;
+      sets.push('relationship_type = ?');
+      params.push(neutralType);
     }
-    if (metadata !== undefined) updateData.metadata = metadata;
+    if (metadata !== undefined) {
+      sets.push('metadata = ?');
+      params.push(JSON.stringify(metadata || {}));
+    }
+    sets.push('updated_at = ?');
+    params.push(Date.now());
 
-    const result = await db.update(characterRelationships)
-      .set(updateData)
-      .where(eq(characterRelationships.id, id))
-      .returning();
+    db.prepare(`UPDATE character_relationships SET ${sets.join(', ')} WHERE id = ?`).run(...params, id);
 
-    const rel = result[0];
+    const rel = db
+      .prepare(
+        `SELECT
+          id,
+          character_id AS characterId,
+          related_character_id AS relatedCharacterId,
+          relationship_type AS relationshipType,
+          metadata,
+          created_at AS createdAt,
+          updated_at AS updatedAt
+        FROM character_relationships
+        WHERE id = ?
+        LIMIT 1`
+      )
+      .get(id);
+
     if (rel) {
-      const reciprocal = await db.select().from(characterRelationships)
-        .where(and(
-          eq(characterRelationships.characterId, rel.relatedCharacterId),
-          eq(characterRelationships.relatedCharacterId, rel.characterId)
-        )).limit(1);
+      const reciprocal = db
+        .prepare(
+          `SELECT id FROM character_relationships
+           WHERE character_id = ? AND related_character_id = ?
+           LIMIT 1`
+        )
+        .get(rel.relatedCharacterId, rel.characterId);
       
-      if (reciprocal[0]) {
-        const reciprocalUpdate = { updatedAt: Date.now() };
-        if (metadata !== undefined) reciprocalUpdate.metadata = metadata;
-        if (neutralType !== undefined) {
-          reciprocalUpdate.relationshipType = RELATIONSHIP_RECIPROCALS[neutralType] || neutralType;
+      if (reciprocal?.id) {
+        const reciprocalSets = [];
+        const reciprocalParams = [];
+        if (metadata !== undefined) {
+          reciprocalSets.push('metadata = ?');
+          reciprocalParams.push(JSON.stringify(metadata || {}));
         }
+        if (neutralType !== undefined) {
+          reciprocalSets.push('relationship_type = ?');
+          reciprocalParams.push(RELATIONSHIP_RECIPROCALS[neutralType] || neutralType);
+        }
+        reciprocalSets.push('updated_at = ?');
+        reciprocalParams.push(Date.now());
 
-        await db.update(characterRelationships)
-          .set(reciprocalUpdate)
-          .where(eq(characterRelationships.id, reciprocal[0].id));
+        db.prepare(`UPDATE character_relationships SET ${reciprocalSets.join(', ')} WHERE id = ?`).run(
+          ...reciprocalParams,
+          reciprocal.id
+        );
       }
     }
 
-    return result[0] || null;
+    return {
+      ...rel,
+      metadata: parseJson(rel?.metadata, {}),
+    };
   }),
 
   removeRelationship: handleRequest(async (id) => {
-    const rel = await db.select().from(characterRelationships).where(eq(characterRelationships.id, id)).limit(1);
-    if (!rel[0]) return { deleted: false };
-
-    await db.delete(characterRelationships).where(
-      or(
-        eq(characterRelationships.id, id),
-        and(
-          eq(characterRelationships.characterId, rel[0].relatedCharacterId),
-          eq(characterRelationships.relatedCharacterId, rel[0].characterId)
-        )
+    const rel = db
+      .prepare(
+        `SELECT
+          id,
+          character_id AS characterId,
+          related_character_id AS relatedCharacterId
+        FROM character_relationships
+        WHERE id = ?
+        LIMIT 1`
       )
-    );
+      .get(id);
+    if (!rel) return { deleted: false };
+
+    db.prepare(
+      `DELETE FROM character_relationships
+       WHERE id = ?
+          OR (character_id = ? AND related_character_id = ?)`
+    ).run(id, rel.relatedCharacterId, rel.characterId);
 
     return { deleted: true };
   }),
 
   reorder: handleRequest(async (bookId, characterIds) => {
-    const updates = characterIds.map((characterId, index) =>
-      db.update(characters)
-        .set({ position: index, updatedAt: Date.now() })
-        .where(and(
-          eq(characters.id, characterId),
-          eq(characters.bookId, bookId)
-        ))
-    );
-
-    await Promise.all(updates);
+    const update = db.prepare('UPDATE characters SET position = ?, updated_at = ? WHERE id = ? AND book_id = ?');
+    const now = Date.now();
+    const tx = db.transaction(() => {
+      characterIds.forEach((characterId, index) => {
+        update.run(index, now, characterId, bookId);
+      });
+    });
+    tx();
     return { reordered: true };
   }),
 };

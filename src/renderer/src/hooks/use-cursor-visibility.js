@@ -25,8 +25,18 @@ export function useCursorVisibility({
     const ensureCursorVisibility = () => {
       if (!editor) return
 
-      const { state, view } = editor
-      if (!view.hasFocus()) return
+      // Tiptap throws if the editor view is accessed before mount / after destroy.
+      // This can happen when switching panels quickly (unmount before debounced work finishes).
+      let state
+      let view
+      try {
+        state = editor.state
+        view = editor.view
+      } catch {
+        return
+      }
+
+      if (!view?.hasFocus?.()) return
 
       // Get current cursor position coordinates
       const { from } = state.selection

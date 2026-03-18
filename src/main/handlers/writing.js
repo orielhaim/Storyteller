@@ -1,19 +1,92 @@
-import { eq, and, sql } from 'drizzle-orm';
 import db from '../db.js';
-import { chapters, scenes } from '../../db/schema.js';
 import handleRequest from '../utils/handleRequest.js';
+
+function mapChapter(row) {
+  return row || null;
+}
+
+function mapScene(row) {
+  return row || null;
+}
+
+function getChapterById(id) {
+  return mapChapter(
+    db
+      .prepare(
+        `SELECT
+          id,
+          book_id AS bookId,
+          name,
+          description,
+          status,
+          position,
+          created_at AS createdAt,
+          updated_at AS updatedAt
+        FROM chapters
+        WHERE id = ?
+        LIMIT 1`
+      )
+      .get(id)
+  );
+}
+
+function getSceneById(id) {
+  return mapScene(
+    db
+      .prepare(
+        `SELECT
+          id,
+          chapter_id AS chapterId,
+          book_id AS bookId,
+          name,
+          content,
+          status,
+          start_date AS startDate,
+          end_date AS endDate,
+          position,
+          created_at AS createdAt,
+          updated_at AS updatedAt
+        FROM scenes
+        WHERE id = ?
+        LIMIT 1`
+      )
+      .get(id)
+  );
+}
+
+function normalizeJsonForDb(value) {
+  if (value == null) return null;
+  if (typeof value === 'string') return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return null;
+  }
+}
 
 // Chapters handlers
 export const chapterHandlers = {
   getAllByBook: handleRequest(async (bookId) => {
-    return await db.select().from(chapters)
-      .where(eq(chapters.bookId, bookId))
-      .orderBy(chapters.position, chapters.createdAt);
+    return db
+      .prepare(
+        `SELECT
+          id,
+          book_id AS bookId,
+          name,
+          description,
+          status,
+          position,
+          created_at AS createdAt,
+          updated_at AS updatedAt
+        FROM chapters
+        WHERE book_id = ?
+        ORDER BY position ASC, created_at ASC`
+      )
+      .all(bookId);
   }),
 
   getById: handleRequest(async (id) => {
-    const result = await db.select().from(chapters).where(eq(chapters.id, id)).limit(1);
-    return result[0] || null;
+    return getChapterById(id);
   }),
 
   create: handleRequest(async ({ bookId, name, description, position }) => {
@@ -22,57 +95,60 @@ export const chapterHandlers = {
     // If position not provided, get max position and add 1
     let finalPosition = position;
     if (finalPosition === null || finalPosition === undefined) {
-      const maxResult = await db
-        .select({ max: sql`MAX(${chapters.position})` })
-        .from(chapters)
-        .where(eq(chapters.bookId, bookId));
-      finalPosition = (maxResult[0]?.max ?? -1) + 1;
+      const max = db.prepare('SELECT MAX(position) AS max FROM chapters WHERE book_id = ?').get(bookId)?.max;
+      finalPosition = (max ?? -1) + 1;
     }
 
-    const result = await db.insert(chapters).values({
-      bookId,
-      name,
-      description: description || null,
-      position: finalPosition,
-      createdAt: now,
-      updatedAt: now,
-    }).returning();
-    return result[0];
+    const info = db
+      .prepare(
+        `INSERT INTO chapters (
+          book_id, name, description, status, position, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+      )
+      .run(bookId, name, description || null, null, finalPosition, now, now);
+    return getChapterById(Number(info.lastInsertRowid));
   }),
 
   update: handleRequest(async (id, { name, description, status, position }) => {
-    const updateData = {
-      updatedAt: Date.now(),
-    };
+    const sets = [];
+    const params = [];
+    if (name !== undefined) {
+      sets.push('name = ?');
+      params.push(name);
+    }
+    if (description !== undefined) {
+      sets.push('description = ?');
+      params.push(description);
+    }
+    if (status !== undefined) {
+      sets.push('status = ?');
+      params.push(status);
+    }
+    if (position !== undefined) {
+      sets.push('position = ?');
+      params.push(position);
+    }
+    sets.push('updated_at = ?');
+    params.push(Date.now());
 
-    if (name !== undefined) updateData.name = name;
-    if (description !== undefined) updateData.description = description;
-    if (status !== undefined) updateData.status = status;
-    if (position !== undefined) updateData.position = position;
-
-    const result = await db.update(chapters)
-      .set(updateData)
-      .where(eq(chapters.id, id))
-      .returning();
-    return result[0] || null;
+    db.prepare(`UPDATE chapters SET ${sets.join(', ')} WHERE id = ?`).run(...params, id);
+    return getChapterById(id);
   }),
 
   delete: handleRequest(async (id) => {
-    await db.delete(chapters).where(eq(chapters.id, id));
+    db.prepare('DELETE FROM chapters WHERE id = ?').run(id);
     return { deleted: true };
   }),
 
   reorder: handleRequest(async (bookId, chapterIds) => {
-    const updates = chapterIds.map((chapterId, index) =>
-      db.update(chapters)
-        .set({ position: index, updatedAt: Date.now() })
-        .where(and(
-          eq(chapters.id, chapterId),
-          eq(chapters.bookId, bookId)
-        ))
-    );
-
-    await Promise.all(updates);
+    const stmt = db.prepare('UPDATE chapters SET position = ?, updated_at = ? WHERE id = ? AND book_id = ?');
+    const now = Date.now();
+    const tx = db.transaction(() => {
+      chapterIds.forEach((chapterId, index) => {
+        stmt.run(index, now, chapterId, bookId);
+      });
+    });
+    tx();
     return { reordered: true };
   }),
 };
@@ -80,20 +156,51 @@ export const chapterHandlers = {
 // Scenes handlers
 export const sceneHandlers = {
   getAllByChapter: handleRequest(async (chapterId) => {
-    return await db.select().from(scenes)
-      .where(eq(scenes.chapterId, chapterId))
-      .orderBy(scenes.position, scenes.createdAt);
+    return db
+      .prepare(
+        `SELECT
+          id,
+          chapter_id AS chapterId,
+          book_id AS bookId,
+          name,
+          content,
+          status,
+          start_date AS startDate,
+          end_date AS endDate,
+          position,
+          created_at AS createdAt,
+          updated_at AS updatedAt
+        FROM scenes
+        WHERE chapter_id = ?
+        ORDER BY position ASC, created_at ASC`
+      )
+      .all(chapterId);
   }),
 
   getAllByBook: handleRequest(async (bookId) => {
-    return await db.select().from(scenes)
-      .where(eq(scenes.bookId, bookId))
-      .orderBy(scenes.position, scenes.createdAt);
+    return db
+      .prepare(
+        `SELECT
+          id,
+          chapter_id AS chapterId,
+          book_id AS bookId,
+          name,
+          content,
+          status,
+          start_date AS startDate,
+          end_date AS endDate,
+          position,
+          created_at AS createdAt,
+          updated_at AS updatedAt
+        FROM scenes
+        WHERE book_id = ?
+        ORDER BY position ASC, created_at ASC`
+      )
+      .all(bookId);
   }),
 
   getById: handleRequest(async (id) => {
-    const result = await db.select().from(scenes).where(eq(scenes.id, id)).limit(1);
-    return result[0] || null;
+    return getSceneById(id);
   }),
 
   create: handleRequest(async ({ chapterId, bookId, name, content, position }) => {
@@ -102,71 +209,90 @@ export const sceneHandlers = {
     // If position not provided, get max position and add 1
     let finalPosition = position;
     if (finalPosition === null || finalPosition === undefined) {
-      const maxResult = await db
-        .select({ max: sql`MAX(${scenes.position})` })
-        .from(scenes)
-        .where(eq(scenes.chapterId, chapterId));
-      finalPosition = (maxResult[0]?.max ?? -1) + 1;
+      const max = db.prepare('SELECT MAX(position) AS max FROM scenes WHERE chapter_id = ?').get(chapterId)?.max;
+      finalPosition = (max ?? -1) + 1;
     }
 
-    const result = await db.insert(scenes).values({
-      chapterId,
-      bookId,
-      name,
-      content: content || null,
-      position: finalPosition,
-      createdAt: now,
-      updatedAt: now,
-    }).returning();
-    return result[0];
+    const info = db
+      .prepare(
+        `INSERT INTO scenes (
+          chapter_id, book_id, name, content, status, start_date, end_date, position, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .run(
+        chapterId,
+        bookId,
+        name,
+        normalizeJsonForDb(content),
+        null,
+        null,
+        null,
+        finalPosition,
+        now,
+        now
+      );
+    return getSceneById(Number(info.lastInsertRowid));
   }),
 
   update: handleRequest(async (id, { name, content, position, status, startDate, endDate }) => {
-    const updateData = {
-      updatedAt: Date.now(),
-    };
+    const sets = [];
+    const params = [];
+    if (name !== undefined) {
+      sets.push('name = ?');
+      params.push(name);
+    }
+    if (content !== undefined) {
+      sets.push('content = ?');
+      params.push(normalizeJsonForDb(content));
+    }
+    if (position !== undefined) {
+      sets.push('position = ?');
+      params.push(position);
+    }
+    if (status !== undefined) {
+      sets.push('status = ?');
+      params.push(status);
+    }
+    if (startDate !== undefined) {
+      sets.push('start_date = ?');
+      params.push(startDate ? new Date(startDate).getTime() : null);
+    }
+    if (endDate !== undefined) {
+      sets.push('end_date = ?');
+      params.push(endDate ? new Date(endDate).getTime() : null);
+    }
+    sets.push('updated_at = ?');
+    params.push(Date.now());
 
-    if (name !== undefined) updateData.name = name;
-    if (content !== undefined) updateData.content = content;
-    if (position !== undefined) updateData.position = position;
-    if (status !== undefined) updateData.status = status;
-    if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate).getTime() : null;
-    if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate).getTime() : null;
-
-    const result = await db.update(scenes)
-      .set(updateData)
-      .where(eq(scenes.id, id))
-      .returning();
-    return result[0] || null;
+    db.prepare(`UPDATE scenes SET ${sets.join(', ')} WHERE id = ?`).run(...params, id);
+    return getSceneById(id);
   }),
 
   delete: handleRequest(async (id) => {
-    await db.delete(scenes).where(eq(scenes.id, id));
+    db.prepare('DELETE FROM scenes WHERE id = ?').run(id);
     return { deleted: true };
   }),
 
   reorder: handleRequest(async (chapterId, sceneIds) => {
-    const updates = sceneIds.map((sceneId, index) =>
-      db.update(scenes)
-        .set({ position: index, updatedAt: Date.now() })
-        .where(and(
-          eq(scenes.id, sceneId),
-          eq(scenes.chapterId, chapterId)
-        ))
-    );
-
-    await Promise.all(updates);
+    const stmt = db.prepare('UPDATE scenes SET position = ?, updated_at = ? WHERE id = ? AND chapter_id = ?');
+    const now = Date.now();
+    const tx = db.transaction(() => {
+      sceneIds.forEach((sceneId, index) => {
+        stmt.run(index, now, sceneId, chapterId);
+      });
+    });
+    tx();
     return { reordered: true };
   }),
 
   moveToChapter: handleRequest(async (sceneId, targetChapterId) => {
     // Get the scene to validate it exists and get current chapter
-    const scene = await db.select().from(scenes).where(eq(scenes.id, sceneId)).limit(1);
-    if (!scene[0]) {
+    const scene = getSceneById(sceneId);
+    if (!scene) {
       throw new Error('Scene not found');
     }
 
-    const currentChapterId = scene[0].chapterId;
+    const currentChapterId = scene.chapterId;
 
     // If moving to the same chapter, do nothing
     if (currentChapterId === targetChapterId) {
@@ -174,25 +300,21 @@ export const sceneHandlers = {
     }
 
     // Get the max position in the target chapter
-    const maxResult = await db
-      .select({ max: sql`MAX(${scenes.position})` })
-      .from(scenes)
-      .where(eq(scenes.chapterId, targetChapterId));
-    const newPosition = (maxResult[0]?.max ?? -1) + 1;
+    const max = db.prepare('SELECT MAX(position) AS max FROM scenes WHERE chapter_id = ?').get(targetChapterId)?.max;
+    const newPosition = (max ?? -1) + 1;
 
     // Update the scene
-    const result = await db.update(scenes)
-      .set({
-        chapterId: targetChapterId,
-        position: newPosition,
-        updatedAt: Date.now()
-      })
-      .where(eq(scenes.id, sceneId))
-      .returning();
+    db.prepare('UPDATE scenes SET chapter_id = ?, position = ?, updated_at = ? WHERE id = ?').run(
+      targetChapterId,
+      newPosition,
+      Date.now(),
+      sceneId
+    );
+    const movedScene = getSceneById(sceneId);
 
     return {
       moved: true,
-      scene: result[0],
+      scene: movedScene,
       oldChapterId: currentChapterId,
       newChapterId: targetChapterId
     };
@@ -203,16 +325,43 @@ export const sceneHandlers = {
 export const writingHandlers = {
   getAllForPreview: handleRequest(async (bookId) => {
     // Fetch chapters ordered by position
-    const chaptersList = await db.select()
-      .from(chapters)
-      .where(eq(chapters.bookId, bookId))
-      .orderBy(chapters.position, chapters.createdAt);
+    const chaptersList = db
+      .prepare(
+        `SELECT
+          id,
+          book_id AS bookId,
+          name,
+          description,
+          status,
+          position,
+          created_at AS createdAt,
+          updated_at AS updatedAt
+        FROM chapters
+        WHERE book_id = ?
+        ORDER BY position ASC, created_at ASC`
+      )
+      .all(bookId);
     
     // Fetch all scenes for the book ordered by chapter position and scene position
-    const scenesList = await db.select()
-      .from(scenes)
-      .where(eq(scenes.bookId, bookId))
-      .orderBy(scenes.position, scenes.createdAt);
+    const scenesList = db
+      .prepare(
+        `SELECT
+          id,
+          chapter_id AS chapterId,
+          book_id AS bookId,
+          name,
+          content,
+          status,
+          start_date AS startDate,
+          end_date AS endDate,
+          position,
+          created_at AS createdAt,
+          updated_at AS updatedAt
+        FROM scenes
+        WHERE book_id = ?
+        ORDER BY position ASC, created_at ASC`
+      )
+      .all(bookId);
     
     // Group scenes by chapter
     const scenesByChapter = {};

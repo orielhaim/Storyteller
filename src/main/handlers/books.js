@@ -1,8 +1,41 @@
-import { eq, desc, sql } from 'drizzle-orm';
 import db from '../db.js';
-import { books, chapters, scenes, characters, worlds, locations, objects } from '../../db/schema.js';
 import { imageHandlers } from './imageHandler.js';
 import handleRequest from '../utils/handleRequest.js';
+import parseJson from '../../utils/parseJson';
+
+function mapBook(row) {
+  if (!row) return null;
+  return {
+    ...row,
+    genres: parseJson(row.genres, []),
+    archived: !!row.archived,
+  };
+}
+
+function getBookById(id) {
+  return mapBook(
+    db
+      .prepare(
+        `SELECT
+          id,
+          name,
+          author,
+          description,
+          image,
+          progress_status AS progressStatus,
+          genres,
+          target_audience AS targetAudience,
+          primary_language AS primaryLanguage,
+          created_at AS createdAt,
+          updated_at AS updatedAt,
+          archived
+        FROM books
+        WHERE id = ?
+        LIMIT 1`,
+      )
+      .get(id),
+  );
+}
 
 function extractTextFromNode(node) {
   if (!node) return '';
@@ -41,46 +74,71 @@ function countWordsFromContent(rawContent) {
 // Books handlers
 export const bookHandlers = {
   getAll: handleRequest(async () => {
-    return await db.select().from(books).orderBy(desc(books.createdAt));
+    const rows = db
+      .prepare(
+        `SELECT
+          id,
+          name,
+          author,
+          description,
+          image,
+          progress_status AS progressStatus,
+          genres,
+          target_audience AS targetAudience,
+          primary_language AS primaryLanguage,
+          created_at AS createdAt,
+          updated_at AS updatedAt,
+          archived
+        FROM books
+        ORDER BY created_at DESC`,
+      )
+      .all();
+    return rows.map(mapBook);
   }),
 
   getById: handleRequest(async (id) => {
-    const result = await db.select().from(books).where(eq(books.id, id)).limit(1);
-    return result[0] || null;
+    return getBookById(id);
   }),
 
   getOverview: handleRequest(async (id) => {
-    const result = await db.select().from(books).where(eq(books.id, id)).limit(1);
-    const book = result[0] || null;
+    const book = getBookById(id);
     if (!book) return null;
 
-    const [
-      chapterCountResult,
-      sceneCountResult,
-      characterCountResult,
-      worldCountResult,
-      locationCountResult,
-      objectCountResult,
-      scenesForStats,
-    ] = await Promise.all([
-      db.select({ count: sql`COUNT(*)` }).from(chapters).where(eq(chapters.bookId, id)),
-      db.select({ count: sql`COUNT(*)` }).from(scenes).where(eq(scenes.bookId, id)),
-      db.select({ count: sql`COUNT(*)` }).from(characters).where(eq(characters.bookId, id)),
-      db.select({ count: sql`COUNT(*)` }).from(worlds).where(eq(worlds.bookId, id)),
-      db.select({ count: sql`COUNT(*)` }).from(locations).where(eq(locations.bookId, id)),
-      db.select({ count: sql`COUNT(*)` }).from(objects).where(eq(objects.bookId, id)),
+    const chapterCount = Number(
       db
-        .select({ content: scenes.content, status: scenes.status, createdAt: scenes.createdAt })
-        .from(scenes)
-        .where(eq(scenes.bookId, id)),
-    ]);
-
-    const chapterCount = Number(chapterCountResult[0]?.count ?? 0);
-    const sceneCount = Number(sceneCountResult[0]?.count ?? 0);
-    const characterCount = Number(characterCountResult[0]?.count ?? 0);
-    const worldCount = Number(worldCountResult[0]?.count ?? 0);
-    const locationCount = Number(locationCountResult[0]?.count ?? 0);
-    const objectCount = Number(objectCountResult[0]?.count ?? 0);
+        .prepare('SELECT COUNT(*) AS count FROM chapters WHERE book_id = ?')
+        .get(id)?.count ?? 0,
+    );
+    const sceneCount = Number(
+      db
+        .prepare('SELECT COUNT(*) AS count FROM scenes WHERE book_id = ?')
+        .get(id)?.count ?? 0,
+    );
+    const characterCount = Number(
+      db
+        .prepare('SELECT COUNT(*) AS count FROM characters WHERE book_id = ?')
+        .get(id)?.count ?? 0,
+    );
+    const worldCount = Number(
+      db
+        .prepare('SELECT COUNT(*) AS count FROM worlds WHERE book_id = ?')
+        .get(id)?.count ?? 0,
+    );
+    const locationCount = Number(
+      db
+        .prepare('SELECT COUNT(*) AS count FROM locations WHERE book_id = ?')
+        .get(id)?.count ?? 0,
+    );
+    const objectCount = Number(
+      db
+        .prepare('SELECT COUNT(*) AS count FROM objects WHERE book_id = ?')
+        .get(id)?.count ?? 0,
+    );
+    const scenesForStats = db
+      .prepare(
+        'SELECT content, status, created_at AS createdAt FROM scenes WHERE book_id = ?',
+      )
+      .all(id);
 
     let totalWords = 0;
     let scenesWithContent = 0;
@@ -106,8 +164,10 @@ export const bookHandlers = {
       }
     }
 
-    const averageWordsPerScene = scenesWithContent > 0 ? Math.round(totalWords / scenesWithContent) : 0;
-    const averageScenesPerChapter = chapterCount > 0 ? Math.round((sceneCount / chapterCount) * 10) / 10 : 0;
+    const averageWordsPerScene =
+      scenesWithContent > 0 ? Math.round(totalWords / scenesWithContent) : 0;
+    const averageScenesPerChapter =
+      chapterCount > 0 ? Math.round((sceneCount / chapterCount) * 10) / 10 : 0;
 
     return {
       book,
@@ -134,66 +194,127 @@ export const bookHandlers = {
     };
   }),
 
-  create: handleRequest(async ({ name, author, description, image, progressStatus, genres, targetAudience, primaryLanguage }) => {
-    const now = Date.now();
-    const result = await db.insert(books).values({
+  create: handleRequest(
+    async ({
       name,
       author,
-      description: description || null,
-      image: image || null,
-      progressStatus: progressStatus || "not_started",
-      genres: genres || [],
-      targetAudience: targetAudience || "general",
-      primaryLanguage: primaryLanguage || "en",
-      createdAt: now,
-      updatedAt: now,
-      archived: false,
-    }).returning();
-    return result[0];
-  }),
-
-  update: handleRequest(async (id, { name, author, description, image, progressStatus, genres, targetAudience, primaryLanguage }) => {
-    const result = await db.update(books)
-      .set({
+      description,
+      image,
+      progressStatus,
+      genres,
+      targetAudience,
+      primaryLanguage,
+    }) => {
+      const now = Date.now();
+      const insert = db.prepare(
+        `INSERT INTO books (
+        name, author, description, image, progress_status, genres, target_audience, primary_language, created_at, updated_at, archived
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      );
+      const info = insert.run(
         name,
         author,
-        description: description || null,
-        image: image || null,
-        progressStatus: progressStatus || undefined,
-        genres: genres || undefined,
-        targetAudience: targetAudience || undefined,
-        primaryLanguage: primaryLanguage || undefined,
-        updatedAt: Date.now(),
-      })
-      .where(eq(books.id, id))
-      .returning();
-    return result[0] || null;
-  }),
+        description || null,
+        image || null,
+        progressStatus || 'not_started',
+        JSON.stringify(genres || []),
+        targetAudience || 'general',
+        primaryLanguage || 'en',
+        now,
+        now,
+        0,
+      );
+      return getBookById(Number(info.lastInsertRowid));
+    },
+  ),
+
+  update: handleRequest(
+    async (
+      id,
+      {
+        name,
+        author,
+        description,
+        image,
+        progressStatus,
+        genres,
+        targetAudience,
+        primaryLanguage,
+      },
+    ) => {
+      const sets = [];
+      const params = [];
+
+      if (name !== undefined) {
+        sets.push('name = ?');
+        params.push(name);
+      }
+      if (author !== undefined) {
+        sets.push('author = ?');
+        params.push(author);
+      }
+      if (description !== undefined) {
+        sets.push('description = ?');
+        params.push(description || null);
+      }
+      if (image !== undefined) {
+        sets.push('image = ?');
+        params.push(image || null);
+      }
+      if (progressStatus !== undefined) {
+        sets.push('progress_status = ?');
+        params.push(progressStatus || 'not_started');
+      }
+      if (genres !== undefined) {
+        sets.push('genres = ?');
+        params.push(JSON.stringify(genres || []));
+      }
+      if (targetAudience !== undefined) {
+        sets.push('target_audience = ?');
+        params.push(targetAudience || 'general');
+      }
+      if (primaryLanguage !== undefined) {
+        sets.push('primary_language = ?');
+        params.push(primaryLanguage || 'en');
+      }
+
+      sets.push('updated_at = ?');
+      params.push(Date.now());
+
+      if (sets.length === 0) return getBookById(id);
+
+      db.prepare(`UPDATE books SET ${sets.join(', ')} WHERE id = ?`).run(
+        ...params,
+        id,
+      );
+      return getBookById(id);
+    },
+  ),
 
   delete: handleRequest(async (id) => {
     // Get book to check for image
-    const book = await db.select({ image: books.image }).from(books).where(eq(books.id, id)).limit(1);
-    if (book[0]?.image) {
-      await imageHandlers.deleteImage(null, book[0].image);
+    const row = db
+      .prepare('SELECT image FROM books WHERE id = ? LIMIT 1')
+      .get(id);
+    if (row?.image) {
+      await imageHandlers.deleteImage(null, row.image);
     }
 
-    await db.delete(books).where(eq(books.id, id));
+    db.prepare('DELETE FROM books WHERE id = ?').run(id);
     return { deleted: true };
   }),
 
   archive: handleRequest(async (id) => {
-    const result = await db.update(books)
-      .set({ archived: true, updatedAt: Date.now() })
-      .where(eq(books.id, id))
-      .returning();
-    return result[0] || null;
+    db.prepare(
+      'UPDATE books SET archived = 1, updated_at = ? WHERE id = ?',
+    ).run(Date.now(), id);
+    return getBookById(id);
   }),
 
   unarchive: handleRequest(async (id) => {
-    const result = await db.update(books)
-      .set({ archived: false, updatedAt: Date.now() })
-      .where(eq(books.id, id))
-      .returning();
-    return result[0] || null;
+    db.prepare(
+      'UPDATE books SET archived = 0, updated_at = ? WHERE id = ?',
+    ).run(Date.now(), id);
+    return getBookById(id);
   }),
 };

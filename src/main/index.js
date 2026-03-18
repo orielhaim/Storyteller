@@ -1,10 +1,18 @@
-import { app, shell, BrowserWindow, ipcMain, nativeImage, Tray } from 'electron'
-import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import {
+  app,
+  shell,
+  BrowserWindow,
+  ipcMain,
+  nativeImage,
+  Tray,
+} from 'electron';
+import { join } from 'path';
+import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import windowStateKeeper from 'electron-window-state';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log/main';
 import dotenv from 'dotenv';
+import { registerIpcHandlers } from './handlers/index.js';
 
 dotenv.config();
 log.initialize();
@@ -20,11 +28,9 @@ autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
 
 autoUpdater.autoDownload = false;
-console.log('UPDATER_TEST', process.env['UPDATER_TEST']);
-autoUpdater.forceDevUpdateConfig = (is.dev && (process.env['UPDATER_TEST'] === 'true'));
-
-import { registerIpcHandlers } from './handlers/index.js';
-import { runMigrations } from '../db/migrate.js';
+console.log('UPDATER_TEST', process.env.UPDATER_TEST);
+autoUpdater.forceDevUpdateConfig =
+  is.dev && process.env.UPDATER_TEST === 'true';
 
 ipcMain.handle('updater:check-for-updates', () => {
   autoUpdater.checkForUpdates();
@@ -40,14 +46,14 @@ ipcMain.handle('updater:install-and-restart', () => {
 
 autoUpdater.on('update-available', (info) => {
   console.log('Update available:', info);
-  BrowserWindow.getAllWindows().forEach(window => {
+  BrowserWindow.getAllWindows().forEach((window) => {
     window.webContents.send('updater:update-available', info);
   });
 });
 
 autoUpdater.on('update-downloaded', (info) => {
   console.log('Update downloaded');
-  BrowserWindow.getAllWindows().forEach(window => {
+  BrowserWindow.getAllWindows().forEach((window) => {
     window.webContents.send('updater:update-downloaded', info);
   });
 });
@@ -55,33 +61,35 @@ autoUpdater.on('update-downloaded', (info) => {
 autoUpdater.on('download-progress', (progressObj) => {
   const log_message = `Download speed: ${progressObj.bytesPerSecond} - Downloaded ${progressObj.percent}%`;
   console.log(log_message);
-  BrowserWindow.getAllWindows().forEach(window => {
+  BrowserWindow.getAllWindows().forEach((window) => {
     window.webContents.send('updater:download-progress', progressObj);
   });
 });
 
 autoUpdater.on('update-not-available', (info) => {
-  BrowserWindow.getAllWindows().forEach(window => {
+  BrowserWindow.getAllWindows().forEach((window) => {
     window.webContents.send('updater:update-not-available', info);
   });
 });
 
 autoUpdater.on('error', (err) => {
   console.error('Error in auto-updater:', err);
-  BrowserWindow.getAllWindows().forEach(window => {
+  BrowserWindow.getAllWindows().forEach((window) => {
     window.webContents.send('updater:error', err);
   });
 });
 
-const trayIcon = nativeImage.createFromPath(join(__dirname, '../../resources/icon.png'))
-const appIcon = nativeImage.createFromPath(join(__dirname, '../../resources/icon.png'))
-
-
+const trayIcon = nativeImage.createFromPath(
+  join(__dirname, '../../resources/icon.png'),
+);
+const appIcon = nativeImage.createFromPath(
+  join(__dirname, '../../resources/icon.png'),
+);
 
 function createWindow() {
-  let mainWindowState = windowStateKeeper({
+  const mainWindowState = windowStateKeeper({
     defaultWidth: 900,
-    defaultHeight: 700
+    defaultHeight: 700,
   });
 
   const win = new BrowserWindow({
@@ -91,72 +99,57 @@ function createWindow() {
     y: mainWindowState.y,
     show: false,
     autoHideMenuBar: true,
-    icon: appIcon,   
+    icon: appIcon,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
-  })
+      sandbox: false,
+    },
+  });
 
-  const tray = new Tray(trayIcon)
+  // biome-ignore lint/correctness/noUnusedVariables: tray is used
+  const tray = new Tray(trayIcon);
 
   mainWindowState.manage(win);
 
   win.on('ready-to-show', () => {
-    win.show()
-    win.setIcon(appIcon)
-  })
+    win.show();
+    win.setIcon(appIcon);
+  });
 
   win.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
+    shell.openExternal(details.url);
+    return { action: 'deny' };
+  });
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    win.loadURL(process.env['ELECTRON_RENDERER_URL'])
+  if (is.dev && process.env.ELECTRON_RENDERER_URL) {
+    win.loadURL(process.env.ELECTRON_RENDERER_URL);
     win.webContents.openDevTools();
   } else {
-    win.loadFile(join(__dirname, '../renderer/index.html'))
+    win.loadFile(join(__dirname, '../renderer/index.html'));
   }
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
-  try {
-    await runMigrations();
-  } catch (error) {
-    console.error('Failed to run migrations:', error);
-    // You might want to show an error dialog or exit the app
-  }
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.orielhaim.storyteller')
+  electronApp.setAppUserModelId('com.orielhaim.storyteller');
 
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
+    optimizer.watchWindowShortcuts(window);
+  });
 
-  // Register IPC handlers
   ipcMain.handle('get-app-version', () => {
     return app.getVersion();
   });
   registerIpcHandlers();
 
-  createWindow()
+  createWindow();
 
-  app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
-})
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit()
+    app.quit();
   }
-})
+});
