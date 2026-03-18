@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect} from "react"
+import { useRef, useState, useEffect, useMemo } from "react"
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
 
 import { StarterKit } from "@tiptap/starter-kit"
@@ -53,6 +53,49 @@ import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
 import "@/components/tiptap-templates/simple/simple-editor.scss"
 
 import content from "@/components/tiptap-templates/simple/data/content.json"
+
+const EDITOR_EXTENSIONS = [
+  StarterKit.configure({
+    horizontalRule: false,
+    link: {
+      openOnClick: false,
+      enableClickSelection: true,
+    },
+  }),
+  HorizontalRule,
+  TextAlign.configure({ types: ["heading", "paragraph"] }),
+  TaskList,
+  TaskItem.configure({ nested: true }),
+  Highlight.configure({ multicolor: true }),
+  Image,
+  Typography,
+  Superscript,
+  Subscript,
+  Selection,
+  ImageUploadNode.configure({
+    accept: "image/*",
+    maxSize: MAX_FILE_SIZE,
+    limit: 3,
+    upload: handleImageUpload,
+    onError: (error) => console.error("Upload failed:", error),
+  }),
+  CharacterCount,
+]
+
+const DEFAULT_CONTENT = { type: "doc", content: [] }
+
+function parseContent(value) {
+  if (!value) return DEFAULT_CONTENT
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value)
+      return parsed?.type === "doc" && Array.isArray(parsed?.content) ? parsed : DEFAULT_CONTENT
+    } catch {
+      return DEFAULT_CONTENT
+    }
+  }
+  return value?.type === "doc" && Array.isArray(value?.content) ? value : DEFAULT_CONTENT
+}
 
 const MainToolbarContent = () => {
   return (
@@ -114,9 +157,13 @@ export function SimpleEditor({ initialContent, onContentChange }) {
     }
   }, 1000)
 
-  const editor = useEditor({
-    immediatelyRender: false,
-    editorProps: {
+  const resolvedContent = useMemo(
+    () => (initialContent != null ? parseContent(initialContent) : content),
+    [initialContent]
+  )
+
+  const editorProps = useMemo(
+    () => ({
       attributes: {
         autocomplete: "off",
         autocorrect: "off",
@@ -125,45 +172,27 @@ export function SimpleEditor({ initialContent, onContentChange }) {
         "aria-label": "Main content area, start typing to enter text.",
         class: "simple-editor",
       },
-    },
-    textDirection: "auto",
-    extensions: [
-      StarterKit.configure({
-        horizontalRule: false,
-        link: {
-          openOnClick: false,
-          enableClickSelection: true,
-        },
-      }),
-      HorizontalRule,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      Highlight.configure({ multicolor: true }),
-      Image,
-      Typography,
-      Superscript,
-      Subscript,
-      Selection,
-      ImageUploadNode.configure({
-        accept: "image/*",
-        maxSize: MAX_FILE_SIZE,
-        limit: 3,
-        upload: handleImageUpload,
-        onError: (error) => console.error("Upload failed:", error),
-      }),
-      CharacterCount,
-    ],
-    content: initialContent || content,
-    onUpdate: ({ editor }) => {
-      setCounts({
-        words: editor.storage.characterCount.words(),
-        characters: editor.storage.characterCount.characters(),
-      })
+    }),
+    [spellCheckEnabled]
+  )
 
-      debouncedSave(editor.getJSON())
+  const editor = useEditor(
+    {
+      immediatelyRender: false,
+      editorProps,
+      textDirection: "auto",
+      extensions: EDITOR_EXTENSIONS,
+      content: resolvedContent,
+      onUpdate: ({ editor }) => {
+        setCounts({
+          words: editor.storage.characterCount.words(),
+          characters: editor.storage.characterCount.characters(),
+        })
+        debouncedSave(editor.getJSON())
+      },
     },
-  })
+    [resolvedContent]
+  )
 
   // Initialize word count with initial content
   useEffect(() => {

@@ -201,12 +201,12 @@ export function useColorHighlight(config) {
   }, [editor, hideWhenUnavailable, mode])
 
   const handleColorHighlight = useCallback(() => {
-    if (!editor || !canColorHighlightState || !highlightColor || !label)
+    if (!editor || !editor.schema || !canColorHighlightState || !highlightColor || !label)
       return false
 
     if (mode === "mark") {
       if (editor.state.storedMarks) {
-        const highlightMarkType = editor.schema.marks.highlight
+        const highlightMarkType = editor?.schema?.marks?.highlight
         if (highlightMarkType) {
           editor.view.dispatch(editor.state.tr.removeStoredMark(highlightMarkType))
         }
