@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,7 @@ import DOMPurify from 'dompurify';
 
 const UpdateModal = ({ isOpen, onClose, updateInfo, currentVersion, onInstallNow }) => {
   const [timeAgo, setTimeAgo] = useState('');
+  const { t } = useTranslation('settings');
 
   useEffect(() => {
     if (updateInfo?.releaseDate) {
@@ -34,6 +36,7 @@ const UpdateModal = ({ isOpen, onClose, updateInfo, currentVersion, onInstallNow
   }, [updateInfo]);
 
   if (!updateInfo) return null;
+  const isPrerelease = Boolean(updateInfo?.version?.includes('-'));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -46,6 +49,14 @@ const UpdateModal = ({ isOpen, onClose, updateInfo, currentVersion, onInstallNow
               </DialogTitle>
               <DialogDescription className="text-base">
                 Upgrade from <Badge variant="secondary" className="text-xs">v{currentVersion}</Badge> to <Badge variant="secondary" className="text-xs">v{updateInfo.version}</Badge>
+                {isPrerelease && (
+                  <Badge
+                    variant="secondary"
+                    className="ml-2 text-xs bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"
+                  >
+                    {t('updates.betaBadge')}
+                  </Badge>
+                )}
               </DialogDescription>
             </div>
           </div>
@@ -58,6 +69,7 @@ const UpdateModal = ({ isOpen, onClose, updateInfo, currentVersion, onInstallNow
               <div
                 className="text-sm text-muted-foreground prose prose-sm max-w-none dark:prose-invert overflow-y-auto max-h-100"
                 dir="auto"
+                // biome-ignore lint/security/noDangerouslySetInnerHtml: DOMPurify is sanitizing the HTML
                 dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(updateInfo.releaseNotes) }}
               />
             </div>

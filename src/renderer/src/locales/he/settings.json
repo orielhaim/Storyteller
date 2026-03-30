@@ -37,6 +37,16 @@
     "checking": "בודק עדכונים...",
     "available": "עדכון זמין",
     "availableDescription": "גרסה חדשה של Storyteller זמינה.",
+    "betaBadge": "בטא",
+    "channel": {
+      "label": "ערוץ עדכונים",
+      "description": "בחר יציב עבור גרסאות רגילות, או בטא לקבלת גרסאות טרום-שחרור",
+      "placeholder": "בחר ערוץ",
+      "options": {
+        "stable": "יציב",
+        "beta": "בטא"
+      }
+    },
     "whatsNew": "מה חדש:",
     "installRestart": "התקן והפעל מחדש",
     "downloading": "מוריד...",

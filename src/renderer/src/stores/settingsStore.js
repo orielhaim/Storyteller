@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { produce } from 'immer';
 import get from 'lodash/get';
 import set from 'lodash/set';
 import { DEFAULT_SETTINGS } from '@/config/settingsConfig';
@@ -27,9 +26,10 @@ export const useSettingsStore = create((setState, getState) => ({
 
     try {
       const storedSettings = await storeAPI.getAll();
+      const mergedSettings = { ...DEFAULT_SETTINGS, ...storedSettings };
 
       setState({
-        settings: { ...DEFAULT_SETTINGS, ...storedSettings },
+        settings: mergedSettings,
         isLoaded: true,
       });
     } catch (error) {

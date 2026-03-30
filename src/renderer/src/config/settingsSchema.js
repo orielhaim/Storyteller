@@ -1,23 +1,5 @@
 export const SETTINGS_SCHEMA = [
   {
-    category: "categories.editor",
-    description: "descriptions.editor",
-    items: [
-      {
-        path: "editor.wordCountEnabled",
-        label: "settings.wordCount.label",
-        description: "settings.wordCount.description",
-        type: "switch"
-      },
-      {
-        path: "editor.spellCheck",
-        label: "settings.spellCheck.label",
-        description: "settings.spellCheck.description",
-        type: "switch"
-      }
-    ]
-  },
-  {
     category: "categories.general",
     description: "descriptions.general",
     items: [
@@ -39,6 +21,24 @@ export const SETTINGS_SCHEMA = [
         description: "settings.notifications.description",
         type: "switch",
         disabled: true
+      }
+    ]
+  },
+  {
+    category: "categories.editor",
+    description: "descriptions.editor",
+    items: [
+      {
+        path: "editor.wordCountEnabled",
+        label: "settings.wordCount.label",
+        description: "settings.wordCount.description",
+        type: "switch"
+      },
+      {
+        path: "editor.spellCheck",
+        label: "settings.spellCheck.label",
+        description: "settings.spellCheck.description",
+        type: "switch"
       }
     ]
   }

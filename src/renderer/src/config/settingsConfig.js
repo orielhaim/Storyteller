@@ -3,6 +3,9 @@ export const DEFAULT_SETTINGS = {
     wordCountEnabled: false,
     spellCheck: true
   },
+  updates: {
+    channel: 'stable',
+  },
   general: {
     theme: 'system',
     notifications: true,

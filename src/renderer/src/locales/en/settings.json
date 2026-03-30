@@ -37,6 +37,16 @@
     "checking": "Checking for updates...",
     "available": "Update Available",
     "availableDescription": "A new version of Storyteller is available.",
+    "betaBadge": "Beta",
+    "channel": {
+      "label": "Update channel",
+      "description": "Choose Stable for regular releases, or Beta to receive pre-release versions",
+      "placeholder": "Select channel",
+      "options": {
+        "stable": "Stable",
+        "beta": "Beta"
+      }
+    },
     "whatsNew": "What's new:",
     "installRestart": "Install & Restart",
     "downloading": "Downloading...",

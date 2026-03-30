@@ -12,6 +12,7 @@ import windowStateKeeper from 'electron-window-state';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log/main';
 import dotenv from 'dotenv';
+import Store from 'electron-store';
 import { registerIpcHandlers } from './handlers/index.js';
 
 dotenv.config();
@@ -32,6 +33,20 @@ console.log('UPDATER_TEST', process.env.UPDATER_TEST);
 autoUpdater.forceDevUpdateConfig =
   is.dev && process.env.UPDATER_TEST === 'true';
 
+const settingsStore = new Store({ name: 'settings' });
+
+const applyUpdateChannel = (channel) => {
+  const isBeta = channel === 'beta';
+
+  autoUpdater.channel = isBeta ? 'beta' : 'latest';
+  autoUpdater.allowPrerelease = isBeta;
+
+  settingsStore.set('updates.channel', isBeta ? 'beta' : 'stable');
+
+  return isBeta ? 'beta' : 'stable';
+};
+applyUpdateChannel(settingsStore.get('updates.channel', 'stable'));
+
 ipcMain.handle('updater:check-for-updates', () => {
   autoUpdater.checkForUpdates();
 });
@@ -44,23 +59,28 @@ ipcMain.handle('updater:install-and-restart', () => {
   autoUpdater.quitAndInstall(false, true);
 });
 
+ipcMain.handle('updater:set-channel', (_event, channel) => {
+  const normalized = applyUpdateChannel(channel);
+  return {
+    channel: normalized,
+    updaterChannel: autoUpdater.channel,
+    allowPrerelease: autoUpdater.allowPrerelease,
+  };
+});
+
 autoUpdater.on('update-available', (info) => {
-  console.log('Update available:', info);
   BrowserWindow.getAllWindows().forEach((window) => {
     window.webContents.send('updater:update-available', info);
   });
 });
 
 autoUpdater.on('update-downloaded', (info) => {
-  console.log('Update downloaded');
   BrowserWindow.getAllWindows().forEach((window) => {
     window.webContents.send('updater:update-downloaded', info);
   });
 });
 
 autoUpdater.on('download-progress', (progressObj) => {
-  const log_message = `Download speed: ${progressObj.bytesPerSecond} - Downloaded ${progressObj.percent}%`;
-  console.log(log_message);
   BrowserWindow.getAllWindows().forEach((window) => {
     window.webContents.send('updater:download-progress', progressObj);
   });
