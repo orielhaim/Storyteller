@@ -5,11 +5,6 @@
     "app": "Storyteller"
   },
   "subtitle": "סטודיו הכתיבה המודרני למחשב, שתוכנן עבור הדור הבא של הסופרים. שלבו את הפשטות של עורך נקי מהסחות דעת עם כלים עוצמתיים לבניית עולמות.",
-  "stats": {
-    "characterProfiles": "פרופילי דמויות",
-    "worldBuilding": "בניית עולם",
-    "timelineView": "תצוגת ציר זמן"
-  },
   "features": {
     "projectManagement": {
       "title": "ניהול פרויקטים",

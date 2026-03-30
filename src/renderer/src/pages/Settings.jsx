@@ -1,9 +1,24 @@
 import { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Download, RefreshCw, CheckCircle, AlertCircle, XCircle, Github, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  Download,
+  RefreshCw,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+  X,
+} from 'lucide-react';
+import { FaGithub } from 'react-icons/fa6';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +29,7 @@ import { SettingItem } from '@/components/settings/SettingItem';
 import { SETTINGS_SCHEMA } from '@/config/settingsSchema';
 
 function Settings() {
-  const { t } = useTranslation("settings");
+  const { t } = useTranslation('settings');
   const navigate = useNavigate();
 
   const [clickCount, setClickCount] = useState(0);
@@ -36,7 +51,7 @@ function Settings() {
   const { loadSettings, updateSetting, settings } = useSettingsStore();
 
   const handleTitleClick = () => {
-    setClickCount(prev => {
+    setClickCount((prev) => {
       const newCount = prev + 1;
 
       if (clickTimeoutRef.current) {
@@ -124,7 +139,10 @@ function Settings() {
               <CardTitle className="flex items-center justify-between gap-2 text-orange-600 dark:text-orange-400">
                 <div className="flex items-center gap-2">
                   <AlertCircle className="h-5 w-5" />
-                  {t('updates.available')} <span className="text-sm text-muted-foreground">{currentVersion} &rarr; {updateInfo?.version}</span>
+                  {t('updates.available')}{' '}
+                  <span className="text-sm text-muted-foreground">
+                    {currentVersion} &rarr; {updateInfo?.version}
+                  </span>
                 </div>
                 <Badge variant="secondary">
                   {updateInfo?.files?.[0]?.size
@@ -137,14 +155,16 @@ function Settings() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-
               {updateInfo?.releaseNotes && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium">{t('updates.whatsNew')}</p>
                   <div
                     className="text-sm text-muted-foreground max-h-32 overflow-y-auto bg-muted/50 p-2 rounded-md"
                     dir="auto"
-                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(updateInfo.releaseNotes) }}
+                    // biome-ignore lint/security/noDangerouslySetInnerHtml: DOMPurify is sanitizing the HTML
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(updateInfo.releaseNotes),
+                    }}
                   />
                 </div>
               )}
@@ -209,7 +229,11 @@ function Settings() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Button onClick={checkForUpdates} variant="outline" className="w-full">
+              <Button
+                onClick={checkForUpdates}
+                variant="outline"
+                className="w-full"
+              >
                 {t('updates.tryAgain')}
               </Button>
             </CardContent>
@@ -225,11 +249,7 @@ function Settings() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto p-6 space-y-8 max-w-4xl">
         <header className="flex items-center gap-4 mb-4">
-          <Button
-            onClick={() => navigate('/')}
-            variant="ghost"
-            size="sm"
-          >
+          <Button onClick={() => navigate('/')} variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1
@@ -248,31 +268,35 @@ function Settings() {
             {renderUpdateSection()}
           </section>
 
-          {SETTINGS_SCHEMA.filter(section => !section.hidden).map((section) => (
-            <section key={section.category}>
-              <h2 className="text-xl font-semibold mb-4">{t(section.category)}</h2>
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t(section.category)} Settings</CardTitle>
-                  <CardDescription>{t(section.description)}</CardDescription>
-                </CardHeader>
-                <CardContent className="divide-y">
-                  {section.items.map((item) => (
-                    <SettingItem
-                      key={item.path}
-                      path={item.path}
-                      label={item.label}
-                      description={item.description}
-                      type={item.type}
-                      disabled={item.disabled}
-                      options={item.options}
-                      placeholder={item.placeholder}
-                    />
-                  ))}
-                </CardContent>
-              </Card>
-            </section>
-          ))}
+          {SETTINGS_SCHEMA.filter((section) => !section.hidden).map(
+            (section) => (
+              <section key={section.category}>
+                <h2 className="text-xl font-semibold mb-4">
+                  {t(section.category)}
+                </h2>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t(section.category)} Settings</CardTitle>
+                    <CardDescription>{t(section.description)}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="divide-y">
+                    {section.items.map((item) => (
+                      <SettingItem
+                        key={item.path}
+                        path={item.path}
+                        label={item.label}
+                        description={item.description}
+                        type={item.type}
+                        disabled={item.disabled}
+                        options={item.options}
+                        placeholder={item.placeholder}
+                      />
+                    ))}
+                  </CardContent>
+                </Card>
+              </section>
+            ),
+          )}
 
           {isDeveloperMode && (
             <section>
@@ -316,9 +340,14 @@ function Settings() {
               variant="link"
               size="sm"
               className="p-0 h-auto text-sm text-muted-foreground hover:text-foreground cursor-pointer"
-              onClick={() => window.open('https://github.com/orielhaim/storyteller', '_blank')}
+              onClick={() =>
+                window.open(
+                  'https://github.com/orielhaim/storyteller',
+                  '_blank',
+                )
+              }
             >
-              <Github className="mr-1 h-3 w-3" />
+              <FaGithub className="mr-1 h-3 w-3" />
               {t('footer.viewOnGitHub')}
             </Button>
           </div>

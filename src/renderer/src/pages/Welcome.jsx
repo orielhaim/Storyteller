@@ -13,9 +13,9 @@ import {
   MapPin,
   Clock,
   ArrowRight,
-  Github,
   ExternalLink
 } from 'lucide-react';
+import { FaGithub } from "react-icons/fa6";
 import { cn } from '@/lib/utils';
 
 export default function Welcome() {
@@ -57,12 +57,6 @@ export default function Welcome() {
       gradient: "from-orange-500 to-amber-500",
       bgGradient: "from-orange-500/10 to-amber-500/10",
     },
-  ];
-
-  const STATS = [
-    { icon: Users, label: t('stats.characterProfiles') },
-    { icon: MapPin, label: t('stats.worldBuilding') },
-    { icon: Clock, label: t('stats.timelineView') },
   ];
 
 const FeatureCard = memo(function FeatureCard({
@@ -206,7 +200,7 @@ const StatItem = memo(function StatItem({
             mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           )}
         >
-          <header className="mx-auto max-w-4xl space-y-8 text-center">
+          <header className="mx-auto max-w-4xl space-y-8 text-center mb-10">
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm px-4 py-2">
               <Sparkles className="size-4 text-amber-500" />
               <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
@@ -224,12 +218,6 @@ const StatItem = memo(function StatItem({
             <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-slate-400 sm:text-xl">
               {t('subtitle')}
             </p>
-
-            <div className="flex flex-wrap items-center justify-center gap-6 pt-2">
-              {STATS.map((stat) => (
-                <StatItem key={stat.label} stat={stat} />
-              ))}
-            </div>
           </header>
 
           <section className="grid gap-6 sm:grid-cols-2 lg:gap-8">
@@ -276,7 +264,7 @@ const StatItem = memo(function StatItem({
                 onClick={handleOpenGitHub}
                 className="h-14 rounded-full px-8 text-lg font-medium border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
               >
-                <Github className="mr-2 size-5" />
+                <FaGithub className="mr-2 size-5" />
                 <span>{t('buttons.viewOnGitHub')}</span>
                 <ExternalLink className="ml-2 size-4 opacity-50" />
               </Button>

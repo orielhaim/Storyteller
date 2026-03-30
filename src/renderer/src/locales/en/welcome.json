@@ -5,11 +5,6 @@
     "app": "Storyteller"
   },
   "subtitle": "The modern desktop writing studio designed for the next generation of authors. Combine the simplicity of a distraction-free editor with powerful world-building tools.",
-  "stats": {
-    "characterProfiles": "Character Profiles",
-    "worldBuilding": "World Building",
-    "timelineView": "Timeline View"
-  },
   "features": {
     "projectManagement": {
       "title": "Project Management",

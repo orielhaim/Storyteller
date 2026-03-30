@@ -124,9 +124,9 @@ export const TooltipTrigger = forwardRef(
     const context = useTooltipContext()
     const childrenRef = isValidElement(children)
       ? parseInt(version, 10) >= 19
-        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ?
           (children).props.ref
-        : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        :
           (children).ref
       : undefined
     const ref = useMergeRefs([context.refs.setReference, propRef, childrenRef])
