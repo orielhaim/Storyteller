@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import fs from 'fs/promises';
 import { app } from 'electron';
 
 const dbPath = app.isPackaged
@@ -149,5 +150,18 @@ db.transaction(() => {
     );
   `);
 })();
+
+export function getDatabaseFilePath() {
+  return dbPath;
+}
+
+export async function backupDatabaseToFile(destinationPath) {
+  if (typeof destinationPath !== 'string' || !destinationPath.trim()) {
+    throw new TypeError('destinationPath must be a non-empty string');
+  }
+  const dir = path.dirname(destinationPath);
+  await fs.mkdir(dir, { recursive: true });
+  await db.backup(destinationPath);
+}
 
 export default db;

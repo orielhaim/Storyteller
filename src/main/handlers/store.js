@@ -1,20 +1,24 @@
 import Store from 'electron-store';
+import { refreshBackupSchedule } from '../backupScheduler.js';
 
 const store = new Store({
-  name: 'settings'
+  name: 'settings',
 });
 
 export const storeHandlers = {
-  get: async (event, key, defaultValue) => {
+  get: async (_event, key, defaultValue) => {
     return store.get(key, defaultValue);
   },
 
-  set: async (event, key, value) => {
+  set: async (_event, key, value) => {
     store.set(key, value);
+    if (typeof key === 'string' && key.startsWith('storage.')) {
+      refreshBackupSchedule();
+    }
     return true;
   },
 
-  delete: async (event, key) => {
+  delete: async (_event, key) => {
     store.delete(key);
     return true;
   },
@@ -24,7 +28,7 @@ export const storeHandlers = {
     return true;
   },
 
-  has: async (event, key) => {
+  has: async (_event, key) => {
     return store.has(key);
   },
 

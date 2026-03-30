@@ -26,7 +26,14 @@ export const useSettingsStore = create((setState, getState) => ({
 
     try {
       const storedSettings = await storeAPI.getAll();
-      const mergedSettings = { ...DEFAULT_SETTINGS, ...storedSettings };
+      const mergedSettings = {
+        ...DEFAULT_SETTINGS,
+        ...storedSettings,
+        storage: {
+          ...DEFAULT_SETTINGS.storage,
+          ...(storedSettings.storage || {}),
+        },
+      };
 
       setState({
         settings: mergedSettings,
@@ -40,5 +47,5 @@ export const useSettingsStore = create((setState, getState) => ({
 
   getSetting: (path) => {
     return get(getState().settings, path);
-  }
+  },
 }));

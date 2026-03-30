@@ -1,7 +1,7 @@
 export const DEFAULT_SETTINGS = {
   editor: {
     wordCountEnabled: false,
-    spellCheck: true
+    spellCheck: true,
   },
   updates: {
     channel: 'stable',
@@ -12,11 +12,17 @@ export const DEFAULT_SETTINGS = {
     language: null,
   },
   developer: {
-    isDeveloperMode: false
+    isDeveloperMode: false,
+  },
+  storage: {
+    backupEnabled: false,
+    backupPath: null,
+    backupIntervalMinutes: 60,
+    maxBackupsToKeep: 10,
   },
   filters: {
     type: 'all',
     showBooksInSeries: false,
     showArchived: false,
-  }
+  },
 };

@@ -1,11 +1,4 @@
-import {
-  app,
-  shell,
-  BrowserWindow,
-  ipcMain,
-  nativeImage,
-  net,
-} from 'electron';
+import { app, shell, BrowserWindow, ipcMain, nativeImage, net } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import windowStateKeeper from 'electron-window-state';
@@ -14,6 +7,7 @@ import log from 'electron-log/main';
 import dotenv from 'dotenv';
 import Store from 'electron-store';
 import { registerIpcHandlers } from './handlers/index.js';
+import { refreshBackupSchedule } from './backupScheduler.js';
 
 dotenv.config();
 log.initialize();
@@ -158,6 +152,7 @@ app.whenReady().then(async () => {
     return app.getVersion();
   });
   registerIpcHandlers();
+  refreshBackupSchedule();
 
   createWindow();
 

@@ -7,6 +7,7 @@ import { chapterHandlers, sceneHandlers, writingHandlers } from './writing.js';
 import { imageHandlers } from './imageHandler.js';
 import { storeHandlers } from './store.js';
 import { exportHandlers } from './exportHandler.js';
+import { storageHandlers } from './storageHandler.js';
 
 export function registerIpcHandlers() {
   // Books channels
@@ -30,9 +31,18 @@ export function registerIpcHandlers() {
   ipcMain.handle('series:unarchive', seriesHandlers.unarchive);
 
   // Book-Series relationship channels
-  ipcMain.handle('bookSeries:addBookToSeries', bookSeriesHandlers.addBookToSeries);
-  ipcMain.handle('bookSeries:removeBookFromSeries', bookSeriesHandlers.removeBookFromSeries);
-  ipcMain.handle('bookSeries:updateBookPosition', bookSeriesHandlers.updateBookPosition);
+  ipcMain.handle(
+    'bookSeries:addBookToSeries',
+    bookSeriesHandlers.addBookToSeries,
+  );
+  ipcMain.handle(
+    'bookSeries:removeBookFromSeries',
+    bookSeriesHandlers.removeBookFromSeries,
+  );
+  ipcMain.handle(
+    'bookSeries:updateBookPosition',
+    bookSeriesHandlers.updateBookPosition,
+  );
   ipcMain.handle('bookSeries:reorderSeries', bookSeriesHandlers.reorderSeries);
 
   // Character channels
@@ -41,10 +51,22 @@ export function registerIpcHandlers() {
   ipcMain.handle('characters:create', characterHandlers.create);
   ipcMain.handle('characters:update', characterHandlers.update);
   ipcMain.handle('characters:delete', characterHandlers.delete);
-  ipcMain.handle('characters:getRelationships', characterHandlers.getRelationships);
-  ipcMain.handle('characters:addRelationship', characterHandlers.addRelationship);
-  ipcMain.handle('characters:updateRelationship', characterHandlers.updateRelationship);
-  ipcMain.handle('characters:removeRelationship', characterHandlers.removeRelationship);
+  ipcMain.handle(
+    'characters:getRelationships',
+    characterHandlers.getRelationships,
+  );
+  ipcMain.handle(
+    'characters:addRelationship',
+    characterHandlers.addRelationship,
+  );
+  ipcMain.handle(
+    'characters:updateRelationship',
+    characterHandlers.updateRelationship,
+  );
+  ipcMain.handle(
+    'characters:removeRelationship',
+    characterHandlers.removeRelationship,
+  );
   ipcMain.handle('characters:reorder', characterHandlers.reorder);
 
   // World channels
@@ -112,4 +134,15 @@ export function registerIpcHandlers() {
   ipcMain.handle('export:exportToTxt', exportHandlers.exportToTxt);
   ipcMain.handle('export:exportToEpub', exportHandlers.exportToEpub);
   ipcMain.handle('export:exportToMd', exportHandlers.exportToMd);
+
+  ipcMain.handle('storage:exportDatabase', storageHandlers.exportDatabase);
+  ipcMain.handle(
+    'storage:getDefaultBackupDir',
+    storageHandlers.getDefaultBackupDir,
+  );
+  ipcMain.handle(
+    'storage:pickBackupDirectory',
+    storageHandlers.pickBackupDirectory,
+  );
+  ipcMain.handle('storage:backupNow', storageHandlers.backupNow);
 }

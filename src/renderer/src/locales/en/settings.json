@@ -2,11 +2,13 @@
   "title": "Settings",
   "categories": {
     "editor": "Editor",
-    "general": "General"
+    "general": "General",
+    "storage": "Storage"
   },
   "descriptions": {
     "editor": "Customize your writing experience",
-    "general": "Application preferences"
+    "general": "Application preferences",
+    "storage": "Export and automatic backups of your library database"
   },
   "settings": {
     "wordCount": {
@@ -56,6 +58,52 @@
     "checkAgain": "Check for Updates Again",
     "failed": "Update Check Failed",
     "tryAgain": "Try Again"
+  },
+  "storage": {
+    "export": {
+      "label": "Export database",
+      "description": "Save a copy of your entire Storyteller database as a single SQLite file.",
+      "button": "Export…",
+      "success": "Database exported",
+      "failed": "Export failed",
+      "unavailable": "Export is not available in this environment"
+    },
+    "backup": {
+      "label": "Automatic backups",
+      "description": "Periodically copy your database to a folder."
+    },
+    "backupNow": {
+      "label": "Backup now",
+      "button": "Backup now",
+      "working": "Backing up…",
+      "success": "Backup saved",
+      "failed": "Backup failed",
+      "unavailable": "Backup is not available in this environment"
+    },
+    "folder": {
+      "label": "Backup folder",
+      "choose": "Choose folder…",
+      "useDefault": "Use default folder",
+      "updated": "Backup folder updated",
+      "failed": "Could not choose folder",
+      "unavailable": "Folder picker is not available"
+    },
+    "interval": {
+      "label": "Backup interval",
+      "description": "How often to save while the app is running.",
+      "options": {
+        "15": "Every 15 minutes",
+        "30": "Every 30 minutes",
+        "60": "Every hour",
+        "360": "Every 6 hours",
+        "1440": "Every 24 hours"
+      }
+    },
+    "retention": {
+      "label": "Backups to keep",
+      "description": "Oldest files are deleted before creating the next scheduled backup when there are more than this many.",
+      "option": "{{count}} backups"
+    }
   },
   "footer": {
     "openSource": "Storyteller is open source software under GPLv3 license",
