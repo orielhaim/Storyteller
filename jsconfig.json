@@ -2,6 +2,7 @@
   "compilerOptions": {
     "jsx": "react",
     "baseUrl": ".",
+    "module": "ESNext",
     "paths": {
       "@/*": ["src/renderer/src/*"]
     }

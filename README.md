@@ -88,4 +88,4 @@ Just download the latest release from the [Releases Page](https://github.com/ori
 
 ## 📄 License
 
-This project is licensed under the **GPLv3 License** - see the [LICENSE](LICENSE) file for details. This ensures the software remains free and open-source for everyone, forever.
+This project is licensed under the [**GPLv3 License**](LICENSE). This ensures the software remains free and open-source for everyone, forever.

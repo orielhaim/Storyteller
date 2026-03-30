@@ -9,13 +9,10 @@ import {
   Layout,
   Loader2,
   Sparkles,
-  Users,
-  MapPin,
-  Clock,
   ArrowRight,
   ExternalLink
 } from 'lucide-react';
-import { FaGithub } from "react-icons/fa6";
+import { RiGithubLine } from "react-icons/ri";
 import { cn } from '@/lib/utils';
 
 export default function Welcome() {
@@ -201,13 +198,6 @@ const StatItem = memo(function StatItem({
           )}
         >
           <header className="mx-auto max-w-4xl space-y-8 text-center mb-10">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm px-4 py-2">
-              <Sparkles className="size-4 text-amber-500" />
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                {t('badge')}
-              </span>
-            </div>
-
             <h1 className="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
               <span className="text-slate-900 dark:text-slate-50">{t('title.welcome')}</span>
               <span className="bg-linear-to-r from-blue-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
@@ -220,7 +210,7 @@ const StatItem = memo(function StatItem({
             </p>
           </header>
 
-          <section className="grid gap-6 sm:grid-cols-2 lg:gap-8">
+          <section className="grid gap-6 sm:grid-cols-2 lg:gap-8 mb-10">
             {FEATURES.map((feature, index) => (
               <FeatureCard
                 key={feature.title}
@@ -230,7 +220,7 @@ const StatItem = memo(function StatItem({
             ))}
           </section>
 
-          <footer className="flex flex-col items-center gap-6 pt-4">
+          <footer className="flex flex-col items-center gap-6">
             <div className="flex flex-col items-center gap-4 sm:flex-row">
               <Button
                 size="lg"
@@ -264,7 +254,7 @@ const StatItem = memo(function StatItem({
                 onClick={handleOpenGitHub}
                 className="h-14 rounded-full px-8 text-lg font-medium border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
               >
-                <FaGithub className="mr-2 size-5" />
+                <RiGithubLine className="mr-2 size-5" />
                 <span>{t('buttons.viewOnGitHub')}</span>
                 <ExternalLink className="ml-2 size-4 opacity-50" />
               </Button>

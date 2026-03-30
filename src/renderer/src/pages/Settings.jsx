@@ -9,7 +9,7 @@ import {
   XCircle,
   X,
 } from 'lucide-react';
-import { FaGithub } from 'react-icons/fa6';
+import { RiGithubLine } from "react-icons/ri";
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -347,7 +347,7 @@ function Settings() {
                 )
               }
             >
-              <FaGithub className="mr-1 h-3 w-3" />
+              <RiGithubLine className="mr-1 h-3 w-3" />
               {t('footer.viewOnGitHub')}
             </Button>
           </div>
