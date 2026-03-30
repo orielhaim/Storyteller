@@ -30,6 +30,23 @@ const UPDATE_CHANNELS = [
   { value: 'beta', label: 'updates.channel.options.beta' },
 ];
 
+function useOnlineStatus() {
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return isOnline;
+}
+
 function UpdateStatusBanner() {
   const { t } = useTranslation('settings');
   const {
@@ -42,11 +59,34 @@ function UpdateStatusBanner() {
     installAndRestart,
   } = useUpdaterStore();
 
+  const isOnline = useOnlineStatus();
   const isPrerelease = updateInfo?.version?.includes('-');
   const fileSize = updateInfo?.files?.[0]?.size;
   const formattedSize = fileSize
     ? `${Math.round(fileSize / 1024 / 1024)} MB`
     : null;
+
+  if (status === 'offline') {
+    return (
+      <div className="flex items-center justify-between py-3">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+            Offline
+          </Badge>
+          <span>{t('updates.failed')}</span>
+        </div>
+        <Button
+          onClick={checkForUpdates}
+          variant="ghost"
+          size="sm"
+          className="h-7 text-xs"
+          disabled
+        >
+          {t('updates.checkAgain')}
+        </Button>
+      </div>
+    );
+  }
 
   if (
     status === 'idle' ||
@@ -73,12 +113,18 @@ function UpdateStatusBanner() {
           >
             {currentVersion}
           </Badge>
+          {!isOnline && (
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+              Offline
+            </Badge>
+          )}
         </div>
         <Button
           onClick={checkForUpdates}
           variant="ghost"
           size="sm"
           className="h-7 text-xs"
+          disabled={!isOnline}
         >
           <RefreshCw className="h-3 w-3 mr-1" />
           {t('updates.checkAgain')}
@@ -93,12 +139,18 @@ function UpdateStatusBanner() {
         <div className="flex items-center gap-2 text-sm text-destructive">
           <XCircle className="h-3.5 w-3.5" />
           <span>{t('updates.failed')}</span>
+          {!isOnline && (
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+              Offline
+            </Badge>
+          )}
         </div>
         <Button
           onClick={checkForUpdates}
           variant="ghost"
           size="sm"
           className="h-7 text-xs"
+          disabled={!isOnline}
         >
           {t('updates.tryAgain')}
         </Button>

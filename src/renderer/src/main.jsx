@@ -1,3 +1,5 @@
+import log from 'electron-log/renderer';
+Object.assign(console, log.functions);
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';

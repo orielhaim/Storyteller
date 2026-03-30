@@ -4,7 +4,7 @@ import {
   BrowserWindow,
   ipcMain,
   nativeImage,
-  Tray,
+  net,
 } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
@@ -47,12 +47,16 @@ const applyUpdateChannel = (channel) => {
 };
 applyUpdateChannel(settingsStore.get('updates.channel', 'stable'));
 
-ipcMain.handle('updater:check-for-updates', () => {
+ipcMain.handle('updater:check-for-updates', async () => {
+  const isOnline = await net.isOnline();
+  if (!isOnline) return { offline: true };
+
   autoUpdater.checkForUpdates();
+  return { ok: true };
 });
 
-ipcMain.handle('updater:start-download', () => {
-  autoUpdater.downloadUpdate();
+ipcMain.handle('updater:start-download', async () => {
+  return await autoUpdater.downloadUpdate();
 });
 
 ipcMain.handle('updater:install-and-restart', () => {
@@ -99,9 +103,6 @@ autoUpdater.on('error', (err) => {
   });
 });
 
-const trayIcon = nativeImage.createFromPath(
-  join(__dirname, '../../resources/icon.png'),
-);
 const appIcon = nativeImage.createFromPath(
   join(__dirname, '../../resources/icon.png'),
 );
@@ -125,9 +126,6 @@ function createWindow() {
       sandbox: false,
     },
   });
-
-  // biome-ignore lint/correctness/noUnusedVariables: tray is used
-  const tray = new Tray(trayIcon);
 
   mainWindowState.manage(win);
 

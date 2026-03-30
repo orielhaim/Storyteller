@@ -43,6 +43,11 @@ export const useUpdaterStore = create((set, get) => ({
       set({ status: 'error' });
     });
 
+    if (typeof navigator !== 'undefined' && navigator && !navigator.onLine) {
+      set({ status: 'offline' });
+      return;
+    }
+
     set({ status: 'pending_check' });
 
     setTimeout(() => {
@@ -56,10 +61,18 @@ export const useUpdaterStore = create((set, get) => ({
     const { status } = get();
     if (status === 'checking' || status === 'downloading') return;
 
+    if (typeof navigator !== 'undefined' && navigator && !navigator.onLine) {
+      set({ status: 'offline' });
+      return;
+    }
+
     set({ status: 'checking' });
 
     try {
-      await window.updaterAPI.checkForUpdates();
+      const result = await window.updaterAPI.checkForUpdates();
+      if (result?.offline) {
+        set({ status: 'offline' });
+      }
     } catch (error) {
       console.error('Check failed:', error);
       set({ status: 'error' });
@@ -70,7 +83,7 @@ export const useUpdaterStore = create((set, get) => ({
     try {
       set({ status: 'downloading', downloadProgress: 0 });
       await window.updaterAPI.startDownload();
-    } catch (error) {
+    } catch {
       set({ status: 'available' });
       toast.error('Download failed');
     }
