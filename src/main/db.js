@@ -148,6 +148,15 @@ db.transaction(() => {
       FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE,
       FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS workspace_state (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      book_id INTEGER NOT NULL UNIQUE,
+      dockview_layout TEXT NOT NULL DEFAULT '{}',
+      panel_layout TEXT,
+      updated_at INTEGER NOT NULL,
+      FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    );
   `);
 })();
 

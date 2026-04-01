@@ -8,6 +8,7 @@ import { imageHandlers } from './imageHandler.js';
 import { storeHandlers } from './store.js';
 import { exportHandlers } from './exportHandler.js';
 import { storageHandlers } from './storageHandler.js';
+import { workspaceHandlers } from './workspace.js';
 
 export function registerIpcHandlers() {
   // Books channels
@@ -145,4 +146,8 @@ export function registerIpcHandlers() {
     storageHandlers.pickBackupDirectory,
   );
   ipcMain.handle('storage:backupNow', storageHandlers.backupNow);
+
+  // Workspace state channels
+  ipcMain.handle('workspace:load', workspaceHandlers.load);
+  ipcMain.handle('workspace:save', workspaceHandlers.save);
 }
