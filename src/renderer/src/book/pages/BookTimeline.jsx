@@ -1,12 +1,4 @@
-/* global bookAPI */
-import {
-  useState,
-  useEffect,
-  useRef,
-  useTransition,
-  use,
-  Suspense,
-} from 'react';
+import { useState, useEffect, useRef, useTransition, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
@@ -16,7 +8,7 @@ import {
   ZoomOut,
   Maximize2,
   Layers,
-  Link2
+  Link2,
 } from 'lucide-react';
 import { useCharacterStore } from '@/stores/characterStore';
 import { useWritingStore } from '@/stores/writingStore';
@@ -96,7 +88,9 @@ const TimelineContentBuilders = {
   },
 
   sceneItem(scene, chapter) {
-    const chapterLabel = chapter ? `<span class="text-[10px] text-emerald-600 font-medium">${chapter.name}</span>` : '';
+    const chapterLabel = chapter
+      ? `<span class="text-[10px] text-emerald-600 font-medium">${chapter.name}</span>`
+      : '';
     return `
       <div class="flex items-center gap-2 px-2.5 py-1.5 bg-linear-to-r from-emerald-50 to-teal-50 border border-emerald-200/60 rounded-lg shadow-sm hover:shadow transition-shadow">
         <div class="w-2 h-2 bg-linear-to-br from-emerald-500 to-teal-600 rounded-full shrink-0"></div>
@@ -247,12 +241,15 @@ function useCharacterImages(characters) {
   const [imageDataMap, setImageDataMap] = useState({});
 
   useEffect(() => {
-    if (characters.length === 0) return;
+    if (characters.length === 0) {
+      setImageDataMap({});
+      return;
+    }
 
-    const controller = new AbortController();
+    let cancelled = false;
 
     async function loadImages() {
-      const charactersWithAvatars = characters.filter(c => c.avatar);
+      const charactersWithAvatars = characters.filter((c) => c.avatar);
 
       const results = await Promise.allSettled(
         charactersWithAvatars.map(async (character) => {
@@ -261,10 +258,10 @@ function useCharacterImages(characters) {
             return { id: character.id, data: result.data };
           }
           return null;
-        })
+        }),
       );
 
-      if (controller.signal.aborted) return;
+      if (cancelled) return;
 
       const imageMap = {};
       for (const result of results) {
@@ -276,7 +273,10 @@ function useCharacterImages(characters) {
     }
 
     loadImages();
-    return () => controller.abort();
+
+    return () => {
+      cancelled = true;
+    };
   }, [characters]);
 
   return imageDataMap;
@@ -288,11 +288,12 @@ function useRelationships(characters) {
 
   useEffect(() => {
     if (characters.length === 0) {
+      setRelationships({});
       setIsLoading(false);
       return;
     }
 
-    const controller = new AbortController();
+    let cancelled = false;
 
     async function fetchAllRelationships() {
       setIsLoading(true);
@@ -301,11 +302,14 @@ function useRelationships(characters) {
       const results = await Promise.allSettled(
         characters.map(async (character) => {
           const res = await bookAPI.characters.getRelationships(character.id);
-          return { id: character.id, data: res.success ? res.data ?? [] : [] };
-        })
+          return {
+            id: character.id,
+            data: res.success ? (res.data ?? []) : [],
+          };
+        }),
       );
 
-      if (controller.signal.aborted) return;
+      if (cancelled) return;
 
       for (const result of results) {
         if (result.status === 'fulfilled') {
@@ -318,7 +322,10 @@ function useRelationships(characters) {
     }
 
     fetchAllRelationships();
-    return () => controller.abort();
+
+    return () => {
+      cancelled = true;
+    };
   }, [characters]);
 
   return { relationships, isLoading };
@@ -330,25 +337,36 @@ function buildTimelineData(
   characters,
   relationships,
   imageDataMap,
-  displayMode
+  displayMode,
 ) {
   const items = [];
   const groups = [];
-  const characterMap = new Map(characters.map(c => [c.id, c]));
-  const chapterMap = new Map(chapters.map(c => [c.id, c]));
+  const characterMap = new Map(characters.map((c) => [c.id, c]));
+  const chapterMap = new Map(chapters.map((c) => [c.id, c]));
   const processedRelationships = new Set();
 
-  const scenesWithDates = scenes.filter(s => s.startDate || s.endDate);
+  const scenesWithDates = scenes.filter((s) => s.startDate || s.endDate);
 
   if (displayMode === 'separate') {
-    buildSeparateBookTimeline(scenesWithDates, chapterMap, items, groups, chapters);
+    buildSeparateBookTimeline(
+      scenesWithDates,
+      chapterMap,
+      items,
+      groups,
+      chapters,
+    );
   } else {
     buildConnectedBookTimeline(scenesWithDates, chapterMap, items, groups);
   }
 
   buildCharacterGroups(characters, imageDataMap, groups);
   buildCharacterEvents(characters, characterMap, items);
-  buildRelationshipEvents(relationships, characterMap, processedRelationships, items);
+  buildRelationshipEvents(
+    relationships,
+    characterMap,
+    processedRelationships,
+    items,
+  );
   buildParentChildEvents(relationships, characterMap, items);
 
   return { items, groups };
@@ -359,7 +377,7 @@ function buildSeparateBookTimeline(
   chapterMap,
   items,
   groups,
-  chapters
+  chapters,
 ) {
   const chaptersWithScenes = new Map();
 
@@ -381,7 +399,10 @@ function buildSeparateBookTimeline(
 
     groups.push({
       id: chapterGroupId,
-      content: TimelineContentBuilders.chapterGroup(chapter, chapterScenes.length),
+      content: TimelineContentBuilders.chapterGroup(
+        chapter,
+        chapterScenes.length,
+      ),
       nestedGroups: [`scenes-${chapterId}`],
       showNested: true,
       order: 0,
@@ -418,7 +439,7 @@ function buildConnectedBookTimeline(
   scenesWithDates,
   chapterMap,
   items,
-  groups
+  groups,
 ) {
   const bookTimelineGroupId = 'book-timeline-connected';
 
@@ -435,13 +456,7 @@ function buildConnectedBookTimeline(
   }
 }
 
-function addSceneItem(
-  scene,
-  groupId,
-  chapter,
-  items,
-  includeChapter = false
-) {
+function addSceneItem(scene, groupId, chapter, items, includeChapter = false) {
   const startDate = normalizeDate(scene.startDate);
   const endDate = normalizeDate(scene.endDate, true);
   const sceneContent = includeChapter
@@ -475,11 +490,7 @@ function addSceneItem(
   }
 }
 
-function buildCharacterGroups(
-  characters,
-  imageDataMap,
-  groups
-) {
+function buildCharacterGroups(characters, imageDataMap, groups) {
   const charactersByRole = characters.reduce((acc, char) => {
     const role = char.role ?? 'marginal';
     (acc[role] ??= []).push(char);
@@ -496,8 +507,11 @@ function buildCharacterGroups(
 
     groups.push({
       id: `role-${roleKey}`,
-      content: TimelineContentBuilders.roleGroup(config.label, roleCharacters.length),
-      nestedGroups: roleCharacters.map(c => c.id),
+      content: TimelineContentBuilders.roleGroup(
+        config.label,
+        roleCharacters.length,
+      ),
+      nestedGroups: roleCharacters.map((c) => c.id),
       showNested: true,
       order: config.order,
     });
@@ -517,16 +531,15 @@ function buildCharacterGroups(
     const name = getCharacterFullName(character);
     groups.push({
       id: character.id,
-      content: TimelineContentBuilders.characterGroup(name, imageDataMap[character.id]),
+      content: TimelineContentBuilders.characterGroup(
+        name,
+        imageDataMap[character.id],
+      ),
     });
   }
 }
 
-function buildCharacterEvents(
-  characters,
-  characterMap,
-  items
-) {
+function buildCharacterEvents(characters, characterMap, items) {
   for (const character of characters) {
     const name = getCharacterFullName(character);
 
@@ -537,7 +550,10 @@ function buildCharacterEvents(
         group: character.id,
         start: birthDate,
         type: 'point',
-        content: TimelineContentBuilders.eventBirth(birthDate, character.description),
+        content: TimelineContentBuilders.eventBirth(
+          birthDate,
+          character.description,
+        ),
         title: `${name} was born on ${birthDate.toLocaleDateString()}`,
         className: 'birth-event',
       });
@@ -550,7 +566,10 @@ function buildCharacterEvents(
         group: character.id,
         start: deathDate,
         type: 'point',
-        content: TimelineContentBuilders.eventDeath(deathDate, character.description),
+        content: TimelineContentBuilders.eventDeath(
+          deathDate,
+          character.description,
+        ),
         title: `${name} died on ${deathDate.toLocaleDateString()}`,
         className: 'death-event',
       });
@@ -562,7 +581,7 @@ function buildRelationshipEvents(
   relationships,
   characterMap,
   processedRelationships,
-  items
+  items,
 ) {
   for (const [characterIdStr, rels] of Object.entries(relationships)) {
     const characterId = parseInt(characterIdStr, 10);
@@ -584,8 +603,14 @@ function buildRelationshipEvents(
       if (rel.relationshipType === 'spouse' && rel.metadata?.marriageDate) {
         const date = normalizeDate(rel.metadata.marriageDate);
         if (date) {
-          const content = TimelineContentBuilders.eventMarriage(relatedName, date);
-          const reverseContent = TimelineContentBuilders.eventMarriage(characterName, date);
+          const content = TimelineContentBuilders.eventMarriage(
+            relatedName,
+            date,
+          );
+          const reverseContent = TimelineContentBuilders.eventMarriage(
+            characterName,
+            date,
+          );
 
           items.push(
             {
@@ -605,7 +630,7 @@ function buildRelationshipEvents(
               content: reverseContent,
               title: `${relatedName} married ${characterName} on ${date.toLocaleDateString()}`,
               className: 'marriage-event',
-            }
+            },
           );
         }
       }
@@ -613,8 +638,14 @@ function buildRelationshipEvents(
       if (rel.relationshipType === 'engaged' && rel.metadata?.engagementDate) {
         const date = normalizeDate(rel.metadata.engagementDate);
         if (date) {
-          const content = TimelineContentBuilders.eventEngagement(relatedName, date);
-          const reverseContent = TimelineContentBuilders.eventEngagement(characterName, date);
+          const content = TimelineContentBuilders.eventEngagement(
+            relatedName,
+            date,
+          );
+          const reverseContent = TimelineContentBuilders.eventEngagement(
+            characterName,
+            date,
+          );
 
           items.push(
             {
@@ -634,7 +665,7 @@ function buildRelationshipEvents(
               content: reverseContent,
               title: `${relatedName} engaged to ${characterName} on ${date.toLocaleDateString()}`,
               className: 'engagement-event',
-            }
+            },
           );
         }
       }
@@ -642,11 +673,7 @@ function buildRelationshipEvents(
   }
 }
 
-function buildParentChildEvents(
-  relationships,
-  characterMap,
-  items
-) {
+function buildParentChildEvents(relationships, characterMap, items) {
   const parentChildEvents = new Map();
 
   for (const [characterIdStr, rels] of Object.entries(relationships)) {
@@ -688,16 +715,22 @@ function buildParentChildEvents(
       if (!date) continue;
 
       const childNames = children.map(getCharacterFullName);
-      const description = children.length === 1 ? children[0].description : undefined;
+      const description =
+        children.length === 1 ? children[0].description : undefined;
 
       items.push({
-        id: children.length === 1
-          ? `child-birth-${parentId}-${children[0].id}`
-          : `children-birth-${parentId}-${dateKey}`,
+        id:
+          children.length === 1
+            ? `child-birth-${parentId}-${children[0].id}`
+            : `children-birth-${parentId}-${dateKey}`,
         group: parentId,
         start: date,
         type: 'point',
-        content: TimelineContentBuilders.eventChildBirth(childNames, date, description),
+        content: TimelineContentBuilders.eventChildBirth(
+          childNames,
+          date,
+          description,
+        ),
         title: `${childNames.join(', ')} born to ${parentName} on ${date.toLocaleDateString()}`,
         className: 'child-birth-event',
       });
@@ -713,7 +746,9 @@ function LoadingState() {
           <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
           <div className="absolute inset-0 h-10 w-10 mx-auto rounded-full bg-primary/10 animate-ping" />
         </div>
-        <p className="text-muted-foreground font-medium">Loading timeline data...</p>
+        <p className="text-muted-foreground font-medium">
+          Loading timeline data...
+        </p>
       </div>
     </div>
   );
@@ -727,9 +762,12 @@ function EmptyState() {
           <Calendar className="h-8 w-8 text-muted-foreground/50" />
         </div>
         <div className="space-y-2">
-          <h3 className="font-semibold text-lg text-foreground">No timeline data available</h3>
+          <h3 className="font-semibold text-lg text-foreground">
+            No timeline data available
+          </h3>
           <p className="text-sm text-muted-foreground">
-            Add dates to character events or scene timings to see them visualized on the timeline.
+            Add dates to character events or scene timings to see them
+            visualized on the timeline.
           </p>
         </div>
       </div>
@@ -750,7 +788,9 @@ function TimelineControls({
   return (
     <div className="flex items-center justify-between flex-wrap gap-4">
       <div className="flex items-center gap-4">
-        <h2 className="font-bold text-xl text-foreground tracking-tight">Timeline</h2>
+        <h2 className="font-bold text-xl text-foreground tracking-tight">
+          Timeline
+        </h2>
 
         {hasScenes && (
           <div className="relative">
@@ -764,9 +804,9 @@ function TimelineControls({
                 value="separate"
                 aria-label="Display chapters separately"
                 className={cn(
-                  "px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200",
-                  "data-[state=on]:bg-background data-[state=on]:text-blue-600 data-[state=on]:shadow-sm",
-                  "data-[state=off]:text-muted-foreground data-[state=off]:hover:text-foreground"
+                  'px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200',
+                  'data-[state=on]:bg-background data-[state=on]:text-blue-600 data-[state=on]:shadow-sm',
+                  'data-[state=off]:text-muted-foreground data-[state=off]:hover:text-foreground',
                 )}
               >
                 <Layers className="w-4 h-4 mr-1.5" />
@@ -776,9 +816,9 @@ function TimelineControls({
                 value="connected"
                 aria-label="Display all scenes connected"
                 className={cn(
-                  "px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200",
-                  "data-[state=on]:bg-background data-[state=on]:text-emerald-600 data-[state=on]:shadow-sm",
-                  "data-[state=off]:text-muted-foreground data-[state=off]:hover:text-foreground"
+                  'px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200',
+                  'data-[state=on]:bg-background data-[state=on]:text-emerald-600 data-[state=on]:shadow-sm',
+                  'data-[state=off]:text-muted-foreground data-[state=off]:hover:text-foreground',
                 )}
               >
                 <Link2 className="w-4 h-4 mr-1.5" />
@@ -832,8 +872,13 @@ function TimelineControls({
 }
 
 export default function BookTimeline({ book }) {
-  const { characters, loading: charactersLoading, fetchCharacters } = useCharacterStore();
-  const { chapters, scenes, fetchChapters, fetchScenesByBook } = useWritingStore();
+  const {
+    characters,
+    loading: charactersLoading,
+    fetchCharacters,
+  } = useCharacterStore();
+  const { chapters, scenes, fetchChapters, fetchScenesByBook } =
+    useWritingStore();
 
   const [chaptersLoading, setChaptersLoading] = useState(true);
   const [scenesLoading, setScenesLoading] = useState(true);
@@ -843,58 +888,70 @@ export default function BookTimeline({ book }) {
   const timelineRef = useRef(null);
 
   const imageDataMap = useCharacterImages(characters);
-  const { relationships, isLoading: relationshipsLoading } = useRelationships(characters);
+  const { relationships, isLoading: relationshipsLoading } =
+    useRelationships(characters);
 
   useEffect(() => {
     fetchCharacters(book.id);
   }, [book.id, fetchCharacters]);
 
   useEffect(() => {
-    let isMounted = true;
+    let cancelled = false;
 
     async function loadChapters() {
       setChaptersLoading(true);
       try {
         await fetchChapters(book.id);
       } catch (error) {
-        console.error('Failed to fetch chapters:', error);
+        if (!cancelled) console.error('Failed to fetch chapters:', error);
       } finally {
-        if (isMounted) setChaptersLoading(false);
+        if (!cancelled) setChaptersLoading(false);
       }
     }
 
     loadChapters();
-    return () => { isMounted = false; };
+    return () => {
+      cancelled = true;
+    };
   }, [book.id, fetchChapters]);
 
   useEffect(() => {
-    let isMounted = true;
+    let cancelled = false;
 
     async function loadScenes() {
       setScenesLoading(true);
       try {
         await fetchScenesByBook(book.id);
       } catch (error) {
-        console.error('Failed to fetch scenes:', error);
+        if (!cancelled) console.error('Failed to fetch scenes:', error);
       } finally {
-        if (isMounted) setScenesLoading(false);
+        if (!cancelled) setScenesLoading(false);
       }
     }
 
     loadScenes();
-    return () => { isMounted = false; };
+    return () => {
+      cancelled = true;
+    };
   }, [book.id, fetchScenesByBook]);
 
-  const scenesWithDates = scenes.filter(s => s.startDate || s.endDate);
+  const scenesWithDates = useMemo(
+    () => scenes.filter((s) => s.startDate || s.endDate),
+    [scenes],
+  );
   const hasScenes = scenesWithDates.length > 0;
 
-  const { items: timelineItems, groups: timelineGroups } = buildTimelineData(
-    chapters,
-    scenes,
-    characters,
-    relationships,
-    imageDataMap,
-    displayMode
+  const { items: timelineItems, groups: timelineGroups } = useMemo(
+    () =>
+      buildTimelineData(
+        chapters,
+        scenes,
+        characters,
+        relationships,
+        imageDataMap,
+        displayMode,
+      ),
+    [chapters, scenes, characters, relationships, imageDataMap, displayMode],
   );
 
   const handleDisplayModeChange = (mode) => {
@@ -907,7 +964,11 @@ export default function BookTimeline({ book }) {
   const handleZoomIn = () => timelineRef.current?.zoomIn();
   const handleZoomOut = () => timelineRef.current?.zoomOut();
 
-  const isLoading = charactersLoading || relationshipsLoading || chaptersLoading || scenesLoading;
+  const isLoading =
+    charactersLoading ||
+    relationshipsLoading ||
+    chaptersLoading ||
+    scenesLoading;
 
   if (isLoading) {
     return <LoadingState />;

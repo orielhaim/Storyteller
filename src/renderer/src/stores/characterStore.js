@@ -1,303 +1,339 @@
-/* global bookAPI */
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
-export const useCharacterStore = create(immer((set, get) => ({
-  characters: [],
-  currentCharacter: null,
-  relationships: [],
-  relationshipsByCharacter: {},
-  loading: false,
-  error: null,
+export const useCharacterStore = create(
+  immer((set, get) => ({
+    characters: [],
+    currentCharacter: null,
+    relationships: [],
+    relationshipsByCharacter: {},
+    loading: false,
+    error: null,
 
-  characterCache: {}, // Record<bookId, Character[]>
+    characterCache: {},
 
-  fetchCharacters: async (bookId) => {
-    const cachedCharacters = get().characterCache[bookId];
-    if (cachedCharacters) {
-      set(state => { state.characters = cachedCharacters; });
-      return cachedCharacters;
-    }
+    fetchCharacters: async (bookId) => {
+      const cachedCharacters = get().characterCache[bookId];
+      if (cachedCharacters) {
+        set((state) => {
+          state.characters = cachedCharacters;
+        });
+        return cachedCharacters;
+      }
 
-    set(state => {
-      state.loading = true;
-      state.error = null;
-    });
-
-    try {
-      const res = await bookAPI.characters.getAllByBook(bookId);
-      if (!res.success) throw new Error(res.error);
-
-      set(state => {
-        state.characters = res.data;
-        state.characterCache[bookId] = res.data;
-        state.loading = false;
+      set((state) => {
+        state.loading = true;
+        state.error = null;
       });
 
-      return res.data;
-    } catch (e) {
-      console.error('Failed to fetch characters:', e);
-      set(state => {
-        state.loading = false;
-        state.error = e.message || 'Failed to fetch characters';
-      });
-      throw e;
-    }
-  },
+      try {
+        const res = await bookAPI.characters.getAllByBook(bookId);
+        if (!res.success) throw new Error(res.error);
 
-  fetchCharacter: async (id) => {
-    set(state => {
-      state.loading = true;
-      state.error = null;
-    });
+        set((state) => {
+          state.characters = res.data;
+          state.characterCache[bookId] = res.data;
+          state.loading = false;
+        });
 
-    try {
-      const res = await bookAPI.characters.getById(id);
-      if (!res.success) throw new Error(res.error);
+        return res.data;
+      } catch (e) {
+        console.error('Failed to fetch characters:', e);
+        set((state) => {
+          state.loading = false;
+          state.error = e.message || 'Failed to fetch characters';
+        });
+        throw e;
+      }
+    },
 
-      const relRes = await bookAPI.characters.getRelationships(id);
-      
-      set(state => {
-        // Update in characters list if exists
-        const index = state.characters.findIndex(c => c.id === id);
-        if (index !== -1) {
-          state.characters[index] = res.data;
-        } else {
-          state.characters.push(res.data);
-        }
-
-        state.currentCharacter = res.data;
-        state.relationships = relRes.success ? relRes.data : [];
-        state.relationshipsByCharacter[id] = relRes.success ? relRes.data : [];
-        state.loading = false;
+    fetchCharacter: async (id) => {
+      set((state) => {
+        state.loading = true;
+        state.error = null;
       });
 
-      return res.data;
-    } catch (e) {
-      console.error('Failed to fetch character:', e);
-      set(state => {
-        state.loading = false;
-        state.error = e.message || 'Failed to fetch character';
-      });
-      throw e;
-    }
-  },
+      try {
+        const res = await bookAPI.characters.getById(id);
+        if (!res.success) throw new Error(res.error);
 
-  fetchRelationships: async (characterId) => {
-    try {
-      const res = await bookAPI.characters.getRelationships(characterId);
-      if (!res.success) throw new Error(res.error);
+        const relRes = await bookAPI.characters.getRelationships(id);
 
-      set(state => {
-        state.relationships = res.data;
-        state.relationshipsByCharacter[characterId] = res.data;
-      });
+        set((state) => {
+          const index = state.characters.findIndex((c) => c.id === id);
+          if (index !== -1) {
+            state.characters[index] = res.data;
+          } else {
+            state.characters.push(res.data);
+          }
 
-      return res.data;
-    } catch (e) {
-      console.error('Failed to fetch relationships:', e);
-      throw e;
-    }
-  },
+          state.currentCharacter = res.data;
+          state.relationships = relRes.success ? relRes.data : [];
+          state.relationshipsByCharacter[id] = relRes.success
+            ? relRes.data
+            : [];
+          state.loading = false;
+        });
 
-  refreshRelatedCharacters: async (ids) => {
-    const uniqueIds = [...new Set(ids.filter(id => id !== undefined && id !== null))];
-    await Promise.all(uniqueIds.map(id => get().fetchRelationships(id)));
-  },
+        return res.data;
+      } catch (e) {
+        console.error('Failed to fetch character:', e);
+        set((state) => {
+          state.loading = false;
+          state.error = e.message || 'Failed to fetch character';
+        });
+        throw e;
+      }
+    },
 
-  addRelationship: async (data) => {
-    try {
-      const res = await bookAPI.characters.addRelationship(data);
-      if (!res.success) throw new Error(res.error);
+    fetchRelationships: async (characterId) => {
+      try {
+        const res = await bookAPI.characters.getRelationships(characterId);
+        if (!res.success) throw new Error(res.error);
 
-      await get().refreshRelatedCharacters([data.characterId, data.relatedCharacterId]);
-      
-      return res.data;
-    } catch (e) {
-      console.error('Failed to add relationship:', e);
-      throw e;
-    }
-  },
+        set((state) => {
+          state.relationships = res.data;
+          state.relationshipsByCharacter[characterId] = res.data;
+        });
 
-  updateRelationship: async (id, characterId, data) => {
-    try {
-      const res = await bookAPI.characters.updateRelationship(id, data);
-      if (!res.success) throw new Error(res.error);
+        return res.data;
+      } catch (e) {
+        console.error('Failed to fetch relationships:', e);
+        throw e;
+      }
+    },
 
-      const rels = get().relationshipsByCharacter[characterId] || [];
-      const rel = rels.find(r => r.id === id);
-      
-      const otherId = rel?.characterId === characterId ? rel?.relatedCharacterId : rel?.characterId;
-      
-      await get().refreshRelatedCharacters([characterId, otherId]);
-      
-      return res.data;
-    } catch (e) {
-      console.error('Failed to update relationship:', e);
-      throw e;
-    }
-  },
+    refreshRelatedCharacters: async (ids) => {
+      const uniqueIds = [
+        ...new Set(ids.filter((id) => id !== undefined && id !== null)),
+      ];
+      await Promise.all(uniqueIds.map((id) => get().fetchRelationships(id)));
+    },
 
-  removeRelationship: async (id, characterId) => {
-    try {
-      const rels = get().relationshipsByCharacter[characterId] || [];
-      const rel = rels.find(r => r.id === id);
-      
-      const otherId = rel?.characterId === characterId ? rel?.relatedCharacterId : rel?.characterId;
+    addRelationship: async (data) => {
+      try {
+        const res = await bookAPI.characters.addRelationship(data);
+        if (!res.success) throw new Error(res.error);
 
-      const res = await bookAPI.characters.removeRelationship(id);
-      if (!res.success) throw new Error(res.error);
+        await get().refreshRelatedCharacters([
+          data.characterId,
+          data.relatedCharacterId,
+        ]);
 
-      await get().refreshRelatedCharacters([characterId, otherId]);
-      
-      return res;
-    } catch (e) {
-      console.error('Failed to remove relationship:', e);
-      throw e;
-    }
-  },
+        return res.data;
+      } catch (e) {
+        console.error('Failed to add relationship:', e);
+        throw e;
+      }
+    },
 
-  createCharacter: async (data) => {
-    set(state => { state.loading = true; state.error = null; });
+    updateRelationship: async (id, characterId, data) => {
+      try {
+        const res = await bookAPI.characters.updateRelationship(id, data);
+        if (!res.success) throw new Error(res.error);
 
-    try {
-      const res = await bookAPI.characters.create(data);
-      if (!res.success) throw new Error(res.error);
+        const rels = get().relationshipsByCharacter[characterId] || [];
+        const rel = rels.find((r) => r.id === id);
 
-      const newCharacter = res.data;
+        const otherId =
+          rel?.characterId === characterId
+            ? rel?.relatedCharacterId
+            : rel?.characterId;
 
-      set(state => {
-        state.characters.push(newCharacter);
-        delete state.characterCache[data.bookId];
-        state.loading = false;
-      });
+        await get().refreshRelatedCharacters([characterId, otherId]);
 
-      return newCharacter;
-    } catch (e) {
-      console.error('Failed to create character:', e);
-      set(state => {
-        state.loading = false;
-        state.error = e.message || 'Failed to create character';
-      });
-      throw e;
-    }
-  },
+        return res.data;
+      } catch (e) {
+        console.error('Failed to update relationship:', e);
+        throw e;
+      }
+    },
 
-  updateCharacter: async (id, data) => {
-    set(state => { state.loading = true; state.error = null; });
+    removeRelationship: async (id, characterId) => {
+      try {
+        const rels = get().relationshipsByCharacter[characterId] || [];
+        const rel = rels.find((r) => r.id === id);
 
-    try {
-      const res = await bookAPI.characters.update(id, data);
-      if (!res.success) throw new Error(res.error);
+        const otherId =
+          rel?.characterId === characterId
+            ? rel?.relatedCharacterId
+            : rel?.characterId;
 
-      const updatedCharacter = res.data;
+        const res = await bookAPI.characters.removeRelationship(id);
+        if (!res.success) throw new Error(res.error);
 
-      set(state => {
-        const index = state.characters.findIndex(char => char.id === id);
-        if (index !== -1) {
-          state.characters[index] = updatedCharacter;
-        } else {
-          state.characters.push(updatedCharacter);
-        }
+        await get().refreshRelatedCharacters([characterId, otherId]);
 
-        if (state.currentCharacter?.id === id) {
-          state.currentCharacter = updatedCharacter;
-        }
+        return res;
+      } catch (e) {
+        console.error('Failed to remove relationship:', e);
+        throw e;
+      }
+    },
 
-        if (updatedCharacter.bookId) {
-          delete state.characterCache[updatedCharacter.bookId];
-        }
-
-        state.loading = false;
+    createCharacter: async (data) => {
+      set((state) => {
+        state.loading = true;
+        state.error = null;
       });
 
-      return updatedCharacter;
-    } catch (e) {
-      console.error('Failed to update character:', e);
-      set(state => {
-        state.loading = false;
-        state.error = e.message || 'Failed to update character';
-      });
-      throw e;
-    }
-  },
+      try {
+        const res = await bookAPI.characters.create(data);
+        if (!res.success) throw new Error(res.error);
 
-  deleteCharacter: async (id) => {
-    set(state => { state.loading = true; state.error = null; });
+        const newCharacter = res.data;
 
-    try {
-      const res = await bookAPI.characters.delete(id);
-      if (!res.success) throw new Error(res.error);
+        set((state) => {
+          state.characters.push(newCharacter);
+          delete state.characterCache[data.bookId];
+          state.loading = false;
+        });
 
-      set(state => {
-        state.characters = state.characters.filter(char => char.id !== id);
+        return newCharacter;
+      } catch (e) {
+        console.error('Failed to create character:', e);
+        set((state) => {
+          state.loading = false;
+          state.error = e.message || 'Failed to create character';
+        });
+        throw e;
+      }
+    },
 
-        if (state.currentCharacter?.id === id) {
-          state.currentCharacter = null;
-        }
-
-        delete state.relationshipsByCharacter[id];
-        state.characterCache = {};
-
-        state.loading = false;
+    updateCharacter: async (id, data) => {
+      set((state) => {
+        state.loading = true;
+        state.error = null;
       });
 
-      return res;
-    } catch (e) {
-      console.error('Failed to delete character:', e);
-      set(state => {
-        state.loading = false;
-        state.error = e.message || 'Failed to delete character';
+      try {
+        const res = await bookAPI.characters.update(id, data);
+        if (!res.success) throw new Error(res.error);
+
+        const updatedCharacter = res.data;
+
+        set((state) => {
+          const index = state.characters.findIndex((char) => char.id === id);
+          if (index !== -1) {
+            state.characters[index] = updatedCharacter;
+          } else {
+            state.characters.push(updatedCharacter);
+          }
+
+          if (state.currentCharacter?.id === id) {
+            state.currentCharacter = updatedCharacter;
+          }
+
+          if (updatedCharacter.bookId) {
+            delete state.characterCache[updatedCharacter.bookId];
+          }
+
+          state.loading = false;
+        });
+
+        return updatedCharacter;
+      } catch (e) {
+        console.error('Failed to update character:', e);
+        set((state) => {
+          state.loading = false;
+          state.error = e.message || 'Failed to update character';
+        });
+        throw e;
+      }
+    },
+
+    deleteCharacter: async (id) => {
+      set((state) => {
+        state.loading = true;
+        state.error = null;
       });
-      throw e;
-    }
-  },
 
-  setCurrentCharacter: (character) => set(state => {
-    state.currentCharacter = character;
-  }),
+      try {
+        const res = await bookAPI.characters.delete(id);
+        if (!res.success) throw new Error(res.error);
 
-  clearCurrentCharacter: () => set(state => {
-    state.currentCharacter = null;
-    state.error = null;
-  }),
+        set((state) => {
+          state.characters = state.characters.filter((char) => char.id !== id);
 
-  clearCharacters: (bookId) => set(state => {
-    state.characters = [];
-    if (bookId) {
-      delete state.characterCache[bookId];
-    }
-    state.error = null;
-  }),
+          if (state.currentCharacter?.id === id) {
+            state.currentCharacter = null;
+          }
 
-  invalidateCharacterCache: (bookId) => set(state => {
-    delete state.characterCache[bookId];
-  }),
+          delete state.relationshipsByCharacter[id];
+          state.characterCache = {};
 
-  reorderCharacters: async (bookId, characterIds) => {
-    set(state => { state.loading = true; state.error = null; });
+          state.loading = false;
+        });
 
-    try {
-      const res = await bookAPI.characters.reorder(bookId, characterIds);
-      if (!res.success) throw new Error(res.error);
+        return res;
+      } catch (e) {
+        console.error('Failed to delete character:', e);
+        set((state) => {
+          state.loading = false;
+          state.error = e.message || 'Failed to delete character';
+        });
+        throw e;
+      }
+    },
 
-      set(state => {
-        if (state.characterCache[bookId]) {
+    setCurrentCharacter: (character) =>
+      set((state) => {
+        state.currentCharacter = character;
+      }),
+
+    clearCurrentCharacter: () =>
+      set((state) => {
+        state.currentCharacter = null;
+        state.error = null;
+      }),
+
+    clearCharacters: (bookId) =>
+      set((state) => {
+        state.characters = [];
+        if (bookId) {
           delete state.characterCache[bookId];
         }
-      });
-      await get().fetchCharacters(bookId);
+        state.error = null;
+      }),
 
-      set(state => { state.loading = false; });
+    invalidateCharacterCache: (bookId) =>
+      set((state) => {
+        delete state.characterCache[bookId];
+      }),
 
-      return res.data;
-    } catch (e) {
-      console.error('Failed to reorder characters:', e);
-      set(state => {
-        state.loading = false;
-        state.error = e.message || 'Failed to reorder characters';
+    reorderCharacters: async (bookId, characterIds) => {
+      const previousCharacters = [...get().characters];
+
+      set((state) => {
+        const reorderedCharacters = characterIds
+          .map((id) => state.characters.find((c) => c.id === id))
+          .filter(Boolean);
+        const otherCharacters = state.characters.filter(
+          (c) => !characterIds.includes(c.id)
+        );
+        state.characters = [...reorderedCharacters, ...otherCharacters];
+        delete state.characterCache[bookId];
       });
-      throw e;
-    }
-  },
-})));
+
+      try {
+        const res = await bookAPI.characters.reorder(bookId, characterIds);
+        if (!res.success) throw new Error(res.error);
+
+        set((state) => {
+          delete state.characterCache[bookId];
+        });
+        await get().fetchCharacters(bookId);
+
+        return res.data;
+      } catch (e) {
+        console.error('Failed to reorder characters:', e);
+        set((state) => {
+          state.characters = previousCharacters;
+          delete state.characterCache[bookId];
+          state.error = e.message || 'Failed to reorder characters';
+        });
+        throw e;
+      }
+    },
+  }))
+);

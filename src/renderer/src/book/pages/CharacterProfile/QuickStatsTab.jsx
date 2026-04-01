@@ -1,9 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker';
 import { Wand2 } from 'lucide-react';
+import FieldSectionCard from './FieldSectionCard';
 
 export const FIELDS = [
   { key: 'age', label: 'Age', type: 'text', placeholder: '25', colSpan: 1 },
@@ -13,63 +9,14 @@ export const FIELDS = [
   { key: 'residence', label: 'Residence', type: 'text', placeholder: 'City name', colSpan: 1 },
 ];
 
-const FormField = ({ config, value, onChange }) => {
-  if (config.type === 'date') {
-    return (
-      <div className={`space-y-2 ${config.colSpan === 2 ? 'col-span-2' : 'col-span-1'}`}>
-        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          {config.label}
-        </Label>
-        <DatePicker
-          value={value}
-          onChange={(dateValue) => onChange(config.key, dateValue)}
-          placeholder={config.placeholder}
-          className="bg-card/50 focus:bg-background transition-colors"
-        />
-      </div>
-    );
-  }
-
-  const Component = config.type === 'textarea' ? Textarea : Input;
-
-  return (
-    <div className={`space-y-2 ${config.colSpan === 2 ? 'col-span-2' : 'col-span-1'}`}>
-      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-        {config.label}
-      </Label>
-      <Component
-        value={value || ''}
-        onChange={e => onChange(config.key, e.target.value)}
-        placeholder={config.placeholder}
-        type={config.type === 'date' ? 'date' : 'text'}
-        rows={config.rows}
-        className="bg-card/50 focus:bg-background transition-colors"
-      />
-    </div>
-  );
-};
-
 export default function QuickStatsTab({ attributes, onChange }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Wand2 className="h-5 w-5 text-primary" />
-          Quick Stats
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {FIELDS.map(field => (
-            <FormField
-              key={field.key}
-              config={field}
-              value={attributes[field.key]}
-              onChange={onChange}
-            />
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <FieldSectionCard
+      icon={Wand2}
+      title="Quick Stats"
+      fields={FIELDS}
+      attributes={attributes}
+      onChange={onChange}
+    />
   );
 }

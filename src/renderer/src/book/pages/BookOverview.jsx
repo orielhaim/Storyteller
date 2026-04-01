@@ -1,88 +1,57 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
+import { format, differenceInDays } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   BookOpen,
-  Calendar,
   User,
   Globe,
   Users,
   FileText,
   ListOrdered,
-  Map,
+  Map as MapIcon,
   PersonStanding,
   Activity,
 } from 'lucide-react';
 import useImageLoader from '@/hooks/useImageLoader';
+import { useBookStore } from '@/stores/bookStore';
+
+const formatNumber = (value) => {
+  if (value == null) return '0';
+  return new Intl.NumberFormat('en-US').format(value);
+};
 
 function BookOverview({ book }) {
-  const [overview, setOverview] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const fetchOverview = useBookStore((state) => state.fetchOverview);
+  const overviewState = useBookStore((state) => state.overviewByBook[book?.id]);
 
-  const formatNumber = (value) => {
-    if (value == null) return '0';
-    return new Intl.NumberFormat('en-US').format(value);
-  };
-
-  const formatDate = (timestamp) => {
-    return new Date(timestamp).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+  const overview = overviewState?.data ?? null;
+  const loading = overviewState?.loading ?? true;
+  const error = overviewState?.error ?? null;
 
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchOverview = async () => {
-      if (!book?.id || !window?.bookAPI?.books?.getOverview) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const res = await window.bookAPI.books.getOverview(book.id);
-        if (!isMounted) return;
-        if (res?.success) {
-          setOverview(res.data);
-        } else {
-          setError(res?.error || 'Failed to load book overview');
-        }
-      } catch (e) {
-        if (!isMounted) return;
-        setError(e?.message || 'Failed to load book overview');
-      } finally {
-        if (!isMounted) return;
-        setLoading(false);
-      }
-    };
-
-    fetchOverview();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [book?.id]);
+    if (!book?.id) return;
+    fetchOverview(book.id).catch(() => {
+      // Error is already set in store
+    });
+  }, [book?.id, fetchOverview]);
 
   const stats = overview?.stats || {};
 
   const writingSpan = useMemo(() => {
-    if (!stats.writingPeriod?.firstSceneAt || !stats.writingPeriod?.lastSceneAt) {
+    if (
+      !stats.writingPeriod?.firstSceneAt ||
+      !stats.writingPeriod?.lastSceneAt
+    ) {
       return null;
     }
     const start = new Date(stats.writingPeriod.firstSceneAt);
     const end = new Date(stats.writingPeriod.lastSceneAt);
-    const diffMs = end.getTime() - start.getTime();
-    const days = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)));
+    const days = Math.max(1, differenceInDays(end, start));
     return {
-      startLabel: formatDate(stats.writingPeriod.firstSceneAt),
-      endLabel: formatDate(stats.writingPeriod.lastSceneAt),
+      startLabel: format(start, 'MMMM d, yyyy'),
+      endLabel: format(end, 'MMMM d, yyyy'),
       days,
     };
   }, [stats.writingPeriod]);
@@ -144,7 +113,10 @@ function BookOverview({ book }) {
                 )}
 
                 <div className="flex flex-wrap gap-3 pt-1">
-                  <Badge variant="secondary" className="gap-2 px-3 py-1.5 text-xs md:text-sm">
+                  <Badge
+                    variant="secondary"
+                    className="gap-2 px-3 py-1.5 text-xs md:text-sm"
+                  >
                     <BookOpen className="h-4 w-4" />
                     <span>
                       {book.progressStatus === 'not_started'
@@ -157,12 +129,16 @@ function BookOverview({ book }) {
                     </span>
                   </Badge>
 
-                  {typeof stats.words?.total === 'number' && stats.words.total > 0 && (
-                    <Badge variant="outline" className="gap-2 px-3 py-1.5 text-xs md:text-sm">
-                      <FileText className="h-4 w-4" />
-                      <span>{formatNumber(stats.words.total)} words</span>
-                    </Badge>
-                  )}
+                  {typeof stats.words?.total === 'number' &&
+                    stats.words.total > 0 && (
+                      <Badge
+                        variant="outline"
+                        className="gap-2 px-3 py-1.5 text-xs md:text-sm"
+                      >
+                        <FileText className="h-4 w-4" />
+                        <span>{formatNumber(stats.words.total)} words</span>
+                      </Badge>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
@@ -197,7 +173,11 @@ function BookOverview({ book }) {
                       </span>
                       <div className="flex flex-wrap gap-1.5">
                         {book.genres.map((genre, index) => (
-                          <Badge key={index} variant="outline" className="text-[11px]">
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-[11px]"
+                          >
                             {genre}
                           </Badge>
                         ))}
@@ -216,7 +196,9 @@ function BookOverview({ book }) {
           <CardHeader className="flex flex-row items-center justify-between gap-2">
             <CardTitle>Project Snapshot</CardTitle>
             {error && !loading && (
-              <span className="text-xs text-destructive">Failed to load statistics</span>
+              <span className="text-xs text-destructive">
+                Failed to load statistics
+              </span>
             )}
           </CardHeader>
           <CardContent>
@@ -300,7 +282,7 @@ function BookOverview({ book }) {
                     <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Worlds & Locations
                     </span>
-                    <Map className="h-4 w-4 text-muted-foreground" />
+                    <MapIcon className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="text-2xl font-semibold">
                     {formatNumber((stats.worlds || 0) + (stats.locations || 0))}
@@ -398,7 +380,9 @@ function BookOverview({ book }) {
                           className="flex items-center justify-between text-xs"
                         >
                           <span className="capitalize text-muted-foreground">
-                            {entry.key === 'unspecified' ? 'Unspecified' : entry.key.replace(/_/g, ' ')}
+                            {entry.key === 'unspecified'
+                              ? 'Unspecified'
+                              : entry.key.replace(/_/g, ' ')}
                           </span>
                           <span className="font-medium">
                             {formatNumber(entry.value)}
