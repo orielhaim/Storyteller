@@ -1,19 +1,13 @@
-# 🗺️ Storyteller Roadmap
+# Storyteller Roadmap
 
 We are building this project in phases. Here is our detailed development plan:
 
-## Phase 1: Foundation
-- [X] Initialize Electron (electron-vite) + React + Tailwind CSS + Shadcn/ui.
-- [X] Setup SQLite with Drizzle ORM connectivity (IPC communication).
-- [X] Establish global state management with Zustand.
-
-## Phase 2: Project Dashboard
-- [X] "Welcome" screen.
+## Phase 1: Project Dashboard
 - [X] Ability to create/delete Books/Series.
 - [X] Move Books between Series. (Drag-and-drop)
 - [X] Series Management Page.
 
-## Phase 3: The Main Workspace
+## Phase 2: The Main Workspace
 
 ### Book Edit Page Architecture
 - [X] **Book Entry Point**: Dedicated book page
@@ -36,7 +30,7 @@ We are building this project in phases. Here is our detailed development plan:
 - [ ] **Revision History**: Basic undo/redo with draft snapshots
 - [ ] **Vim Motions**: Vim-like motions for navigation and editing
 
-## Phase 4: Quality of Life Features
+## Phase 3: Quality of Life Features
 
 ### Auto Updates
 - [X] **Auto Updates**: Automatically check for updates and installer (using github release)
@@ -47,7 +41,7 @@ We are building this project in phases. Here is our detailed development plan:
 - [ ] **Font and Text Customization**: Choose from web fonts and system fonts
 - [X] **Global Settings**: Application-wide preferences
 - [ ] **Keyboard Shortcuts**: Customizable hotkeys
-- [ ] **Backup & Sync**: Automatic backups
+- [X] **Backup & Sync**: Automatic backups
 - [ ] **Import/Export Settings**: Transfer preferences between devices
 
 ### Notes System
@@ -58,7 +52,7 @@ We are building this project in phases. Here is our detailed development plan:
 - [ ] **Rich Text Notes**: Full formatting support in notes
 - [ ] **Note Attachments**: Link images, documents, or external resources
 
-## Phase 5: Advanced Features
+## Phase 4: Advanced Features
 
 ### Book Preview
 - [X] **Page View**: Read-only paginated view
@@ -86,3 +80,14 @@ We are building this project in phases. Here is our detailed development plan:
 - [ ] **Custom Styling**: Apply themes and stylesheets to exports
 - [ ] **Print Optimization**: Print-ready formatting
 - [X] **Batch Export**: Export entire books or selected chapters
+
+### AI Features
+- [ ] **Autocomplete**: AI-powered autocomplete in the editor
+  - [ ] Context-aware suggestions
+- [ ] **Super Agent**: An AI agent that can assist across the entire workspace
+  - [ ] **Chat History**: Persistent conversation history and task continuity
+  - [ ] **RAG**: Embedded context retrieval from all relevant project data
+  - [ ] **Document Editing**: Ability to propose and apply changes to documents
+    - [ ] Diff-based change preview
+  - [ ] **Task Execution**: Can help plan, write, refactor, summarize, and organize work
+  - [ ] **Search & Reasoning**: Can search across the entire project and answer based on combined context

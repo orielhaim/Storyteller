@@ -7,7 +7,7 @@
 
 Storyteller is a powerful desktop application designed to replace the outdated interfaces of traditional writing software. It combines the distraction-free environment of a simple text editor with the complex world-building tools needed for full-length novels and series.
 
-Built for the modern web era, it prioritizes user experience (UI/UX), speed, and complete customizability.
+Built for the modern web era, it prioritizes user experience, speed, and complete customizability.
 
 ## ✨ Key Features
 
@@ -51,13 +51,11 @@ Built for the modern web era, it prioritizes user experience (UI/UX), speed, and
 
 ---
 
-## 🗺️ Roadmap
-
 For a detailed breakdown of our development phases and upcoming features, see our [ROADMAP.md](ROADMAP.md).
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 Just download the latest release from the [Releases Page](https://github.com/orielhaim/storyteller/releases) and run the installer.
 
@@ -71,21 +69,14 @@ Just download the latest release from the [Releases Page](https://github.com/ori
 
 2.  **Install dependencies:**
     ```bash
-    pnpm install
+    bun install
     ```
 
-3.  **Generate database migrations:**
+3.  **Run the development server:**
     ```bash
-    pnpm db:generate
-    ```
-
-4.  **Run the development server:**
-    ```bash
-    pnpm dev
+    bun dev
     ```
 
 ---
 
-## 📄 License
-
-This project is licensed under the [**GPLv3 License**](LICENSE). This ensures the software remains free and open-source for everyone, forever.
+This project is licensed under the [**GPLv3 License**](LICENSE). This ensures the software remains free and open-source for everyone forever.
