@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Tree } from 'react-arborist';
+import useResizeObserver from 'use-resize-observer';
 import { useWritingStore } from '@/stores/writingStore';
 import { useCharacterStore } from '@/stores/characterStore';
 import { useWorldStore } from '@/stores/worldStore';
@@ -244,14 +245,18 @@ export default function FileTree({ bookId, onNodeClick, onItemDeleted }) {
   const [chapterIdForScene, setChapterIdForScene] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-  const treeContainerRef = useRef(null);
-  const [treeContainer, setTreeContainer] = useState(null);
+  const { ref, height } = useResizeObserver();
 
-  useEffect(() => {
-    if (treeContainerRef.current) {
-      setTreeContainer(treeContainerRef.current);
-    }
-  }, []);
+  const setRefs = useCallback(
+    (node) => {
+      if (typeof ref === 'function') {
+        ref(node);
+      } else if (ref) {
+        ref.current = node;
+      }
+    },
+    [ref],
+  );
 
   useEffect(() => {
     if (!bookId) return;
@@ -617,20 +622,22 @@ export default function FileTree({ bookId, onNodeClick, onItemDeleted }) {
 
   return (
     <div
-      ref={treeContainerRef}
-      className="w-full bg-sidebar border-r border-border h-full"
+      ref={ref}
+      className="w-full bg-sidebar border-r border-border h-full parent"
     >
-      {treeContainer && (
+      {setRefs && (
         <Tree
           key={`tree-${bookId}`}
           data={treeData}
           width={'auto'}
+          height={height}
+          className="h-full!"
           indent={16}
           rowHeight={32}
           onActivate={handleActivate}
           onMove={handleMove}
           openByDefault={true}
-          dndRootElement={treeContainer}
+          dndRootElement={setRefs}
           disableDrag={(node) =>
             node.data?.type === 'main' ||
             node.data?.type === 'characters' ||
@@ -723,7 +730,6 @@ function NodeRenderer({
   node,
   style,
   dragHandle,
-  tree,
   onAddCharacter,
   onAddWorld,
   onAddLocation,
@@ -735,7 +741,6 @@ function NodeRenderer({
   const { type, name, children } = node.data;
   const isSelected = node.isSelected;
   const hasChildren = children && children.length > 0;
-  const isFolder = hasChildren || !node.isLeaf;
   const isDraggable = [
     'scene',
     'chapter',
